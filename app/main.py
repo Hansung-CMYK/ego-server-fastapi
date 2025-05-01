@@ -1,15 +1,12 @@
 from fastapi import FastAPI
-from app.api import endpoints
+from app.services.tts_initializer import load_tts_model
 
-app = FastAPI(
-    title="에고",
-    description="FastAPI Server",
-    version="0.0.1"
-)
+app = FastAPI()
 
-app.include_router(endpoints.router)
-
-# 루트 엔드포인트
-@app.get("/")
-def read_root():
-    return {"message": "200 OK"}
+@app.on_event("startup")
+async def load_models():
+    load_tts_model(
+        model_id="default",
+        gpt_path="modules/GPT_SoVITS/GPT_SoVITS/pretrained_models/s1v3.ckpt",
+        sovits_path="modules/GPT_SoVITS/GPT_SoVITS/pretrained_models/s2Gv3.pth"
+    )
