@@ -9,5 +9,5 @@ venv/
 # 환경설정 파일 (환경에 따라 추가)
 .env
 
-# whisper_streaming 모델
-app/whisper_streaming/
+**/*.log
+*.log
