@@ -1,8 +1,9 @@
 import os
-import importlib.util
 import sys
+import importlib.util
 from fastapi import FastAPI
-from app.api import voice_chat_api, ollama_api
+
+from app.api import ollama_api, voice_chat_api
 from app.services.tts_infer import ensure_init
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
@@ -24,16 +25,18 @@ sys.modules["gpt_sovits_api"] = gpt_sovits_api
 spec.loader.exec_module(gpt_sovits_api)
 
 @app.on_event("startup")
-def init_tts_model():
+def init_models():
     model_id = "default"
     gpt_path = "/path/to/gpt_weights"
     sovits_path = "/path/to/sovits_weights"
     ensure_init(model_id, gpt_path, sovits_path)
 
 if hasattr(gpt_sovits_api, "app"):
-    app.include_router(gpt_sovits_api.app)
-    app.include_router(voice_chat_api.router, prefix="/api")
-    app.include_router(ollama_api.router, prefix="/api")
+    for route in gpt_sovits_api.app.routes:
+        app.router.routes.append(route)
 else:
     raise ImportError("modules/GPT-SoVITS/api.py에는 'app' 객체가 없습니다.")
+
+app.include_router(ollama_api.router, prefix="/api")
+app.include_router(voice_chat_api.router, prefix="/api")
 
