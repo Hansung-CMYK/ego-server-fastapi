@@ -2,6 +2,7 @@ import importlib.util
 import sys
 import os
 from fastapi import FastAPI
+from .api import voice_chat_api, ollama_api
 
 app = FastAPI()
 
@@ -18,6 +19,8 @@ spec.loader.exec_module(gpt_sovits_api)
 
 if hasattr(gpt_sovits_api, "app"):
     app.include_router(gpt_sovits_api.app)
+    app.include_router(voice_chat_api.router, prefix="/api") 
+    app.include_router(ollama_api.router, prefix="/api")
 else:
     raise ImportError("modules/GPT-SoVITS/api.py에는 'app' 객체가 없습니다.")
 
