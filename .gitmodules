@@ -1,6 +1,6 @@
-[submodule "modules/RealtimeSTT"]
-	path = modules/RealtimeSTT
-	url = https://github.com/KoljaB/RealtimeSTT.git
 [submodule "modules/GPT-SoVITS"]
 	path = modules/GPT-SoVITS
 	url = https://github.com/6-keem/GPT-SoVITS.git
+[submodule "modules/RealtimeSTT"]
+	path = modules/RealtimeSTT
+	url = https://github.com/6-keem/RealtimeSTT.git
