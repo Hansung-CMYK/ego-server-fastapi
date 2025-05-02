@@ -9,6 +9,8 @@ import numpy as np
 from scipy.signal import resample
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
+from app.services.tts_infer import get_tts_wav
+
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 MODULES_ROOT = os.path.join(ROOT, "modules")
 if MODULES_ROOT not in sys.path:
@@ -47,6 +49,10 @@ def run_recorder():
     recorder = AudioToTextRecorder(**recorder_config)
     recorder_ready.set()
 
+    ref_wav_path    = "/home/keem/sample.wav"
+    prompt_language = "ja"
+    text_language   = "ko"
+
     while is_running:
         full = recorder.text()
         if full and main_loop:
@@ -55,7 +61,9 @@ def run_recorder():
                 main_loop
             )
 
+            response_chunks = []
             for chunk in chat_stream(full):
+                response_chunks.append(chunk)
                 logging.info(f"→ sending response_chunk: {chunk!r}")
                 asyncio.run_coroutine_threadsafe(
                     send_to_client({'type': 'response_chunk', 'text': chunk}),
@@ -67,6 +75,18 @@ def run_recorder():
                 main_loop
             )
 
+            full_response = "".join(response_chunks)
+            print(full_response)
+            pcm_bytes = bytearray()
+            for audio_chunk in get_tts_wav(
+                ref_wav_path,
+                prompt_text="なるべく、教師との無駄なやり取りを発生させたくないですもんね。",
+                prompt_language=prompt_language,
+                text=full_response,
+                text_language=text_language
+            ):
+                pcm_bytes.extend(audio_chunk)
+                print("done")
 def decode_and_resample(data: bytes, sr: int, tr: int) -> bytes:
     arr = np.frombuffer(data, np.int16)
     tgt = int(len(arr) * tr / sr)
