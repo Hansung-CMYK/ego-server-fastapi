@@ -6,8 +6,6 @@ from fastapi import FastAPI
 from app.api import ollama_api, voice_chat_api
 from app.services.tts_infer import ensure_init
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
-
 app = FastAPI()
 
 here = os.path.dirname(__file__)
