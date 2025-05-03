@@ -75,9 +75,6 @@ class VoiceChatSession:
         )
 
     def run_recorder(self):
-        ref_wav_path = "/home/keem/sample.wav"
-        prompt_language = "ja"
-        text_language = "ko"
 
         while self.running:
             full = self.recorder.text()
@@ -104,7 +101,7 @@ class VoiceChatSession:
 
             full_response = ''.join(response_chunks)
             pcm_bytes = bytearray()
-            for audio_chunk in get_tts_wav(ref_wav_path, "...", prompt_language, full_response, text_language):
+            for audio_chunk in get_tts_wav(full_response):
                 pcm_bytes.extend(audio_chunk)
 
             asyncio.run_coroutine_threadsafe(
