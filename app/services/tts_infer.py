@@ -54,7 +54,21 @@ def synthesize(
     )
 
 
-def get_tts_wav(*args, **kwargs):
+def get_tts_wav(text: str):
     gsv = importlib.import_module("gpt_sovits_api")
-    return gsv.get_tts_wav(*args, **kwargs)
+
+    ref_wav_path = "/home/keem/sample.wav"
+    prompt_text = "なるべく、教師との無駄なやり取りを発生させたくないですもんね。"
+    prompt_language = "ja"
+    text_language = "ko"
+    spk = "default"
+
+    return gsv.get_tts_wav(
+        ref_wav_path=ref_wav_path,
+        prompt_text=prompt_text,
+        prompt_language=prompt_language,
+        text=text,
+        text_language=text_language,
+        spk=spk
+    )
 

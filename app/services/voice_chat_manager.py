@@ -109,9 +109,6 @@ class VoiceChatSession:
         )
 
     def run_recorder(self):
-        ref_wav_path = "/home/keem/sample.wav"
-        prompt_language = "ja"
-        text_language = "ko"
 
         while self.running:
             full = self.recorder.text()

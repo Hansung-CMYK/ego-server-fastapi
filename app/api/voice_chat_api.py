@@ -12,7 +12,7 @@ async def websocket_voice_chat(ws: WebSocket):
     try:
         while True:
             msg = await ws.receive_bytes()
-            session.handle_audio(msg)  # 비동기 아님, 내부에서 thread-safe 하게 처리
+            session.handle_audio(msg) 
     except WebSocketDisconnect:
         session_manager.remove_session(session.id)
 
