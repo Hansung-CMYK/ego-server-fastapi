@@ -123,11 +123,13 @@ class VoiceChatSession:
 
             # 이모지 제거, 마크다운 문법 제거, TTS 생성
             def send_tts_to_ws(sentence: str):
-                clean = emoji.demojize(str, language='ko')
+                clean = emoji.demojize(sentence, language='ko')
                 clean = re.sub(r'(__|\*\*|\*|`|~~|!\[.*?\]\(.*?\)|\[.*?\]\(.*?\))', '', clean)
+                if len(clean) == 0:
+                    return
                 pcm = bytearray()
                 for audio_chunk in get_tts_wav(
-                    ref_wav_path, clean, prompt_language, clean, text_language
+                    clean
                 ):
                     pcm.extend(audio_chunk)
                 asyncio.run_coroutine_threadsafe(

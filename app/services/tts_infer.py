@@ -69,6 +69,7 @@ def get_tts_wav(text: str):
         prompt_language=prompt_language,
         text=text,
         text_language=text_language,
+        sample_steps=4,
         spk=spk
     )
 
