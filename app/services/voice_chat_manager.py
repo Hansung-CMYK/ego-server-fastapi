@@ -4,10 +4,14 @@ import asyncio
 import threading
 import json
 import uuid
+import re
+import emoji
 from app.services.tts_infer import get_tts_wav
 from app.services.ollama_service import chat_stream
 
-REALTIME_STT_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../modules/RealtimeSTT"))
+REALTIME_STT_PATH = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "../../modules/RealtimeSTT")
+)
 if REALTIME_STT_PATH not in sys.path:
     sys.path.insert(0, REALTIME_STT_PATH)
 
@@ -15,8 +19,11 @@ import faster_whisper
 from faster_whisper import WhisperModel as _OriginalWhisperModel
 
 __whisper_model_cache = {}
-def _shared_whisper_model(model_size_or_path, device="cuda", compute_type="default",
-                          device_index=None, download_root=None):
+
+def _shared_whisper_model(
+    model_size_or_path, device="cuda", compute_type="default",
+    device_index=None, download_root=None
+):
     key = (model_size_or_path, device, compute_type, device_index, download_root)
     if key not in __whisper_model_cache:
         __whisper_model_cache[key] = _OriginalWhisperModel(
@@ -32,6 +39,33 @@ faster_whisper.WhisperModel = _shared_whisper_model
 
 from RealtimeSTT.audio_recorder import AudioToTextRecorder
 from app.util.audio_utils import decode_and_resample
+
+_SENTENCE_END_RE = re.compile(r'^(.*?[\.\!?]+)(.*)$', re.DOTALL)
+
+class TTSBuffer:
+    def __init__(self, send_tts_fn):
+        self.buffer = ""
+        self.send_tts = send_tts_fn 
+
+    def feed(self, chunk: str):
+        # 청크 추가
+        self.buffer += chunk
+        while True:
+            match = _SENTENCE_END_RE.match(self.buffer)
+            if not match:
+                break
+            sentence, remainder = match.group(1), match.group(2)
+            # 이후에도 문장 부호 인지 검사 아니면 탈출
+            if remainder and re.match(r'^[\.!?]', remainder):
+                break
+            # 전처리 후 TTS 생성
+            self.send_tts(sentence)
+            self.buffer = remainder
+
+    def flush(self):
+        if self.buffer.strip():
+            self.send_tts(self.buffer)
+        self.buffer = ""
 
 class VoiceChatSession:
     def __init__(self, websocket):
@@ -84,33 +118,46 @@ class VoiceChatSession:
             if not full:
                 continue
 
+            # STT 완료 문장 전송
             asyncio.run_coroutine_threadsafe(
                 self.ws.send_text(json.dumps({'type': 'fullSentence', 'text': full})),
                 self.loop
             )
 
-            response_chunks = []
+            # 이모지 제거, 마크다운 문법 제거, TTS 생성
+            def send_tts_to_ws(sentence: str):
+                clean = emoji.demojize(str, language='ko')
+                clean = re.sub(r'(__|\*\*|\*|`|~~|!\[.*?\]\(.*?\)|\[.*?\]\(.*?\))', '', clean)
+                pcm = bytearray()
+                for audio_chunk in get_tts_wav(
+                    ref_wav_path, clean, prompt_language, clean, text_language
+                ):
+                    pcm.extend(audio_chunk)
+                asyncio.run_coroutine_threadsafe(
+                    self.ws.send_bytes(pcm),
+                    self.loop
+                )
+
+            tts_buffer = TTSBuffer(send_tts_to_ws)
+
+            # LLM 응답 청크 전송
             for chunk in chat_stream(full):
-                response_chunks.append(chunk)
+                # 전송
                 asyncio.run_coroutine_threadsafe(
                     self.ws.send_text(json.dumps({'type': 'response_chunk', 'text': chunk})),
                     self.loop
                 )
+                # 버퍼 채우기
+                tts_buffer.feed(chunk)
 
+            # 응답 완료 알림
             asyncio.run_coroutine_threadsafe(
                 self.ws.send_text(json.dumps({'type': 'response_done'})),
                 self.loop
             )
 
-            full_response = ''.join(response_chunks)
-            pcm_bytes = bytearray()
-            for audio_chunk in get_tts_wav(ref_wav_path, "...", prompt_language, full_response, text_language):
-                pcm_bytes.extend(audio_chunk)
-
-            asyncio.run_coroutine_threadsafe(
-                self.ws.send_bytes(pcm_bytes),
-                self.loop
-            )
+            # 버퍼 비우기
+            tts_buffer.flush()
 
     def stop(self):
         self.running = False
@@ -129,4 +176,3 @@ class VoiceChatSessionManager:
         if sid in self.sessions:
             self.sessions[sid].stop()
             del self.sessions[sid]
-
