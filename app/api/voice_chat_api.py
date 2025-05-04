@@ -14,5 +14,7 @@ async def websocket_voice_chat(ws: WebSocket):
             msg = await ws.receive_bytes()
             session.handle_audio(msg) 
     except WebSocketDisconnect:
+        pass
+    finally:
         session_manager.remove_session(session.id)
 
