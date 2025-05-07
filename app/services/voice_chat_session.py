@@ -1,7 +1,14 @@
-import uuid, json, threading, importlib, asyncio, re, base64, emoji
+import os, sys, uuid, json, threading, importlib, asyncio, re, base64, emoji
+
+REALTIME_STT_PATH = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "../../modules/RealtimeSTT")
+)
+if REALTIME_STT_PATH not in sys.path:
+    sys.path.insert(0, REALTIME_STT_PATH)
+
 from RealtimeSTT.audio_recorder import AudioToTextRecorder
 from app.util.audio_utils import decode_and_resample
-from .whisper_model import get_shared_whisper_model  # 패치된 whisper
+from .whisper_model import get_shared_whisper_model 
 from .tts_buffer import TTSBuffer
 from app.services.ollama_service import chat_stream
 
