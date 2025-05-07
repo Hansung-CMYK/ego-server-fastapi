@@ -1,4 +1,13 @@
-import string, os, sys, uuid, json, threading, importlib, asyncio, re, base64, emoji
+import os
+import sys
+import uuid
+import json
+import threading
+import importlib
+import asyncio
+import re
+import base64
+import emoji
 
 REALTIME_STT_PATH = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "../../modules/RealtimeSTT")
@@ -8,7 +17,7 @@ if REALTIME_STT_PATH not in sys.path:
 
 from RealtimeSTT.audio_recorder import AudioToTextRecorder
 from app.util.audio_utils import decode_and_resample
-from .whisper_model import get_shared_whisper_model 
+from .whisper_model import get_shared_whisper_model
 from .tts_buffer import TTSBuffer
 from app.services.ollama_service import chat_stream
 
@@ -35,8 +44,8 @@ class VoiceChatSession:
             'use_microphone': False,
             'model': 'large-v3',
             'language': 'ko',
-            'silero_sensitivity': 0.4,
-            'webrtc_sensitivity': 2,
+            'silero_sensitivity': 0.6,
+            'webrtc_sensitivity': 1,
             'post_speech_silence_duration': 0.4,
             'min_length_of_recording': 0,
             'min_gap_between_recordings': 0,
@@ -52,10 +61,14 @@ class VoiceChatSession:
         pcm = decode_and_resample(pcm_chunk, meta.get('sampleRate', 16000), 16000)
         self.recorder.feed_audio(pcm)
 
-    def on_text_detected(self, text):
-        # 실시간 자막
+    def on_text_detected(self, text: str):
         asyncio.run_coroutine_threadsafe(
             self.ws.send_text(json.dumps({'type': 'realtime', 'text': text})),
+            self.loop
+        )
+        
+        asyncio.run_coroutine_threadsafe(
+            self.ws.send_text(json.dumps({'type': 'cancel_audio'})),
             self.loop
         )
 
@@ -65,18 +78,15 @@ class VoiceChatSession:
             if not full:
                 continue
 
-            # 1) 기존 LLM/TTS 중단
             self.cancel_event.set()
             if self.llm_thread and self.llm_thread.is_alive():
-                self.llm_thread.join()  # 이전 Worker가 안전히 끝나길 기다림
+                self.llm_thread.join()
 
-            # 2) 클라이언트에 오디오 큐 초기화
             asyncio.run_coroutine_threadsafe(
                 self.ws.send_text(json.dumps({'type': 'cancel_audio'})),
                 self.loop
             )
 
-            # 3) 새 cancel_event + Worker Thread 시작
             self.cancel_event = threading.Event()
             asyncio.run_coroutine_threadsafe(
                 self.ws.send_text(json.dumps({'type': 'fullSentence', 'text': full})),
@@ -84,13 +94,15 @@ class VoiceChatSession:
             )
 
             self.llm_thread = threading.Thread(
-                target=self._llm_tts_worker, args=(full, self.cancel_event), daemon=True
+                target=self._llm_tts_worker,
+                args=(full, self.cancel_event),
+                daemon=True
             )
             self.llm_thread.start()
 
     def _llm_tts_worker(self, full: str, cancel_event: threading.Event):
-        # TTS 전송 콜백
         tts_index = 0
+
         def send_tts(sentence: str):
             nonlocal tts_index
             if cancel_event.is_set():
@@ -100,12 +112,12 @@ class VoiceChatSession:
             text = re.sub(r'(__|\*\*|\*|`|~~|!\[.*?\]\(.*?\)|\[.*?\]\(.*?\))', '', text)
             text = text.replace('\n', '').replace('\r', '').replace('\t', '')
             text = re.sub(r'(?<=\d)[.,?!:]', '', text)
-            text = re.sub(r'[^\uAC00-\uD7A3\u3131-\u318F0-9,.!? ]+', '', text)
+            text = re.sub(r'[^\uAC00-\uD7A3\u3131-\u318F0-9A-Za-z,.!? ]+', '', text)
             clean = re.sub(r'\s+', ' ', text).strip()
-
-            if not clean: 
+            if not clean:
                 return
-            print(clean)
+
+            # GPT-SoVITS TTS 생성
             gsv = importlib.import_module("gpt_sovits_api")
             pcm = bytearray()
             for chunk in gsv.get_tts_wav(
@@ -119,35 +131,40 @@ class VoiceChatSession:
                     return
                 pcm.extend(chunk)
 
+            # 클라이언트 전송
             payload = {
                 "type": "audio_chunk",
                 "index": tts_index,
                 "audio_base64": base64.b64encode(pcm).decode('ascii')
             }
             asyncio.run_coroutine_threadsafe(
-                self.ws.send_text(json.dumps(payload)), self.loop
+                self.ws.send_text(json.dumps(payload)),
+                self.loop
             )
             tts_index += 1
 
-        # LLM 스트리밍 + TTS 버퍼
+        # LLM 스트리밍 + TTS 버퍼 처리
         tts_buffer = TTSBuffer(send_tts)
         for chunk in chat_stream(full):
             if cancel_event.is_set():
                 return
+            # LLM 응답 청크 전송
             asyncio.run_coroutine_threadsafe(
-                self.ws.send_text(json.dumps({'type': 'response_chunk','text':chunk})),
+                self.ws.send_text(json.dumps({'type': 'response_chunk', 'text': chunk})),
                 self.loop
             )
             tts_buffer.feed(chunk)
 
-        # 완료 신호 & flush
+        # 완료 신호 및 남은 버퍼 flush
         if not cancel_event.is_set():
             asyncio.run_coroutine_threadsafe(
-                self.ws.send_text(json.dumps({'type': 'response_done'})), self.loop
+                self.ws.send_text(json.dumps({'type': 'response_done'})),
+                self.loop
             )
             tts_buffer.flush()
 
     def stop(self):
+        # 세션 종료
         self.running = False
         self.cancel_event.set()
         if self.llm_thread and self.llm_thread.is_alive():
