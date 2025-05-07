@@ -97,14 +97,10 @@ class VoiceChatSession:
                 return
 
             text = emoji.replace_emoji(sentence, replace='')
-
             text = re.sub(r'(__|\*\*|\*|`|~~|!\[.*?\]\(.*?\)|\[.*?\]\(.*?\))', '', text)
-
             text = text.replace('\n', '').replace('\r', '').replace('\t', '')
-
-
+            text = re.sub(r'(?<=\d)[.,?!:]', '', text)
             text = re.sub(r'[^\uAC00-\uD7A3\u3131-\u318F0-9,.!? ]+', '', text)
-
             clean = re.sub(r'\s+', ' ', text).strip()
 
             if not clean: 
