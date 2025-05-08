@@ -6,7 +6,7 @@ from pymilvus import MilvusClient, MilvusException
 import logging
 
 from app.exception.entity_not_found import EntityNotFound
-from parsed_sentence import ParsedSentence
+from app.models.parsed_sentence import ParsedSentence
 
 # .env 환경 변수 추출
 load_dotenv()
