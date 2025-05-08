@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from langchain_ollama import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate
 
-from exception.incorrect_answer import IncorrectAnswer
+from app.exception.incorrect_answer import IncorrectAnswer
 
 # .env 환경 변수 추출
 load_dotenv()

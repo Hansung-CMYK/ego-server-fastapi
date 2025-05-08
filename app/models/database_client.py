@@ -3,7 +3,7 @@ import os
 from dotenv import load_dotenv
 from pymilvus import MilvusClient
 
-from classes.parsed_sentence import ParsedSentence
+from parsed_sentence import ParsedSentence
 
 # .env 환경 변수 추출
 load_dotenv()

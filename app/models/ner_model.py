@@ -2,7 +2,6 @@ import logging
 
 import stanza
 
-
 class NerModel:
     """
     한국어 Stanza UD 분석을 이용해 [주어, 목적어(또는 보어), 전체 문장] 리스트를 추출하는 스크립트.
