@@ -52,8 +52,12 @@ async def ws_ollama(ws: WebSocket):
     except WebSocketDisconnect:
         return
 
+""" ########## 김명준이 추가한 함수 ########## """
+from app.models.singleton import main_llm
+from langchain_core.messages import SystemMessage
+
 class PromptRequest(BaseModel):
-    prompt: str
+    user_speak: str
 
 @router.post("/ws/ollama_temp/{ego_name}/{session_id}")
 async def ws_ollama_temp(ego_name: str, session_id: str, body: PromptRequest):
@@ -62,15 +66,11 @@ async def ws_ollama_temp(ego_name: str, session_id: str, body: PromptRequest):
     ego_name = "ego"
     session_id = "1234"
     """
-    rag_prompt = get_rag_prompt(ego_name=ego_name, user_speak=body.prompt)
-    chat_history_prompt = get_chat_history_prompt(session_id=f"{ego_name}@{session_id}")
-    history_text = "\n".join([msg.content for msg in chat_history_prompt.messages])
+    rag_prompt = get_rag_prompt(ego_name=ego_name, user_speak=body.user_speak)
 
-    return f"""
-::rag_prompt::
-{rag_prompt}
-::chat_history_prompt::
-{history_text}
-::answer::
-{chat_full(rag_prompt + history_text + body.prompt)}
-    """
+    main_llm.get_chain().invoke({
+                "input":body.user_speak, # LLM에게 하는 질문을 프롬프트로 전달한다.
+                "related_story":[SystemMessage(content=rag_prompt)], # 이전에 한 대화내역 중 관련 대화 내역을 프롬프트로 전달한다.
+            },
+            config={"configurable": {"session_id":f"{ego_name}@{session_id}"}}, # 일일 대화 내역 저장
+        )

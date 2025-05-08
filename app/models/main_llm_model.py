@@ -17,7 +17,7 @@ class MainLlmModel:
     """
 
     # 세션 정보를 저장해두는 매핑 테이블
-    __store : dict = {}
+    __store : dict[str, ChatMessageHistory] = {}
 
     def __init__(self):
         MAIN_LLM_MODEL = "gemma3"
@@ -33,12 +33,12 @@ class MainLlmModel:
 
         self.__prompt = RunnableWithMessageHistory(
             main_chain,
-            self.get_session_history,
+            self.__get_session_history,
             input_messages_key="input",
             history_messages_key="history",
         )
 
-    def get_session_history(self, session_id:str) -> BaseChatMessageHistory:
+    def __get_session_history(self, session_id:str) -> BaseChatMessageHistory:
         """
         세션 아이디로 기존 대화 내역을 불러오는 함수
 
@@ -59,15 +59,15 @@ class MainLlmModel:
 
         :return: list[str] 형태의 대화 내역 (예: ["나: ...", "친구: ..."])
         """
-        memory = self.get_session_history(session_id=session_id)
+        memory = self.__get_session_history(session_id=session_id)
 
-        message_list = [f"{"human" if msg.type == "human" else "ai" }: {msg.content}" for msg in memory.messages]
+        message_list = [f"{'human' if msg.type == 'human' else 'ai' }: {msg.content}" for msg in memory.messages]
 
         return message_list
 
     __MAIN_TEMPLATE = [
         ("system", "/no_think\n"),
-        ("system", dedent("""" 
+        ("system", dedent("""
                 너는 나의 대화 상대야. 네 이름은 '친구(friend)', 내 이름은 '나(me)'야.
                 - 답변은 2–4문장(30~80토큰) 안에서 간결-명확하게.
                 - 제공된 'history'와 'related_story' 외 새로운 사실은 채택하지 말 것.
