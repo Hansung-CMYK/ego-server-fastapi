@@ -5,6 +5,8 @@ from langchain_ollama import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate
 
 from app.exception.incorrect_answer import IncorrectAnswer
+import json
+import logging
 
 class SplitLlmModel:
     """
@@ -30,7 +32,6 @@ class SplitLlmModel:
         :param message_history: 복합 의미를 가진 문장
         :return: 하나의 의미만을 가진 문장
         """
-        import json
         # NOTE 1. 문장을 단일 의미로 분리한다.
         split_messages_string = self.__split_chain.invoke({"input": message_history, "date": datetime.date.today(), "example": self.__SPLIT_TEMPLATE_EXAMPLE}).content.strip()
 
@@ -40,7 +41,6 @@ class SplitLlmModel:
         try:
             return json.loads(split_messages_string)["sentence"]
         except json.JSONDecodeError as e:
-            import logging
             logging.error(f"::Error Exception(JSONDecodeError):: 원문 Parsing 중 예외 발생!")
             logging.error(f"::에러 발생 원문:: {split_messages_string}")
             logging.error(f"::예외 내용:: {e}")

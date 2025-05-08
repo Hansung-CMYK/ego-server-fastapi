@@ -21,12 +21,12 @@ class DatabaseClient:
         milvus_client:
     """
     def  __init__(self):
-        self.milvus_client = MilvusClient(
+        self.__milvus_client = MilvusClient(
             uri=URI,
             token="root:Milvus"
         )
 
-    def search_triplets_to_milvus(partition_name: str, field_name: str, datas: list[ndarray]) -> list[dict]:
+    def search_triplets_to_milvus(self, partition_name: str, field_name: str, datas: list[ndarray]) -> list[dict]:
         """
             triplets 컬렉션에서 연관된 삼중항을 조회하는 함수이다.
 
@@ -59,9 +59,7 @@ class DatabaseClient:
         try:
             if len(datas) == 0: return []  # 아무 의미없는 값 조회 시, 예외처리
 
-            from app.models.singleton import database_client  # 순환 호출 문제로 인해 내부 import
-
-            return database_client.milvus_client.search(
+            return self.__milvus_client.search(
                 collection_name="triplets",
                 anns_field=field_name,
                 partition_names=[partition_name],
@@ -86,7 +84,7 @@ class DatabaseClient:
             logging.error(f"::예외 내용:: {e}")
             return []
 
-    def search_passages_to_milvus(partition_name: str, datas: list[int]) -> list[dict]:
+    def search_passages_to_milvus(self, partition_name: str, datas: list[int]) -> list[dict]:
         """
             주어진 ID 리스트를 기준으로 passages 컬렉션에서 원문 데이터를 조회한다.
 
@@ -110,9 +108,7 @@ class DatabaseClient:
                 EntityNotFound: 해당 ID로 passage가 존재하지 않을 경우 발생한다.
         """
         try:
-            from app.models.singleton import database_client  # 순환 호출 문제로 인해 내부 import
-
-            return database_client.milvus_client.get(
+            return self.__milvus_client.get(
                 collection_name="passages",
                 partition_names=[partition_name],
                 ids=datas,
@@ -149,7 +145,7 @@ class DatabaseClient:
             }
 
             # 실제 DB에 저장
-            res = self.milvus_client.insert(
+            res = self.__milvus_client.insert(
                 collection_name="passages",
                 partition_name=partition_name,
                 data=[passage_data]
@@ -171,7 +167,7 @@ class DatabaseClient:
                     }
                 )
 
-            self.milvus_client.insert(
+            self.__milvus_client.insert(
                 collection_name="triplets",
                 partition_name=partition_name,
                 data=triplet_datas
