@@ -71,8 +71,7 @@ class MainLlmModel:
                 너는 나의 대화 상대야. 네 이름은 '친구(friend)', 내 이름은 '나(me)'야.
                 - 답변은 2–4문장(30~80토큰) 안에서 간결-명확하게.
                 - 제공된 'history'와 'related_story' 외 새로운 사실은 채택하지 말 것.
-                - 'related_story'는 각 개체의 사건 + 의미 정보로 사건의 맥락을 인식할 것  
-                - 답변 전 'related_story'로부터 인식한 맥락 정보를 함께 반환할 것 
+                - 'related_story'는 각 개체의 사건 + 의미 정보로 사건의 맥락을 인식할 것   
                 - 필요하다면 인용부호 없이 자연스럽게 대화 기록을 재사용해.
             """).strip()),
         MessagesPlaceholder(variable_name="history"),

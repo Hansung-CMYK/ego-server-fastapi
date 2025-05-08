@@ -71,4 +71,4 @@ async def ws_ollama_temp(ego_name: str, session_id: str, body: PromptRequest):
                 "related_story":[SystemMessage(content=rag_prompt)], # 이전에 한 대화내역 중 관련 대화 내역을 프롬프트로 전달한다.
             },
             config={"configurable": {"session_id":f"{ego_name}@{session_id}"}}, # 일일 대화 내역 저장
-        )
+        )["content"]
