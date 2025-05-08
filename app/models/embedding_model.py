@@ -1,13 +1,9 @@
 import logging
-import os
 
 import numpy as np
 from transformers import AutoTokenizer, AutoModel
 
 import torch
-
-# .env 환경 변수 추출
-EMBEDDINGS_MODEL = os.getenv('EMBEDDINGS_MODEL')
 
 # 로깅 에러 문구 제거
 logging.getLogger("transformers.modeling_utils").setLevel(logging.ERROR)
@@ -19,6 +15,8 @@ class EmbeddingModel:
     모델은 HuggingFace의 'dragonkue/snowflake-arctic-embed-l-v2.0-ko'를 사용하였다.
     """
     def __init__(self):
+        EMBEDDINGS_MODEL = "dragonkue/snowflake-arctic-embed-l-v2.0-ko"
+
         self.tokenizer = AutoTokenizer.from_pretrained(EMBEDDINGS_MODEL)
         self.model = AutoModel.from_pretrained(EMBEDDINGS_MODEL, add_pooling_layer=False)
         self.model.eval()

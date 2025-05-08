@@ -1,9 +1,3 @@
-from exception.incorrect_answer import IncorrectAnswer
-import json
-import logging
-
-from model.pasing_llm_model import ParsingLlmModel
-
 class ParsedSentence:
     """
     speak 문장을 받아서 원문(passage)와 삼중항(triplets)로 저장하는 클래스이다.
@@ -17,7 +11,7 @@ class ParsedSentence:
         """
         :param passage: 삼중항과 원문으로 저장할 문자열(문장)
         """
-        from model.singleton import ner_model # 순환 호출 문제로 인해 내부 import
+        from app.models.singleton import ner_model # 순환 호출 문제로 인해 내부 import
 
         triplets = ner_model.extract_triplets(passage)
         self.passage = passage
@@ -34,7 +28,7 @@ class ParsedSentence:
                 - embedded_triplets (list[list[ndarray]]): 각 삼중항(주어, 서술어, 목적어) 벡터들의 리스트
                 - embedded_relations (list[ndarray]): 관계 문자열들의 임베딩 벡터 리스트
         """
-        from model.singleton import embedding_model # 순환 호출 문제로 인해 내부 import
+        from app.models.singleton import embedding_model # 순환 호출 문제로 인해 내부 import
 
         # NOTE 1. Speak 객체의 속성을 모두 임베딩 한다.
         embedded_triplets = [embedding_model.embed_documents(triplet) for triplet in self.triplets]

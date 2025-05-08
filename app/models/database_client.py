@@ -1,8 +1,11 @@
 import os
 
 from dotenv import load_dotenv
-from pymilvus import MilvusClient
+from numpy import ndarray
+from pymilvus import MilvusClient, MilvusException
+import logging
 
+from app.exception.entity_not_found import EntityNotFound
 from parsed_sentence import ParsedSentence
 
 # .env 환경 변수 추출
@@ -17,27 +20,111 @@ class DatabaseClient:
     Attibutes:
         milvus_client:
     """
-    TOKEN = "root:Milvus"
-
     def  __init__(self):
         self.milvus_client = MilvusClient(
             uri=URI,
-            token=self.TOKEN
+            token="root:Milvus"
         )
 
-    def search_all(self, collection_name: str, partition_names: list[str], field_name:str, output_fields: list[str]):
+    def search_triplets_to_milvus(partition_name: str, field_name: str, datas: list[ndarray]) -> list[dict]:
         """
-        collection_name의 partition_name에 있는 모든 entity를 조회한다.
+            triplets 컬렉션에서 연관된 삼중항을 조회하는 함수이다.
 
-        id 값이 0 이상인 값을 조회하는 것을 조건으로 생성한다. (pymilvus 자체에는 전체 조회가 없다.)
+            Parameters:
+                partition_name (str): 조회할 파티션 이름
+                field_name (str): 조회할 필드 이름 (벡터 필드)
+                datas (list[ndarray]): 검색하고자 하는 벡터 데이터
+
+            Returns:
+                list[dict]: 검색된 삼중항 정보들의 리스트.
+                            각 항목은 dict 형태이며, 검색 결과가 없으면 빈 리스트를 반환한다.
+
+                            [
+                                {
+                                    distance: FLOAT,
+                                    entity: {
+                                        "triplets_id": INT64,
+                                        "passages_id": INT64,
+                                        "subject": str,
+                                        "object": str,
+                                    }
+                                    ...,
+                                },
+                                ...
+                            ]
+
+            Raises:
+                MilvusException: Milvus 조회 중 오류가 발생한 경우, 예외를 로깅하고 빈 리스트를 반환한다. 주로 연관 데이터가 없을 때 사용한다.
         """
-        return self.milvus_client.query(
-            collection_name=collection_name,
-            partition_names=partition_names,
-            anns_field=field_name,
-            filter=f"{field_name} >= 0",
-            output_fields=output_fields
-        )
+        try:
+            if len(datas) == 0: return []  # 아무 의미없는 값 조회 시, 예외처리
+
+            from app.models.singleton import database_client  # 순환 호출 문제로 인해 내부 import
+
+            return database_client.milvus_client.search(
+                collection_name="triplets",
+                anns_field=field_name,
+                partition_names=[partition_name],
+                data=datas,
+                search_params={
+                    "metric_type": "COSINE",
+                    "params": {
+                        "radius": 0.4
+                    }
+                },
+                output_fields=[
+                    "triplets_id",
+                    "passages_id",
+                    "subject",
+                    "object",
+                    "relation"
+                ],
+            )[0]
+        except MilvusException as e:
+            logging.error(f"::Error Exception(MilvusException):: {field_name}에서 해당 data로 entity 조회 실패")
+            logging.error(f"::에러 발생 내용:: {datas}")
+            logging.error(f"::예외 내용:: {e}")
+            return []
+
+    def search_passages_to_milvus(partition_name: str, datas: list[int]) -> list[dict]:
+        """
+            주어진 ID 리스트를 기준으로 passages 컬렉션에서 원문 데이터를 조회한다.
+
+            Parameters:
+                partition_name (str): 조회할 파티션 이름
+                datas (list[int]): 검색하고자 하는 passages_id 리스트
+
+            Returns:
+                list[dict]: 검색된 passage 원문 리스트.
+                            각 항목은 dict 형태이며, 실패 시 EntityNotFound 예외가 발생한다.
+
+                            [
+                                {
+                                    "passage": str,
+                                },
+                                ...
+                            ]
+
+            Raises:
+                MilvusException: Milvus 조회 중 내부 오류가 발생한 경우 예외를 로깅한 후 전달한다.
+                EntityNotFound: 해당 ID로 passage가 존재하지 않을 경우 발생한다.
+        """
+        try:
+            from app.models.singleton import database_client  # 순환 호출 문제로 인해 내부 import
+
+            return database_client.milvus_client.get(
+                collection_name="passages",
+                partition_names=[partition_name],
+                ids=datas,
+                output_fields=[
+                    "passage"
+                ],
+            )
+        except MilvusException as e:
+            logging.error(f"::Error Exception(MilvusException):: passages에서 해당 ids로 entity 조회 실패")
+            logging.error(f"::에러 발생 데이터:: {datas}")
+            logging.error(f"::예외 내용:: {e}")
+            raise EntityNotFound("passages에 해당 id로 엔티티가 존재하지 않습니다.")
 
     def insert_messages_into_milvus(
             self,

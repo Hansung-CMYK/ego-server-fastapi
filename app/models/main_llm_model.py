@@ -1,8 +1,6 @@
-import os
 import warnings
 from textwrap import dedent
 
-from dotenv import load_dotenv
 from langchain_core._api import LangChainDeprecationWarning
 from langchain_core.chat_history import BaseChatMessageHistory
 from langchain_community.chat_message_histories import ChatMessageHistory
@@ -10,20 +8,20 @@ from langchain_core.runnables import RunnableWithMessageHistory
 from langchain_ollama import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 
-# .env 환경 변수 추출
-load_dotenv()
-MAIN_LLM_MODEL = os.getenv('MAIN_LLM_MODEL')
-
 # 로깅 에러 문구 제거
 warnings.filterwarnings("ignore", category=LangChainDeprecationWarning)
 
-"""
-Ollama를 통해 LLM 모델을 가져오는 클래스
-"""
 class MainLlmModel:
-    __store = {}
+    """
+    Ollama를 통해 LLM 모델을 가져오는 클래스
+    """
+
+    # 세션 정보를 저장해두는 매핑 테이블
+    __store : dict = {}
 
     def __init__(self):
+        MAIN_LLM_MODEL = "gemma3"
+
         model = ChatOllama(
             model=MAIN_LLM_MODEL,
             temperature=0.7
@@ -35,12 +33,12 @@ class MainLlmModel:
 
         self.__prompt = RunnableWithMessageHistory(
             main_chain,
-            self.get_session_history,
+            self.__get_session_history,
             input_messages_key="input",
             history_messages_key="history",
         )
 
-    def get_session_history(self, session_id:str) -> BaseChatMessageHistory:
+    def __get_session_history(self, session_id:str) -> BaseChatMessageHistory:
         """
         세션 아이디로 기존 대화 내역을 불러오는 함수
 
@@ -61,7 +59,7 @@ class MainLlmModel:
 
         :return: list[str] 형태의 대화 내역 (예: ["나: ...", "친구: ..."])
         """
-        memory = self.get_session_history(session_id=session_id)
+        memory = self.__get_session_history(session_id=session_id)
 
         message_list = [f"{"human" if msg.type == "human" else "ai" }: {msg.content}" for msg in memory.messages]
 
