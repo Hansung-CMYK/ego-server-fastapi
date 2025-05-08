@@ -52,30 +52,19 @@ async def ws_ollama(ws: WebSocket):
     except WebSocketDisconnect:
         return
 
-@router.websocket("/ws/ollama_temp/{ego_name}/{session_id}")
-async def ws_ollama_temp(ws: WebSocket, ego_name: str, session_id: str):
+class PromptRequest(BaseModel):
+    prompt: str
+
+@router.post("/ws/ollama_temp/{ego_name}/{session_id}")
+async def ws_ollama_temp(ego_name: str, session_id: str, body: PromptRequest):
     """
     예시
     ego_name = "ego"
     session_id = "1234"
     """
-    await ws.accept()
-    try:
-        raw = await ws.receive_text()
-        payload = json.loads(raw)
-        prompt = payload.get("message")
-        if not prompt:
-            await ws.send_text(json.dumps({"error": "message 필요"}))
-            return
+    rag_prompt = get_rag_prompt(ego_name=ego_name, user_speak=body.prompt)
+    chat_history_prompt = get_chat_history_prompt(session_id=f"{ego_name}@{session_id}")
+    logging.info(f"rag_prompt: {rag_prompt}")
+    logging.info(f"chat_history_prompt: {chat_history_prompt}")
 
-        rag_prompt = get_rag_prompt(ego_name=ego_name, user_speak=prompt)
-        chat_history_prompt = get_chat_history_prompt(session_id=f"{ego_name}@{session_id}")
-        logging.info(f"rag_prompt: {rag_prompt}")
-        logging.info(f"chat_history_prompt: {chat_history_prompt}")
-
-        for chunk in chat_stream(prompt):
-            await ws.send_text(json.dumps({"chunk": chunk}))
-        await ws.send_text(json.dumps({"done": True}))
-    except WebSocketDisconnect:
-        return
-
+    return chat_full(rag_prompt + chat_history_prompt + body.prompt)
