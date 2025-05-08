@@ -1,6 +1,6 @@
 from app.models.singleton import main_llm
 
-def get_chat_history_prompt(session_id:str)->str:
+def get_chat_history_prompt(session_id:str):
     """
         기존 서비스에선 다음과 같이 사용함
         ```
