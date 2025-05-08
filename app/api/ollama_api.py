@@ -52,10 +52,13 @@ async def ws_ollama(ws: WebSocket):
     except WebSocketDisconnect:
         return
 
-ego_name = "ego"
-session_id = "1234"
-@router.websocket("/ws/ollama_temp")
-async def ws_ollama_temp(ws: WebSocket):
+@router.websocket("/ws/ollama_temp/{ego_name}/{session_id}")
+async def ws_ollama_temp(ws: WebSocket, ego_name: str, session_id: str):
+    """
+    예시
+    ego_name = "ego"
+    session_id = "1234"
+    """
     await ws.accept()
     try:
         raw = await ws.receive_text()
