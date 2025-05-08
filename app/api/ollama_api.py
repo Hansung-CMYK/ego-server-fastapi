@@ -1,12 +1,10 @@
 # app/api/ollama_api.py
 import json
-import logging
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, HTTPException
 from pydantic import BaseModel
 from starlette.responses import JSONResponse
 
-from app.services.chat_history_service import get_chat_history_prompt
 from app.services.graph_rag_service import get_rag_prompt
 from app.services.ollama_service import chat_full, chat_stream
 
@@ -68,7 +66,7 @@ async def ws_ollama_temp(ego_name: str, session_id: str, body: PromptRequest):
     """
     rag_prompt = get_rag_prompt(ego_name=ego_name, user_speak=body.user_speak)
 
-    main_llm.get_chain().invoke({
+    return main_llm.get_chain().invoke({
                 "input":body.user_speak, # LLM에게 하는 질문을 프롬프트로 전달한다.
                 "related_story":[SystemMessage(content=rag_prompt)], # 이전에 한 대화내역 중 관련 대화 내역을 프롬프트로 전달한다.
             },
