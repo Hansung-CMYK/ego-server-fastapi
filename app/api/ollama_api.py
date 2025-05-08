@@ -65,7 +65,12 @@ async def ws_ollama_temp(ego_name: str, session_id: str, body: PromptRequest):
     rag_prompt = get_rag_prompt(ego_name=ego_name, user_speak=body.prompt)
     chat_history_prompt = get_chat_history_prompt(session_id=f"{ego_name}@{session_id}")
     history_text = "\n".join([msg.content for msg in chat_history_prompt.messages])
-    logging.info(f"rag_prompt: {rag_prompt}")
-    logging.info(f"chat_history_prompt: {history_text}")
 
-    return chat_full(rag_prompt + history_text + body.prompt)
+    return f"""
+::rag_prompt::
+{rag_prompt}
+::chat_history_prompt::
+{history_text}
+::answer::
+{chat_full(rag_prompt + history_text + body.prompt)}
+    """
