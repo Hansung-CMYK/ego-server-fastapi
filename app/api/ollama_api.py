@@ -4,10 +4,11 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect, HTTPException
 from pydantic import BaseModel
 from starlette.responses import JSONResponse
 
+from app.services.chat_history_service import get_chat_history_prompt
+from app.services.graph_rag_service import get_rag_prompt
 from app.services.ollama_service import chat_full, chat_stream
 
 router = APIRouter()
-
 
 class ChatRequest(BaseModel):
     message: str
@@ -33,7 +34,8 @@ async def http_ollama(body: ChatRequest) -> JSONResponse:
     resp = chat_full(body.message)
     return JSONResponse({"response": resp})
 
-
+ego_name = "ego"
+session_id = "1234"
 @router.websocket("/ws/ollama")
 async def ws_ollama(ws: WebSocket):
     await ws.accept()
@@ -44,6 +46,8 @@ async def ws_ollama(ws: WebSocket):
         if not prompt:
             await ws.send_text(json.dumps({"error": "message 필요"}))
             return
+        rag_prompt = get_rag_prompt(ego_name=ego_name, user_speak=prompt)
+        chat_history_prompt = get_chat_history_prompt(session_id=f"{ego_name}@{session_id}")
         for chunk in chat_stream(prompt):
             await ws.send_text(json.dumps({"chunk": chunk}))
         await ws.send_text(json.dumps({"done": True}))

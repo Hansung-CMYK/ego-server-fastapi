@@ -2,9 +2,58 @@ import numpy as np
 from collections import defaultdict
 from scipy.sparse import csr_matrix
 
+from app.exception.incorrect_answer import IncorrectAnswer
+from app.models.parsed_sentence import ParsedSentence
+
+from app.models.singleton import database_client
 """
-Graph RAG를 활용하기 위한
+Graph RAG를 활용하기 위한 서비스
 """
+
+def get_rag_prompt(ego_name:str, user_speak:str)->str:
+    # NOTE 1. 답변 받은 문장을 Graph RAG에 맞는 형식으로 변환한다.
+    try:  # 답변받은 문장을 임베딩 모델을 통해 삼중항, 관계 등으로 분리한다.
+        speak = ParsedSentence(user_speak)
+        speak_embedding = speak.embedding()
+    except IncorrectAnswer:
+        from collections import defaultdict
+        speak_embedding = defaultdict(list)
+
+    # NOTE 2. Milvus Database에서 사용자 답변과 유사한 Triplet 정보 검색
+    # TODO 1. 주어로도 목적어를 조회하고, 목적어로도 주어를 조회할 수 있어야 하는 것 아님?
+    # 주어, 목적어, 관계와 유사한 삼중항 조회
+    triplets_with_similar_subject = database_client.search_triplets_to_milvus(
+        partition_name=ego_name,
+        field_name="embedded_subject",
+        datas=[embedded_triplets[0] for embedded_triplets in speak_embedding["embedded_triplets"]]
+    )
+    triplets_with_similar_object = database_client.search_triplets_to_milvus(
+        partition_name=ego_name,
+        field_name="embedded_object",
+        datas=[embedded_triplets[1] for embedded_triplets in speak_embedding["embedded_triplets"]]
+    )
+    triplets_with_similar_relations = database_client.search_triplets_to_milvus(
+        partition_name=ego_name,
+        field_name="embedded_relation",
+        datas=speak_embedding["embedded_relations"]
+    )
+
+    # NOTE 3. 검색된 Triplet 정보 중 서로 연결된 관계들을 계산한다.
+    related_passages_ids = get_passages_id_from_triplets(
+        similar_subjects=triplets_with_similar_subject,
+        similar_objects=triplets_with_similar_object,
+        similar_relations=triplets_with_similar_relations
+    )
+
+    # NOTE 4. 연결된 관계들의 원문을 조회한다.
+    related_passages = database_client.search_passages_to_milvus(
+        partition_name=ego_name,
+        datas=related_passages_ids
+    )
+
+    # 모든 결과 값을 하나의 문자열로 합친다.
+    related_story = "\n".join([f"[{index}]: {text["passage"]}" for index, text in enumerate(related_passages)])
+    return related_story
 
 def get_passages_id_from_triplets(similar_subjects: list[dict], similar_objects: list[dict], similar_relations: list[dict]) -> list[int]:
     """
