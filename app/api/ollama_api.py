@@ -1,5 +1,7 @@
 # app/api/ollama_api.py
 import json
+import logging
+
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, HTTPException
 from pydantic import BaseModel
 from starlette.responses import JSONResponse
@@ -48,6 +50,8 @@ async def ws_ollama(ws: WebSocket):
             return
         rag_prompt = get_rag_prompt(ego_name=ego_name, user_speak=prompt)
         chat_history_prompt = get_chat_history_prompt(session_id=f"{ego_name}@{session_id}")
+        logging.info(f"rag_prompt: {rag_prompt}")
+        logging.info(f"chat_history_prompt: {chat_history_prompt}")
         for chunk in chat_stream(prompt):
             await ws.send_text(json.dumps({"chunk": chunk}))
         await ws.send_text(json.dumps({"done": True}))
