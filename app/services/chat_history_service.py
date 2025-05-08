@@ -10,4 +10,4 @@ def get_chat_history_prompt(session_id:str)->str:
             })
         ```
     """
-    return main_llm.get_session_history(sesssion_id=session_id)
+    return main_llm.get_session_history(session_id=session_id)
