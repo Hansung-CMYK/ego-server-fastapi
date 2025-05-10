@@ -34,7 +34,8 @@ class VoiceChatSession:
 
         self.recorder = AudioToTextRecorder(
             **self._recorder_config(),
-            on_realtime_transcription_stabilized=self.on_text_detected
+            on_realtime_transcription_stabilized=self.on_text_detected,
+
         )
         threading.Thread(target=self.run_recorder, daemon=True).start()
 
@@ -44,10 +45,17 @@ class VoiceChatSession:
             'use_microphone': False,
             'model': 'large-v3',
             'language': 'ko',
+            # 민감도 0 (least sensitive) to 1 (most sensitive)
             'silero_sensitivity': 0.6,
-            'webrtc_sensitivity': 1,
+            # 민감도 0 (most sensitive) to 3 (least sensitive)
+            'webrtc_sensitivity': 2,
+            # 사전 녹음 대기 시간
+            "pre_recording_buffer_duration": 0.4,
+            # 녹음 끝낼 대기 시간
             'post_speech_silence_duration': 0.4,
-            'min_length_of_recording': 0,
+            # 최소 녹음 시간
+            'min_length_of_recording': 1.0,
+            # 녹음 끝난 이후 대기 시간
             'min_gap_between_recordings': 0,
             'enable_realtime_transcription': True,
             'realtime_processing_pause': 0,
@@ -66,26 +74,26 @@ class VoiceChatSession:
             self.ws.send_text(json.dumps({'type': 'realtime', 'text': text})),
             self.loop
         )
-        
-        asyncio.run_coroutine_threadsafe(
-            self.ws.send_text(json.dumps({'type': 'cancel_audio'})),
-            self.loop
-        )
 
     def run_recorder(self):
+        """
+            RealtimeSTT 메인 로직
+
+            1. transcribe된 텍스트 가져옴
+            2. 이전에 생성중인 프로세스 중지 
+            3. transcribed 전체 텍스트 전달
+            4. 새로운 프로세스 생성
+        """
         while self.running:
             full = self.recorder.text()
             if not full:
                 continue
 
             self.cancel_event.set()
+
+            # LLM 응답 및 TTS 생성 종료
             if self.llm_thread and self.llm_thread.is_alive():
                 self.llm_thread.join()
-
-            asyncio.run_coroutine_threadsafe(
-                self.ws.send_text(json.dumps({'type': 'cancel_audio'})),
-                self.loop
-            )
 
             self.cancel_event = threading.Event()
             asyncio.run_coroutine_threadsafe(
@@ -101,8 +109,12 @@ class VoiceChatSession:
             self.llm_thread.start()
 
     def _llm_tts_worker(self, full: str, cancel_event: threading.Event):
+        """
+            (async) LLM 응답 생성, TTS 음성 생성 및 전달
+        """
         tts_index = 0
 
+        # TTS 생성 및 전송
         def send_tts(sentence: str):
             nonlocal tts_index
             if cancel_event.is_set():
@@ -146,6 +158,7 @@ class VoiceChatSession:
         # LLM 스트리밍 + TTS 버퍼 처리
         tts_buffer = TTSBuffer(send_tts)
         for chunk in chat_stream(full):
+            # 마이크 입력 들어오면 부모에서 cancel_event set 하고 join (종료 대기)
             if cancel_event.is_set():
                 return
             # LLM 응답 청크 전송
@@ -170,3 +183,20 @@ class VoiceChatSession:
         if self.llm_thread and self.llm_thread.is_alive():
             self.llm_thread.join()
 
+    # 현재 진행중인 프로세스 취소 & 클라이언트에 신호 전송
+    def halt_current_process(self):
+        if not self.running :
+            return
+        self.cancel_event.set()
+        if self.llm_thread and self.llm_thread.is_alive():
+            self.llm_thread.join()
+        # 클라이언트에 종료 메시지 전달
+        asyncio.run_coroutine_threadsafe(
+            self.ws.send_text(json.dumps({'type': 'cancel_audio'})),
+            self.loop
+        )
+
+    # VAD 감지 - 기존 생성 프로세스 중지 -> 새로운 생성 프로세스 시작
+    def on_vad_start(self):
+        self.halt_current_process()
+        return
