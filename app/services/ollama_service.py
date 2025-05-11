@@ -20,4 +20,3 @@ def chat_stream(prompt: str, model: str = "gemma3:4b"):
     )
     for chunk in stream:
         yield chunk["response"]
-
