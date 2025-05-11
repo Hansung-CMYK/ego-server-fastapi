@@ -40,4 +40,4 @@ def chat_stream(prompt: str, config: SessionConfig, model: str = "gemma3:4b"):
         },
         config={"configurable": {"session_id":f"{config.ego_id}@{config.user_id}"}}
     ) : 
-        yield chunk["response"]
+        yield chunk.content
