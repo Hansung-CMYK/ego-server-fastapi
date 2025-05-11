@@ -181,3 +181,8 @@ class VoiceChatHandler:
         self.cancel_event.set()
         if self.llm_thread and self.llm_thread.is_alive():
             self.llm_thread.join()
+        try:
+            self.recorder.stop()      # 혹은 recorder.shutdown()
+            self.recorder.join()      # 내부 프로세스가 있으면
+        except Exception:
+            pass
