@@ -39,5 +39,5 @@ def chat_stream(prompt: str, config: SessionConfig, model: str = "gemma3:4b"):
             "related_story":[SystemMessage(content=rag_prompt)], # 이전에 한 대화내역 중 관련 대화 내역을 프롬프트로 전달한다.
         },
         config={"configurable": {"session_id":f"{config.ego_id}@{config.user_id}"}}
-    ) : 
+    ): 
         yield chunk.content
