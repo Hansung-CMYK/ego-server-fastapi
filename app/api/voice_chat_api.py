@@ -1,13 +1,16 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from app.services.voice_chat_manager import VoiceChatSessionManager
-
+from app.services.session_config import SessionConfig
 router = APIRouter()
 session_manager = VoiceChatSessionManager()
 
 @router.websocket("/ws/voice-chat")
 async def websocket_voice_chat(ws: WebSocket):
     await ws.accept()
-    session = session_manager.create_session(ws)
+    user_id = ws.query_params.get("user_id", "anonymous")
+    ego_id = ws.query_params.get("ego_id", "anonymous")
+    config = SessionConfig(user_id, ego_id)
+    session = session_manager.create_session(ws, config)
 
     try:
         while True:

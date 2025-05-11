@@ -2,11 +2,6 @@ import torch
 from app.services.tts_model_registry import register_model, has_model
 import importlib
 
-from fastapi import Query
-from fastapi.responses import StreamingResponse, JSONResponse
-
-from deprecated import deprecated
-
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 is_half = True
 
