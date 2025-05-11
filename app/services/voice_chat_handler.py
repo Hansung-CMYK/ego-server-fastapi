@@ -125,7 +125,7 @@ class VoiceChatHandler:
 
         # LLM 응답 스트리밍 + TTS 버퍼 처리
         tts_buffer = TTSBuffer(send_tts)
-        for chunk in chat_stream(prompt):
+        for chunk in chat_stream(prompt, self.config):
             if cancel_event.is_set():
                 return
             self._send(type='response_chunk', text=chunk)

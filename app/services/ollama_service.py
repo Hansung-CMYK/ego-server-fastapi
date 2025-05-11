@@ -1,4 +1,9 @@
 import ollama
+from app.services.session_config import SessionConfig
+
+from app.models.singleton import main_llm
+from langchain_core.messages import SystemMessage
+from app.services.graph_rag_service import get_rag_prompt
 
 try:
     ollama.pull("gemma3:4b")
@@ -12,11 +17,27 @@ def chat_full(prompt: str, model: str = "gemma3:4b") -> str:
     )
     return resp["message"]["content"]
 
-def chat_stream(prompt: str, model: str = "gemma3:4b"):
-    stream = ollama.generate(
-        model=model,
-        prompt=prompt,
-        stream=True
-    )
-    for chunk in stream:
+# NOTE: GraphRAG X
+# def chat_stream(prompt: str, config: SessionConfig, model: str = "gemma3:4b"):
+#     stream = ollama.generate(
+#         model=model,
+#         prompt=prompt,
+#         stream=True
+#     )
+#     for chunk in stream:
+#         yield chunk["response"]
+
+# NOTE: GraphRAG O
+def chat_stream(prompt: str, config: SessionConfig, model: str = "gemma3:4b"):
+
+    rag_prompt = get_rag_prompt(ego_name=config.ego_id, user_speak=prompt)
+
+    for chunk in main_llm.get_chain().stream(
+        model = model,
+        input = {
+            "input": prompt, # LLM에게 하는 질문을 프롬프트로 전달한다.
+            "related_story":[SystemMessage(content=rag_prompt)], # 이전에 한 대화내역 중 관련 대화 내역을 프롬프트로 전달한다.
+        },
+        config={"configurable": {"session_id":f"{config.ego_id}@{config.user_id}"}}
+    ) : 
         yield chunk["response"]

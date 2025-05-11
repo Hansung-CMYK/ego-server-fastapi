@@ -1,4 +1,3 @@
-# app/api/ollama_api.py
 import json
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, HTTPException
