@@ -1,11 +1,12 @@
 from .voice_chat_handler import VoiceChatHandler
+from .session_config import SessionConfig
 
 class VoiceChatSessionManager:
     def __init__(self):
         self.sessions: dict[str, VoiceChatHandler] = {}
 
-    def create_session(self, ws):
-        session = VoiceChatHandler(ws)
+    def create_session(self, ws, config : SessionConfig):
+        session = VoiceChatHandler(ws, config)
         self.sessions[session.id] = session
         return session
 

@@ -1,11 +1,8 @@
 import multiprocessing as mp
 
-from dotenv import load_dotenv
-
 mp.set_start_method('spawn', force=True)
 import subprocess
 import os
-import re
 
 def get_free_gpu():
     try:
@@ -25,11 +22,6 @@ os.environ["CUDA_VISIBLE_DEVICES"] = get_free_gpu()
 from app.main import app
 import uvicorn
 
-import os
-load_dotenv()
-
-PORT = int(os.getenv('PORT'))
-
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=PORT)
+    uvicorn.run(app, host="0.0.0.0", port='8000')
 

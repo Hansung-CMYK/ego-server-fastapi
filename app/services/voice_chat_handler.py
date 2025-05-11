@@ -19,16 +19,18 @@ from RealtimeSTT.audio_recorder import AudioToTextRecorder
 from app.util.audio_utils import decode_and_resample
 from .tts_buffer import TTSBuffer
 from app.services.ollama_service import chat_stream
-
+from .session_config import SessionConfig
 
 class VoiceChatHandler:
-    def __init__(self, websocket):
+    def __init__(self, websocket, config: SessionConfig):
         self.id = str(uuid.uuid4())
         self.ws = websocket
         self.loop = asyncio.get_running_loop()
         self.running = True
         self.cancel_event = threading.Event()
         self.llm_thread = None
+
+        self.config = config
 
         self._init_recorder()  # 녹음기 초기화 및 쓰레드 시작
 
