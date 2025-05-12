@@ -8,7 +8,7 @@ LOG = logging.getLogger("kafka-handler")
 KAFKA_BOOTSTRAP      = "localhost:9092"
 REQUEST_TOPIC        = "chat-requests"
 RESPONSE_TOPIC       = "chat-responses"
-GROUP_ID             = "llm-consumer-group"
+GROUP_ID             = "fastapi-consumer-group"
 SESSION_TIMEOUT_MS   = 300_000   # 5분
 MAX_POLL_INTERVAL_MS = 300_000   # 5분
 
@@ -47,6 +47,7 @@ async def consume_loop():
         asyncio.create_task(handle_message(msg))
 
 async def handle_message(msg):
+    print(msg)
     try:
         data = msg.value
         if data.get("type") != "TEXT":
@@ -54,7 +55,6 @@ async def handle_message(msg):
             return
 
         user = data["from"]
-        LOG.info(f"❔ Routing to LLM: user={user}, prompt={data['content']!r}")
 
         loop   = asyncio.get_running_loop()
         result = await loop.run_in_executor(None, to_response_type, data)
@@ -65,17 +65,17 @@ async def handle_message(msg):
             value=result
         )
         await consumer.commit()
-        LOG.info("Message processed & offset committed")
     except Exception:
         LOG.exception("Error processing message")
 
 def to_response_type(msg: dict) -> dict:
-    destination   = msg.get("from")
-    source = msg.get('to')
+    prompt = msg.get("content", "")
+    user   = msg.get("from")
+
     return {
-        "from":      source,
-        "to":        destination,
-        "content":   "테스트",
+        "from":      "llm",
+        "to":        user,
+        "content":   '테스트',
         "type":      "TEXT",
         "mcpEnabled": False,
     }

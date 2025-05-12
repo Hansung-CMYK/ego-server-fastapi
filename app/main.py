@@ -11,6 +11,9 @@ from contextlib import asynccontextmanager
 import app.services.kafka_handler as kh
 import asyncio
 
+import logging
+logging.basicConfig(level=logging.INFO)
+
 here = os.path.dirname(__file__)
 api_file_path = os.path.abspath(os.path.join(here, "../modules/GPT-SoVITS/api.py"))
 gpt_sovits_root = os.path.dirname(api_file_path)
@@ -43,10 +46,10 @@ async def on_shutdown():
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_models()
-    on_startup()
+    await on_startup()
     
     yield
-    on_shutdown()
+    await on_shutdown()
     
 
 app = FastAPI(lifespan=lifespan)
