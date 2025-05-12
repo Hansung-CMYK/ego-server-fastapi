@@ -48,7 +48,7 @@ class PersonaStore:
         사용자의 페르소나 정보를 반환하는 함수
         """
         if self.store.get(persona_id) is None: # 기존 store에 persona_id가 저장되어 있지않다면,
-            new_persona = postgres_client.get_persona(persona_id) # gostgres에서 정보를 가져와서,
+            new_persona = postgres_client.select_persona_to_id(persona_id)[2] # postgres에서 정보를 가져와서,
             self.store[persona_id] = new_persona # store에 저장한다.
 
         return self.store[persona_id][2]
