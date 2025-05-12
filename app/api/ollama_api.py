@@ -4,18 +4,18 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect, HTTPException
 from pydantic import BaseModel
 from starlette.responses import JSONResponse
 
-from app.services.graph_rag_service import get_rag_prompt
 from app.services.ollama_service import chat_full, chat_stream
+from app.services.session_config import SessionConfig
 
 router = APIRouter()
 
 class ChatRequest(BaseModel):
     message: str
-
+    user_id: str
+    ego_id: str
 
 class ChatResponse(BaseModel):
     response: str
-
 
 @router.post(
     "/ollama",
@@ -49,25 +49,18 @@ async def ws_ollama(ws: WebSocket):
     except WebSocketDisconnect:
         return
 
-""" ########## 김명준이 추가한 함수 ########## """
-from app.models.singleton import main_llm
-from langchain_core.messages import SystemMessage
-
-class PromptRequest(BaseModel):
-    user_speak: str
-
-@router.post("/ws/ollama_temp/{ego_name}/{session_id}")
-async def ws_ollama_temp(ego_name: str, session_id: str, body: PromptRequest):
+@router.post("/ws/ollama_chat")
+async def ollama_chat(body: ChatRequest):
     """
-    예시
-    ego_name = "ego"
-    session_id = "1234"
-    """
-    rag_prompt = get_rag_prompt(ego_name=ego_name, user_speak=body.user_speak)
+    채팅을 통한 페르소나 대화
 
-    return main_llm.get_chain().invoke({
-                "input":body.user_speak, # LLM에게 하는 질문을 프롬프트로 전달한다.
-                "related_story":[SystemMessage(content=rag_prompt)], # 이전에 한 대화내역 중 관련 대화 내역을 프롬프트로 전달한다.
-            },
-            config={"configurable": {"session_id":f"{ego_name}@{session_id}"}}, # 일일 대화 내역 저장
-        )["content"]
+    user_id와 ego_id를 통해 채팅방에 접근할 수 있다.
+    """
+    answer:str = ""
+    for chunk in chat_stream(
+        prompt=body.message,
+        config=SessionConfig(body.user_id, body.ego_id)
+    ):
+        answer += chunk
+
+    return answer

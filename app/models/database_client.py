@@ -172,3 +172,5 @@ class DatabaseClient:
                 partition_name=partition_name,
                 data=triplet_datas
             )
+
+database_client = DatabaseClient()
