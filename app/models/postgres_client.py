@@ -37,7 +37,7 @@ class PostgresClient:
         return self.__cursor.fetchall()[0]
 
     def select_persona_to_id(self, persona_id: int):
-        sql = f"SELECT * FROM persona WHERE persona_id = {persona_id}"
+        sql = f"SELECT * FROM persona WHERE persona_id = '{persona_id}'"
         self.__cursor.execute(sql)
         return self.__cursor.fetchall()[0]
 
