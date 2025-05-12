@@ -1,5 +1,8 @@
 from datetime import datetime
 
+from app.models.postgres_client import postgres_client
+
+
 class PersonaStore:
     """
     세션(또는 사용자) 단위 페르소나 메모리.
@@ -8,6 +11,14 @@ class PersonaStore:
     - `$set` / `$unset` 두 연산자만 지원해 변경, 삭제를 명시적으로 구분
     - 리스트 항목 제거, 딕셔너리 키 제거 재귀 지원
     """
+
+    """
+    store은 다음과 같은 형식으로 저장된다.
+    {
+        (<persona_id>, <persona_name>, <persona_data>)
+    }
+    """
+    store: dict[int, list] = {}
 
     # 키값으로 사용될 수 있는 정보들 (화이트리스트)
     # PersonalLlmModel의 허용 최상위 키와는 별개이다.
@@ -32,22 +43,17 @@ class PersonaStore:
         "updated_at": None,
     }
 
-    def __init__(self, persona_id:int, persona_name: str, persona_json: dict) -> None:
-        """
-        페르소나 정보를 외부에서 불러와 저장하는 생성자이다.
-        """
-        self.persona_id = persona_id
-        self.persona_name = persona_name
-        self.__data: dict = self.__DEFAULT_PERSONA | persona_json
-
-    def get_persona(self) -> dict:
+    def get_persona(self, persona_id:int) -> dict:
         """
         사용자의 페르소나 정보를 반환하는 함수
         """
-        # TODO: 사용자 별로 각기 다른 페르소나를 반환해주기
-        return self.__data
+        if self.store.get(persona_id) is None: # 기존 store에 persona_id가 저장되어 있지않다면,
+            new_persona = postgres_client.get_persona(persona_id) # gostgres에서 정보를 가져와서,
+            self.store[persona_id] = new_persona # store에 저장한다.
 
-    def update(self, delta: dict):
+        return self.store[persona_id][2]
+
+    def update(self, persona_id:int, delta: dict):
         """
         delta(dict)를 받아 페르소나 in‑place 갱신
         """
@@ -57,19 +63,22 @@ class PersonaStore:
         # $unset 먼저 처리
         if "$unset" in delta_dict:
             self.__apply_unset(
-                original_data=self.__data,
+                original_data=self.store[persona_id][2],
                 unset_data=delta_dict.pop("$unset")
             )
 
         # 새로운 페르소나 데이터 추가.
         if "$set" in delta_dict:
             self.__apply_set(
-                original_data=self.__data,
+                original_data=self.store[persona_id][2],
                 set_data=delta_dict.pop("$set")
             )
 
         # 업데이트 된 시간 변경
-        self.__data["updated_at"] = datetime.now().isoformat()
+        self.store[persona_id][2]["updated_at"] = datetime.now().isoformat()
+
+        # 데이터베이스에 저장
+        postgres_client.update_persona(persona_id=persona_id, persona_data=self.store[persona_id][2])
 
     @staticmethod
     def __apply_unset(original_data: dict, unset_data: dict) -> None:
@@ -110,3 +119,5 @@ class PersonaStore:
                 original_data[key].extend(x for x in value if x not in original_data[key])
             else:
                 original_data[key] = value # 중복되는 키 값을 가진 데이터는 최신 데이터로 교체
+
+persona_store = PersonaStore()

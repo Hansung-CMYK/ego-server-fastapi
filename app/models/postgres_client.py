@@ -26,8 +26,8 @@ class PostgresClient:
         self.__cursor.execute(sql)
         self.__database.commit()
 
-    def update_persona(self, persona_name: str, persona_json: dict):
-        sql = f"UPDATE persona SET persona = '{json.dumps(persona_json)}' WHERE name = '{persona_name}'"
+    def update_persona(self, persona_id: int, persona_json: dict):
+        sql = f"UPDATE persona SET persona = '{json.dumps(persona_json)}' WHERE persona_id = '{persona_id}'"
         self.__cursor.execute(sql)
         self.__database.commit()
 
