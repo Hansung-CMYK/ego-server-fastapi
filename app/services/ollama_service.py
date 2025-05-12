@@ -29,13 +29,12 @@ def chat_full(prompt: str, model: str = "gemma3:4b") -> str:
 #         yield chunk["response"]
 
 # NOTE: GraphRAG O, Persona O
-def chat_stream(prompt: str, config: SessionConfig, model: str = "gemma3:4b"):
+def chat_stream(prompt: str, config: SessionConfig):
 
     rag_prompt = get_rag_prompt(ego_name=config.ego_id, user_speak=prompt)
     persona = persona_store.get_persona(persona_id=config.ego_id)
 
     for chunk in main_llm.get_chain().stream(
-        model = model,
         input = {
             "input": prompt, # LLM에게 하는 질문을 프롬프트로 전달한다.
             "persona": persona,
