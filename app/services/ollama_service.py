@@ -1,11 +1,10 @@
 import ollama
 
-from app.services.persona_store import PersonaStore, persona_store
+from app.services.persona_store import persona_store
 from app.services.session_config import SessionConfig
 
 from app.models.singleton import main_llm
 from app.services.graph_rag_service import get_rag_prompt
-from app.models.postgres_client import postgres_client
 
 try:
     ollama.pull("gemma3:4b")
