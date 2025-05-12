@@ -89,4 +89,4 @@ async def save_persona_metadata(body: AdminRequest):
     save_persona()
 
     # NOTE 2. 대화 내역을 기반으로 Graph Database 저장
-    save_graphdb()
+    # save_graphdb()
