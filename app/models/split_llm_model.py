@@ -84,3 +84,5 @@ class SplitLlmModel:
               ]
         }
     """).strip()
+
+parsing_llm = SplitLlmModel()

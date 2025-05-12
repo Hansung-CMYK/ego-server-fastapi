@@ -155,3 +155,5 @@ class NerModel:
             "triplets": triplets,
             "relations": sentences
         }
+
+ner_model = NerModel()

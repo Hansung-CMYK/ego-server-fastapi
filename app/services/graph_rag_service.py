@@ -5,7 +5,7 @@ from scipy.sparse import csr_matrix
 from app.exception.incorrect_answer import IncorrectAnswer
 from app.models.parsed_sentence import ParsedSentence
 
-from app.models.singleton import database_client
+from app.models.database_client import database_client
 """
 Graph RAG를 활용하기 위한 서비스
 """

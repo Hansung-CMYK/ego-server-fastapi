@@ -1,9 +1,9 @@
 import ollama
 
+from app.models.main_llm_model import main_llm
 from app.services.persona_store import persona_store
 from app.services.session_config import SessionConfig
 
-from app.models.singleton import main_llm
 from app.services.graph_rag_service import get_rag_prompt
 
 try:

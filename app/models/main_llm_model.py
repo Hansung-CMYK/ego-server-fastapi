@@ -80,3 +80,5 @@ class MainLlmModel:
         ("system", "{related_story}"),
         ("human", "{input}")
     ]
+
+main_llm = MainLlmModel()

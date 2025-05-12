@@ -2,7 +2,6 @@ from datetime import datetime
 
 from app.models.postgres_client import postgres_client
 
-
 class PersonaStore:
     """
     세션(또는 사용자) 단위 페르소나 메모리.
