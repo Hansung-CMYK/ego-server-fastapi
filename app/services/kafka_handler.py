@@ -69,12 +69,9 @@ async def handle_message(msg):
         LOG.exception("Error processing message")
 
 def to_response_type(msg: dict) -> dict:
-    prompt = msg.get("content", "")
-    user   = msg.get("from")
-
     return {
-        "from":      "llm",
-        "to":        user,
+        "from":      msg.get('to'),
+        "to":        msg.get('from'),
         "content":   '테스트',
         "type":      "TEXT",
         "mcpEnabled": False,
