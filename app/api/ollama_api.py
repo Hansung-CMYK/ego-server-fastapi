@@ -10,7 +10,7 @@ from app.services.session_config import SessionConfig
 router = APIRouter()
 
 class ChatRequest(BaseModel):
-    ego_name: str
+    message: str
     user_id: str
     ego_id: str
 
