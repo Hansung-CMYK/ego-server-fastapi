@@ -43,3 +43,29 @@ def chat_stream(prompt: str, config: SessionConfig):
         config={"configurable": {"session_id":f"{config.ego_id}@{config.user_id}"}}
     ): 
         yield chunk.content
+
+def save_persona():
+    """
+    서버 메모리 내 대화내역을 취합하여, 에고를 생성한다.
+    """
+    session_history = main_llm.get_session_history_to_str(tenant_name)
+
+    from app.models.persona_llm_model import persona_llm_model
+    delta_persona = persona_llm_model.invoke(
+        current_persona=persona_store.get_persona(),
+        session_history=session_history
+    )
+    print("=== Delta Persona ===")
+    print(delta_persona)
+    persona_store.update(delta_persona)  # 변경사항 업데이트
+
+    from app.models.postgres_client import postgres_client
+    postgres_client.update_persona(
+        persona_name=persona_store.persona_name,
+        persona_json=persona_store.get_persona()
+    )  # 데이터베이스에 업데이트 된 페르소나 저장
+
+    return
+
+def save_graphdb():
+    return

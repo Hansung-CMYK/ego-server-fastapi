@@ -1,10 +1,11 @@
 import json
+import os
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, HTTPException
 from pydantic import BaseModel
 from starlette.responses import JSONResponse
 
-from app.services.ollama_service import chat_full, chat_stream
+from app.services.chat_service import chat_full, chat_stream, save_graphdb, save_persona
 from app.services.session_config import SessionConfig
 
 router = APIRouter()
@@ -15,6 +16,8 @@ class ChatRequest(BaseModel):
     ego_id: str
 
 class ChatResponse(BaseModel):
+    code: int
+    message: str
     response: str
 
 @router.post(
@@ -63,4 +66,27 @@ async def ollama_chat(body: ChatRequest):
     ):
         answer += chunk
 
-    return answer
+    return ChatResponse(
+        code=200,
+        message="answer success!",
+        response=answer
+    )
+
+class AdminRequest(BaseModel):
+    admin_id: str
+    admin_password: str
+
+ADMIN_ID = os.environ.get("POSTGRES_USER")
+ADMIN_PASSWORD = os.environ.get("POSTGRES_PASSWORD")
+
+@router.post("/admin/save_persona_metadata")
+async def save_persona_metadata(body: AdminRequest):
+    # NOTE 0. 민감 API 임시 로그인 처리
+    if body.admin_id != ADMIN_ID or body.admin_password != ADMIN_PASSWORD:
+        raise HTTPException(status_code=401, detail="Invalid admin credentials")
+
+    # NOTE 1. 대화 내역을 기반으로 페르소나 저장
+    save_persona()
+
+    # NOTE 2. 대화 내역을 기반으로 Graph Database 저장
+    save_graphdb()

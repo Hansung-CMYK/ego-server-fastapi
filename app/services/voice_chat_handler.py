@@ -18,7 +18,7 @@ if REALTIME_STT_PATH not in sys.path:
 from RealtimeSTT.audio_recorder import AudioToTextRecorder
 from app.util.audio_utils import decode_and_resample
 from .tts_buffer import TTSBuffer
-from app.services.ollama_service import chat_stream
+from app.services.chat_service import chat_stream
 from .session_config import SessionConfig
 
 class VoiceChatHandler:

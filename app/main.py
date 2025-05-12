@@ -3,7 +3,7 @@ import sys
 import importlib.util
 
 from fastapi import FastAPI, APIRouter
-from app.api import ollama_api, voice_chat_api
+from app.api import chat_api, voice_chat_api
 from app.services.tts_infer import ensure_init
 
 from contextlib import asynccontextmanager
