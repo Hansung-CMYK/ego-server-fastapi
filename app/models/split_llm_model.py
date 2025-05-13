@@ -40,11 +40,10 @@ class SplitLlmModel:
         # 이 때 예외를 처리하기 위한 try catch이다.
         try:
             return json.loads(split_messages_string)["sentence"]
-        except json.JSONDecodeError as e:
-            logging.error(f"::Error Exception(JSONDecodeError):: 원문 Parsing 중 예외 발생!")
-            logging.error(f"::에러 발생 원문:: {split_messages_string}")
-            logging.error(f"::예외 내용:: {e}")
-            raise IncorrectAnswer("잘못된 형식의 응답입니다. 다시 저장해주세요.")
+        except json.JSONDecodeError:
+            logging.warning(f"LLM이 대화내역을 단일문장으로 분리하지 못했습니다.")
+            logging.warning(f"원본 문장: {split_messages_string}")
+            raise IncorrectAnswer
 
     __SPLIT_TEMPLATE = [
         ("system", "/json\n/no_think\n"),

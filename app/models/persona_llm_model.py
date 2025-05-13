@@ -83,11 +83,9 @@ class PersonaLlmModel:
         # dict로 자료형 변경
         try:
             return json.loads(clean_answer)
-        except JSONDecodeError as e:
-            logging.error(f"::Error Exception(JSONDecodeError):: 원문 Parsing 중 예외 발생!")
-            logging.error(f"::에러 발생 원문:: {clean_answer}")
-            logging.error(f"::예외 내용:: {e}")
-            raise IncorrectAnswer("잘못된 형식의 응답입니다. 다시 저장해주세요.")
+        except JSONDecodeError:
+            logging.warning(f"::Error Exception(JSONDecodeError):: 변경할 persona가 없습니다. 변경사항을 반영하지 않습니다.")
+            return {}
 
     @staticmethod
     def __clean_json_string(text: str) -> str:
