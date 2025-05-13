@@ -3,9 +3,9 @@ import logging
 import asyncio
 
 from aiokafka import AIOKafkaConsumer, AIOKafkaProducer
-from ollama_service import chat_stream
+from app.services.ollama_service import chat_stream
 
-from session_config import SessionConfig
+from app.services.session_config import SessionConfig
 
 LOG = logging.getLogger("kafka-handler")
 
@@ -76,16 +76,16 @@ def to_response_type(msg: dict) -> dict:
     content : str = ""
     try:
         session_config = SessionConfig(msg.get("from"), msg.get('to'))
-        prompt = msg.get('prompt')
+        prompt = str(msg.get('prompt'))
         if len(prompt) == 0:
             raise Exception
         
         # NOTE 문장 단위로 Produce 로직 필요
         for chunk in chat_stream(prompt, session_config):
             content += chunk
-            
-    except:
-        LOG.info(f"메시지 처리간 오류가 발생했습니다. from:{msg.get('from')} to:{msg.get('to')}")
+
+    except Exception as e:
+        LOG.info(f"메시지 처리간 오류가 발생했습니다. from:{msg.get('from')} to:{msg.get('to')} {e}")
     finally:
         # NOTE 메시지 타입 지정 필요 (ERROR, NORMAL ...)
         return {
