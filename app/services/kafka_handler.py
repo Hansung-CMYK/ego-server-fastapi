@@ -1,7 +1,11 @@
 import json
 import logging
 import asyncio
+
 from aiokafka import AIOKafkaConsumer, AIOKafkaProducer
+from ollama_service import chat_stream
+
+from session_config import SessionConfig
 
 LOG = logging.getLogger("kafka-handler")
 
@@ -69,10 +73,26 @@ async def handle_message(msg):
         LOG.exception("Error processing message")
 
 def to_response_type(msg: dict) -> dict:
-    return {
-        "from":      msg.get('to'),
-        "to":        msg.get('from'),
-        "content":   '테스트',
-        "type":      "TEXT",
-        "mcpEnabled": False,
-    }
+    content : str = ""
+    try:
+        session_config = SessionConfig(msg.get("from"), msg.get('to'))
+        prompt = msg.get('prompt')
+        if len(prompt) == 0:
+            raise Exception
+        
+        # NOTE 문장 단위로 Produce 로직 필요
+        for chunk in chat_stream(prompt, session_config):
+            content += chunk
+            
+    except:
+        LOG.info(f"메시지 처리간 오류가 발생했습니다. from:{msg.get('from')} to:{msg.get('to')}")
+    finally:
+        # NOTE 메시지 타입 지정 필요 (ERROR, NORMAL ...)
+        return {
+            "from":      msg.get('to'),
+            "to":        msg.get('from'),
+            "content":   content,
+            "type":      "TEXT",
+            "mcpEnabled": False,
+        }
+
