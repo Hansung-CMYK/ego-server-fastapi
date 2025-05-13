@@ -33,8 +33,11 @@ def chat_full(prompt: str, model: str = "gemma3:4b") -> str:
 # NOTE: GraphRAG O, Persona O
 def chat_stream(prompt: str, config: SessionConfig):
     # TODO: ego_name으로 조회하는데, ego_id로 조회하고 있다. 수정할 것 (로직 자체는 이상 없음)
-    rag_prompt = get_rag_prompt(ego_name=config.ego_id, user_speak=prompt)
-    persona = persona_store.get_persona(persona_id=config.ego_id)
+    ego_id:str = config.ego_id
+    user_id:str = config.user_id
+
+    rag_prompt = get_rag_prompt(ego_id=ego_id, user_speak=prompt)
+    persona = persona_store.get_persona(persona_id=ego_id)
 
     for chunk in main_llm.get_chain().stream(
         input = {
@@ -42,7 +45,7 @@ def chat_stream(prompt: str, config: SessionConfig):
             "persona": persona,
             "related_story":rag_prompt, # 이전에 한 대화내역 중 관련 대화 내역을 프롬프트로 전달한다.
         },
-        config={"configurable": {"session_id":f"{config.ego_id}@{config.user_id}"}}
+        config={"configurable": {"session_id":f"{ego_id}@{user_id}"}}
     ): 
         yield chunk.content
 

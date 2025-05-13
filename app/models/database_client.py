@@ -26,12 +26,12 @@ class DatabaseClient:
             token="root:Milvus"
         )
 
-    def search_triplets_to_milvus(self, partition_name: str, field_name: str, datas: list[ndarray]) -> list[dict]:
+    def search_triplets_to_milvus(self, ego_id: str, field_name: str, datas: list[ndarray]) -> list[dict]:
         """
             triplets 컬렉션에서 연관된 삼중항을 조회하는 함수이다.
 
             Parameters:
-                partition_name (str): 조회할 파티션 이름
+                ego_id (str): 조회할 파티션 이름
                 field_name (str): 조회할 필드 이름 (벡터 필드)
                 datas (list[ndarray]): 검색하고자 하는 벡터 데이터
 
@@ -62,7 +62,7 @@ class DatabaseClient:
             return self.__milvus_client.search(
                 collection_name="triplets",
                 anns_field=field_name,
-                partition_names=[partition_name],
+                partition_names=[ego_id],
                 data=datas,
                 search_params={
                     "metric_type": "COSINE",
@@ -84,12 +84,12 @@ class DatabaseClient:
             logging.error(f"::예외 내용:: {e}")
             return []
 
-    def search_passages_to_milvus(self, partition_name: str, datas: list[int]) -> list[dict]:
+    def search_passages_to_milvus(self, ego_id: str, datas: list[int]) -> list[dict]:
         """
             주어진 ID 리스트를 기준으로 passages 컬렉션에서 원문 데이터를 조회한다.
 
             Parameters:
-                partition_name (str): 조회할 파티션 이름
+                ego_id (int): 조회할 파티션 이름
                 datas (list[int]): 검색하고자 하는 passages_id 리스트
 
             Returns:
@@ -110,7 +110,7 @@ class DatabaseClient:
         try:
             return self.__milvus_client.get(
                 collection_name="passages",
-                partition_names=[partition_name],
+                partition_names=[ego_id],
                 ids=datas,
                 output_fields=[
                     "passage"
