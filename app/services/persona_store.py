@@ -52,12 +52,12 @@ class PersonaStore:
 
         return self.store[persona_id][2]
 
-    def update(self, persona_id:int, delta: dict):
+    def update(self, persona_id:int, delta_persona: dict):
         """
         delta(dict)를 받아 페르소나 in‑place 갱신
         """
         # dict 키값에 지정된 키(_ALLOWED_TOP_KEYS) 값만 남겨둔다.
-        delta_dict = {key: value for key, value in delta.items() if key in self.__ALLOWED_TOP_KEYS}
+        delta_dict = {key: value for key, value in delta_persona.items() if key in self.__ALLOWED_TOP_KEYS}
 
         # $unset 먼저 처리
         if "$unset" in delta_dict:
@@ -77,7 +77,7 @@ class PersonaStore:
         self.store[persona_id][2]["updated_at"] = datetime.now().isoformat()
 
         # 데이터베이스에 저장
-        postgres_client.update_persona(persona_id=persona_id, persona_data=self.store[persona_id][2])
+        postgres_client.update_persona(persona_id=persona_id, persona_json=self.store[persona_id][2])
 
     @staticmethod
     def __apply_unset(original_data: dict, unset_data: dict) -> None:

@@ -38,6 +38,9 @@ class MainLlmModel:
             history_messages_key="history",
         )
 
+    def get_store_keys(self):
+        return self.__store.keys()
+
     def __get_session_history(self, session_id:str) -> BaseChatMessageHistory:
         """
         세션 아이디로 기존 대화 내역을 불러오는 함수

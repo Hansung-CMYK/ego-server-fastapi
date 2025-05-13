@@ -9,8 +9,14 @@ from app.models.database_client import database_client
 """
 Graph RAG를 활용하기 위한 서비스
 """
+def get_rag_prompt(ego_id:str, user_speak:str)->str:
+    """
+    Milvus Database에 접속하여, ego가 가지고 있는 지식 그래프 정보를 검색하는 함수
 
-def get_rag_prompt(ego_name:str, user_speak:str)->str:
+    Parameters:
+        ego_id (int): Milvus에 조회할 ego 기본키 값. Milvus에서는 Partition를 ego_id로 기록하고 있다.
+        user_speak (str): 사용자가 말한 음성 정보이다. 해당 정보를 활용해 관계를 조회한다.
+    """
     # NOTE 1. 답변 받은 문장을 Graph RAG에 맞는 형식으로 변환한다.
     try:  # 답변받은 문장을 임베딩 모델을 통해 삼중항, 관계 등으로 분리한다.
         speak = ParsedSentence(user_speak)
@@ -23,17 +29,17 @@ def get_rag_prompt(ego_name:str, user_speak:str)->str:
     # TODO 1. 주어로도 목적어를 조회하고, 목적어로도 주어를 조회할 수 있어야 하는 것 아님?
     # 주어, 목적어, 관계와 유사한 삼중항 조회
     triplets_with_similar_subject = database_client.search_triplets_to_milvus(
-        partition_name=ego_name,
+        ego_id=ego_id,
         field_name="embedded_subject",
         datas=[embedded_triplets[0] for embedded_triplets in speak_embedding["embedded_triplets"]]
     )
     triplets_with_similar_object = database_client.search_triplets_to_milvus(
-        partition_name=ego_name,
+        ego_id=ego_id,
         field_name="embedded_object",
         datas=[embedded_triplets[1] for embedded_triplets in speak_embedding["embedded_triplets"]]
     )
     triplets_with_similar_relations = database_client.search_triplets_to_milvus(
-        partition_name=ego_name,
+        ego_id=ego_id,
         field_name="embedded_relation",
         datas=speak_embedding["embedded_relations"]
     )
@@ -47,7 +53,7 @@ def get_rag_prompt(ego_name:str, user_speak:str)->str:
 
     # NOTE 4. 연결된 관계들의 원문을 조회한다.
     related_passages = database_client.search_passages_to_milvus(
-        partition_name=ego_name,
+        ego_id=ego_id,
         datas=related_passages_ids
     )
 

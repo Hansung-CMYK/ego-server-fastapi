@@ -31,11 +31,6 @@ class PostgresClient:
         self.__cursor.execute(sql)
         self.__database.commit()
 
-    def select_persona_to_name(self, persona_name: str):
-        sql = f"SELECT * FROM persona WHERE name = '{persona_name}'"
-        self.__cursor.execute(sql)
-        return self.__cursor.fetchall()[0]
-
     def select_persona_to_id(self, persona_id: int):
         sql = f"SELECT * FROM persona WHERE persona_id = '{persona_id}'"
         self.__cursor.execute(sql)

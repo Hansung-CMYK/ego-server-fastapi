@@ -26,12 +26,12 @@ class DatabaseClient:
             token="root:Milvus"
         )
 
-    def search_triplets_to_milvus(self, partition_name: str, field_name: str, datas: list[ndarray]) -> list[dict]:
+    def search_triplets_to_milvus(self, ego_id: str, field_name: str, datas: list[ndarray]) -> list[dict]:
         """
             triplets 컬렉션에서 연관된 삼중항을 조회하는 함수이다.
 
             Parameters:
-                partition_name (str): 조회할 파티션 이름
+                ego_id (str): 조회할 파티션 이름
                 field_name (str): 조회할 필드 이름 (벡터 필드)
                 datas (list[ndarray]): 검색하고자 하는 벡터 데이터
 
@@ -62,7 +62,7 @@ class DatabaseClient:
             return self.__milvus_client.search(
                 collection_name="triplets",
                 anns_field=field_name,
-                partition_names=[partition_name],
+                partition_names=[ego_id],
                 data=datas,
                 search_params={
                     "metric_type": "COSINE",
@@ -84,12 +84,12 @@ class DatabaseClient:
             logging.error(f"::예외 내용:: {e}")
             return []
 
-    def search_passages_to_milvus(self, partition_name: str, datas: list[int]) -> list[dict]:
+    def search_passages_to_milvus(self, ego_id: str, datas: list[int]) -> list[dict]:
         """
             주어진 ID 리스트를 기준으로 passages 컬렉션에서 원문 데이터를 조회한다.
 
             Parameters:
-                partition_name (str): 조회할 파티션 이름
+                ego_id (int): 조회할 파티션 이름
                 datas (list[int]): 검색하고자 하는 passages_id 리스트
 
             Returns:
@@ -110,7 +110,7 @@ class DatabaseClient:
         try:
             return self.__milvus_client.get(
                 collection_name="passages",
-                partition_names=[partition_name],
+                partition_names=[ego_id],
                 ids=datas,
                 output_fields=[
                     "passage"
@@ -125,14 +125,20 @@ class DatabaseClient:
     def insert_messages_into_milvus(
             self,
             splited_messages: list[str],
-            partition_name: str
+            ego_id: str
     ):
         """
         임베딩된 텍스트를 DB에 저장한다.
 
         :param splited_messages: 단일 문장으로 분리된 문장 리스트
-        :param partition_name: 저장할 파티션 명
+        :param ego_id: 저장할 파티션 명
         """
+        # TODO: [계정 생성 연동 이전이라 생성되는 문제] 업데이트 시, 제거할 것
+        # 만약 partition이 생성되어있지 않다면, 새 파티션 생성
+        if not self.__milvus_client.has_partition(collection_name="triplets", partition_name=ego_id):
+            self.__milvus_client.create_partition(collection_name="passages", partition_name=ego_id)
+            self.__milvus_client.create_partition(collection_name="triplets", partition_name=ego_id)
+
         # 문장을 삼중항으로 Parsing한다.
         parsed_sentences = [ParsedSentence(splited_message) for splited_message in splited_messages]
 
@@ -147,7 +153,7 @@ class DatabaseClient:
             # 실제 DB에 저장
             res = self.__milvus_client.insert(
                 collection_name="passages",
-                partition_name=partition_name,
+                partition_name=ego_id,
                 data=[passage_data]
             )
             passages_ids = res["ids"][0] # res는 저장된 원문 ids 값
@@ -169,7 +175,7 @@ class DatabaseClient:
 
             self.__milvus_client.insert(
                 collection_name="triplets",
-                partition_name=partition_name,
+                partition_name=ego_id,
                 data=triplet_datas
             )
 
