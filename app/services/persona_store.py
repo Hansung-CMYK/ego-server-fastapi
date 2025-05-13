@@ -17,7 +17,7 @@ class PersonaStore:
         (<persona_id>, <persona_name>, <persona_data>)
     }
     """
-    store: dict[int, list] = {}
+    __store: dict[int, list] = {}
 
     # 키값으로 사용될 수 있는 정보들 (화이트리스트)
     # PersonalLlmModel의 허용 최상위 키와는 별개이다.
@@ -42,15 +42,21 @@ class PersonaStore:
         "updated_at": None,
     }
 
+    def remove_persona(self, persona_id:int):
+        self.__store[persona_id].pop()
+
+    def remove_all_persona(self):
+        self.__store.clear()
+
     def get_persona(self, persona_id:int) -> dict:
         """
         사용자의 페르소나 정보를 반환하는 함수
         """
-        if self.store.get(persona_id) is None: # 기존 store에 persona_id가 저장되어 있지않다면,
+        if self.__store.get(persona_id) is None: # 기존 store에 persona_id가 저장되어 있지않다면,
             new_persona = postgres_client.select_persona_to_id(persona_id) # postgres에서 정보를 가져와서,
-            self.store[persona_id] = new_persona # store에 저장한다.
+            self.__store[persona_id] = new_persona # store에 저장한다.
 
-        return self.store[persona_id][2]
+        return self.__store[persona_id][2]
 
     def update(self, persona_id:int, delta_persona: dict):
         """
@@ -62,22 +68,22 @@ class PersonaStore:
         # $unset 먼저 처리
         if "$unset" in delta_dict:
             self.__apply_unset(
-                original_data=self.store[persona_id][2],
+                original_data=self.__store[persona_id][2],
                 unset_data=delta_dict.pop("$unset")
             )
 
         # 새로운 페르소나 데이터 추가.
         if "$set" in delta_dict:
             self.__apply_set(
-                original_data=self.store[persona_id][2],
+                original_data=self.__store[persona_id][2],
                 set_data=delta_dict.pop("$set")
             )
 
         # 업데이트 된 시간 변경
-        self.store[persona_id][2]["updated_at"] = datetime.now().isoformat()
+        self.__store[persona_id][2]["updated_at"] = datetime.now().isoformat()
 
         # 데이터베이스에 저장
-        postgres_client.update_persona(persona_id=persona_id, persona_json=self.store[persona_id][2])
+        postgres_client.update_persona(persona_id=persona_id, persona_json=self.__store[persona_id][2])
 
     @staticmethod
     def __apply_unset(original_data: dict, unset_data: dict) -> None:

@@ -52,6 +52,12 @@ class MainLlmModel:
             self.__store[session_id] = ChatMessageHistory()
         return self.__store[session_id]
 
+    def reset_session_history(self, session_id:str):
+        """
+        __store 에 저장된 대화 기록을 초기화하는 함수이다.
+        """
+        self.__store[session_id].clear()
+
     def get_chain(self):
         return self.__prompt
 
