@@ -76,7 +76,7 @@ def save_persona():
 
         # NOTE 4. 업데이트된 json을 postgres에 저장한다.
         postgres_client.update_persona(
-            persona_name=ego_id,
+            persona_id=ego_id,
             persona_json=persona_store.get_persona(persona_id=ego_id)
         )  # 데이터베이스에 업데이트 된 페르소나 저장
     return
