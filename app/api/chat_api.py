@@ -6,6 +6,7 @@ from pydantic import BaseModel
 from starlette.responses import JSONResponse
 
 from app.services.chat_service import chat_full, chat_stream, save_graphdb, save_persona
+from app.services.persona_store import persona_store
 from app.services.session_config import SessionConfig
 
 router = APIRouter()
@@ -90,3 +91,6 @@ async def save_persona_metadata(body: AdminRequest):
 
     # NOTE 2. 대화 내역을 기반으로 Graph Database 저장
     save_graphdb()
+
+    # NOTE 3. 기존에 저장되어있던 PersonaStore.store 정보 초기화(remove unused data)
+    persona_store.store.clear()
