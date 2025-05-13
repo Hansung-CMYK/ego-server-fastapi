@@ -43,3 +43,5 @@ class EmbeddingModel:
 
         # NumPy 배열로 반환
         return [embedding.cpu().numpy().astype(np.float16) for embedding in embeddings]
+
+embedding_model = EmbeddingModel()
