@@ -133,7 +133,8 @@ class DatabaseClient:
         :param splited_messages: 단일 문장으로 분리된 문장 리스트
         :param ego_id: 저장할 파티션 명
         """
-        # TODO: [계정 생성 연동 이전이라 생성되는 문제] 만약 partition이 생성되어있지 않다면, 새 파티션 생성
+        # TODO: [계정 생성 연동 이전이라 생성되는 문제] 업데이트 시, 제거할 것
+        # 만약 partition이 생성되어있지 않다면, 새 파티션 생성
         if not self.__milvus_client.has_partition(collection_name="triplets", partition_name=ego_id):
             self.__milvus_client.create_partition(collection_name="passages", partition_name=ego_id)
             self.__milvus_client.create_partition(collection_name="triplets", partition_name=ego_id)
