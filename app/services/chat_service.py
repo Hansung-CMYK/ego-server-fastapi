@@ -102,9 +102,6 @@ def save_graphdb():
         # NOTE 2. 대화내역을 단일 사실을 가진 문장으로 분리한다.
         try:
             splited_messages = parsing_llm.split_invoke(session_history=session_history)
-            print("\n")
-            print("========================================")
-            print(f"splited_messages: {splited_messages}")
         except IncorrectAnswer:
             return
             # continue # TODO: 대화 내역을 불러와서 loop로 만들 것이기 때문에, 추후 continue를 사용하게 된다.
