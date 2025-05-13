@@ -81,21 +81,31 @@ def save_persona():
         )  # 데이터베이스에 업데이트 된 페르소나 저장
     return
 
-# def save_graphdb():
-#     # NOTE 1. userId, egoId, 대화내역을 불러온다.
-#     message_history = main_llm.get_human_messages_in_memory(session_id=tenant_name)
-#
-#     # NOTE 2. 대화내역을 단일 사실을 가진 문장으로 분리한다.
-#     try:
-#         splited_messages = parsing_llm.split_invoke(message_history=message_history)
-#         print("\n")
-#         print("========================================")
-#         print(f"splited_messages: {splited_messages}")
-#     except IncorrectAnswer:
-#         return
-#         # continue # TODO: 대화 내역을 불러와서 loop로 만들 것이기 때문에, 추후 continue를 사용하게 된다.
-#
-#     # NOTE 3. 단일 문장을 삼중항으로 분리하여 각 에고에 알맞게 저장한다.
-#     from app.models.database_client import database_client
-#     database_client.insert_messages_into_milvus(splited_messages=splited_messages, partition_name=tenant_name)
-#     return
+def save_graphdb():
+    """
+    서버 메모리 내 대화내역을 바탕으로, ego의 맥락 정보를 추출한다.
+    """
+    from app.models.database_client import database_client
+
+    # NOTE 1. userId, egoId, 대화내역을 불러온다.
+    store_keys = main_llm.get_store_keys()  # 모든 채팅방의 대화 내역을 저장한다.
+
+    for session_id in store_keys:
+        ego_id, user_id = session_id.split("@")
+
+        # 세션 정보로 해당 채팅방의 대화 내역을 불러온다.
+        session_history = main_llm.get_human_messages_in_memory(session_id=session_id)
+
+        # NOTE 2. 대화내역을 단일 사실을 가진 문장으로 분리한다.
+        try:
+            splited_messages = parsing_llm.split_invoke(session_history=session_history)
+            print("\n")
+            print("========================================")
+            print(f"splited_messages: {splited_messages}")
+        except IncorrectAnswer:
+            return
+            # continue # TODO: 대화 내역을 불러와서 loop로 만들 것이기 때문에, 추후 continue를 사용하게 된다.
+
+        # NOTE 3. 단일 문장을 삼중항으로 분리하여 각 에고에 알맞게 저장한다.
+        database_client.insert_messages_into_milvus(splited_messages=splited_messages, ego_id=ego_id)
+    return

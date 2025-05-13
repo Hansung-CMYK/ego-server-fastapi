@@ -26,14 +26,14 @@ class SplitLlmModel:
         split_prompt = ChatPromptTemplate.from_messages(self.__SPLIT_TEMPLATE)
         self.__split_chain = split_prompt | model
 
-    def split_invoke(self, message_history:str)->list:
+    def split_invoke(self, session_history:str)->list:
         """
         전달 받은 문장들을 하나의 단일 의미나 사건으로 분리한다.
-        :param message_history: 복합 의미를 가진 문장
+        :param session_history: 복합 의미를 가진 문장
         :return: 하나의 의미만을 가진 문장
         """
         # NOTE 1. 문장을 단일 의미로 분리한다.
-        split_messages_string = self.__split_chain.invoke({"input": message_history, "date": datetime.date.today(), "example": self.__SPLIT_TEMPLATE_EXAMPLE}).content.strip()
+        split_messages_string = self.__split_chain.invoke({"input": session_history, "date": datetime.date.today(), "example": self.__SPLIT_TEMPLATE_EXAMPLE}).content.strip()
 
         # NOTE 2. JSON 문자열을 list로 파싱한다.
         # 아주 드물게 LLM이 사용자 응답을 JSON으로 만들지 못하는 경우가 있는데,

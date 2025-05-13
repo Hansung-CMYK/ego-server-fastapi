@@ -125,13 +125,13 @@ class DatabaseClient:
     def insert_messages_into_milvus(
             self,
             splited_messages: list[str],
-            partition_name: str
+            ego_id: str
     ):
         """
         임베딩된 텍스트를 DB에 저장한다.
 
         :param splited_messages: 단일 문장으로 분리된 문장 리스트
-        :param partition_name: 저장할 파티션 명
+        :param ego_id: 저장할 파티션 명
         """
         # 문장을 삼중항으로 Parsing한다.
         parsed_sentences = [ParsedSentence(splited_message) for splited_message in splited_messages]
@@ -147,7 +147,7 @@ class DatabaseClient:
             # 실제 DB에 저장
             res = self.__milvus_client.insert(
                 collection_name="passages",
-                partition_name=partition_name,
+                partition_name=ego_id,
                 data=[passage_data]
             )
             passages_ids = res["ids"][0] # res는 저장된 원문 ids 값
@@ -169,7 +169,7 @@ class DatabaseClient:
 
             self.__milvus_client.insert(
                 collection_name="triplets",
-                partition_name=partition_name,
+                partition_name=ego_id,
                 data=triplet_datas
             )
 
