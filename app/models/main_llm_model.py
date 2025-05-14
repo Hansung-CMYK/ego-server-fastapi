@@ -33,7 +33,7 @@ class MainLlmModel:
 
         self.__prompt = RunnableWithMessageHistory(
             main_chain,
-            self.__get_session_history,
+            self.get_session_history,
             input_messages_key="input",
             history_messages_key="history",
         )
@@ -41,7 +41,7 @@ class MainLlmModel:
     def get_store_keys(self):
         return self.__store.keys()
 
-    def __get_session_history(self, session_id:str) -> BaseChatMessageHistory:
+    def get_session_history(self, session_id:str) -> BaseChatMessageHistory:
         """
         세션 아이디로 기존 대화 내역을 불러오는 함수
 
@@ -50,6 +50,8 @@ class MainLlmModel:
         """
         if session_id not in self.__store:
             self.__store[session_id] = ChatMessageHistory()
+            # TODO: 에고의 첫 대사가 정해지면 수정할 것
+            self.__store[session_id].add_ai_message("오늘은 어떤 일이 있었어?")
         return self.__store[session_id]
 
     def get_chain(self):
@@ -62,7 +64,7 @@ class MainLlmModel:
 
         :return: list[str] 형태의 대화 내역 (예: ["나: ...", "친구: ..."])
         """
-        memory = self.__get_session_history(session_id=session_id)
+        memory = self.get_session_history(session_id=session_id)
 
         message_list = [f"{'human' if msg.type == 'human' else 'ai' }: {msg.content}" for msg in memory.messages]
 

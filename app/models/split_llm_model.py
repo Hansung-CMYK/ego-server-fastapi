@@ -40,11 +40,10 @@ class SplitLlmModel:
         # 이 때 예외를 처리하기 위한 try catch이다.
         try:
             return json.loads(split_messages_string)["sentence"]
-        except json.JSONDecodeError as e:
-            logging.error(f"::Error Exception(JSONDecodeError):: 원문 Parsing 중 예외 발생!")
-            logging.error(f"::에러 발생 원문:: {split_messages_string}")
-            logging.error(f"::예외 내용:: {e}")
-            raise IncorrectAnswer("잘못된 형식의 응답입니다. 다시 저장해주세요.")
+        except json.JSONDecodeError:
+            logging.warning(f"LLM이 대화내역을 단일문장으로 분리하지 못했습니다.")
+            logging.warning(f"원본 문장: {split_messages_string}")
+            raise IncorrectAnswer
 
     __SPLIT_TEMPLATE = [
         ("system", "/json\n/no_think\n"),
@@ -61,7 +60,7 @@ class SplitLlmModel:
             6. 모든 대명사는 원문 명사로 대체
             7. 의미 없는 부사, 접속어(예: "그래서", "하지만") 생략
             8. 모든 문장 앞에 해당 사건에 맞는 날짜(예: "0000년 0월 0일,")를 명시 (현재 날짜: {date})
-            9. ai의 문장은 맥락을 이해하는데 참고하되, 문장 추출 절대 금지
+            9. ai의 문장은 맥락을 이해하는데 참고하되, ai 답변은 절대 문장 추출 금지
             10. 아무런 정보가 없는 문장은 문장 추출에서 제외(예: 아 배고파, 뭐하지, 심심해 ...) 
 
             {example}
