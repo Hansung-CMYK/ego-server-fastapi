@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from starlette.responses import JSONResponse
 
 from app.models.main_llm_model import main_llm
-from app.services.chat_service import chat_full, chat_stream, save_graphdb, save_persona
+from app.services.chat_service import chat_full, chat_stream, save_persona
 from app.services.persona_store import persona_store
 from app.services.session_config import SessionConfig
 
@@ -100,12 +100,5 @@ async def save_persona_metadata(body: AdminRequest):
         # TODO: 채팅내역 받아와서 정리하기
         save_persona(ego_id=ego_id, session_history=session_history)
 
-        # NOTE 2. 대화 내역을 기반으로 Graph Database 저장
-        save_graphdb(ego_id=ego_id, session_history=session_history)
-
-        # NOTE 3. 채팅 내역 초기화
-        # Graph Database에 중복된 문장을 저장하지 않기 위해 기존 대화 내역을 제거한다.
-        main_llm.reset_session_history(session_id=session_id)
-
-    # NOTE 4. 기존에 저장되어있던 PersonaStore.store 정보들 초기화(remove unused data)
+    # NOTE 2. 기존에 저장되어있던 PersonaStore.store 정보들 초기화(remove unused data)
     persona_store.remove_all_persona()
