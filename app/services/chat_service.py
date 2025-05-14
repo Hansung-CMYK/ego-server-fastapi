@@ -93,7 +93,7 @@ async def save_graphdb(session_id:str, user_answer:str):
     ai_message = f"{'human' if message.type == 'human' else 'ai'}: {message.content}"
     human_message = f"human: {user_answer}" # 사용자가 말한 답변 저장
 
-    messages = [human_message, ai_message]
+    messages = [ai_message, human_message]
 
     # NOTE 2. 문장을 분리한다.
     try:
