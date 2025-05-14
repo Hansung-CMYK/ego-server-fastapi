@@ -18,23 +18,6 @@ try:
 except Exception:
     pass
 
-def chat_full(prompt: str, model: str = "gemma3:4b") -> str:
-    resp = ollama.chat(
-        model=model,
-        messages=[{"role": "user", "content": prompt}],
-    )
-    return resp["message"]["content"]
-
-# NOTE: GraphRAG X
-# def chat_stream(prompt: str, config: SessionConfig, model: str = "gemma3:4b"):
-#     stream = ollama.generate(
-#         model=model,
-#         prompt=prompt,
-#         stream=True
-#     )
-#     for chunk in stream:
-#         yield chunk["response"]
-
 # NOTE: GraphRAG O, Persona O
 def chat_stream(prompt: str, config: SessionConfig):
     # TODO: ego_name으로 조회하는데, ego_id로 조회하고 있다. 수정할 것 (로직 자체는 이상 없음)
@@ -57,25 +40,6 @@ def chat_stream(prompt: str, config: SessionConfig):
         config={"configurable": {"session_id":f"{session_id}"}}
     ): 
         yield chunk.content
-
-def save_persona(ego_id:str, session_history:str):
-    """
-    서버 메모리 내 대화내역을 바탕으로, ego의 persona를 강화한다.
-    """
-    # NOTE 1. 대화내역을 바탕으로 변경될 페르소나 정보를 추출한다.
-    delta_persona = persona_llm_model.invoke(
-        current_persona=persona_store.get_persona(persona_id=ego_id),
-        session_history=session_history
-    )
-
-    # NOTE 2. 변경 값을 기존 페르소나에 적용한다.
-    persona_store.update(persona_id=ego_id, delta_persona=delta_persona)  # 변경사항 업데이트
-
-    # NOTE 3. 업데이트된 json을 postgres에 저장한다.
-    postgres_client.update_persona(
-        persona_id=ego_id,
-        persona_json=persona_store.get_persona(persona_id=ego_id)
-    )  # 데이터베이스에 업데이트 된 페르소나 저장
 
 async def save_graphdb(session_id:str, user_answer:str):
     """
