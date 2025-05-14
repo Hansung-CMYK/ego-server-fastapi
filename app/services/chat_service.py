@@ -42,11 +42,11 @@ def chat_stream(prompt: str, config: SessionConfig):
     user_id:str = config.user_id
     session_id:str = f"{ego_id}@{user_id}"
 
-    rag_prompt = get_rag_prompt(ego_id=ego_id, user_speak=prompt)
-    persona = persona_store.get_persona(persona_id=ego_id)
-
     # NOTE. 비동기로 이전 에고 질문과 현재 사용자의 답변으로 문장을 추출한다.
     asyncio.create_task(save_graphdb(session_id=session_id))
+
+    rag_prompt = get_rag_prompt(ego_id=ego_id, user_speak=prompt)
+    persona = persona_store.get_persona(persona_id=ego_id)
 
     for chunk in main_llm.get_chain().stream(
         input = {
@@ -89,10 +89,10 @@ async def save_graphdb(session_id:str):
     # ex) 에고의 질문 or 사용자의 대명사 활용
     memory = main_llm.get_session_history(session_id=session_id)
     message = memory.messages[-1]
-    human_message = f"{'human' if message.type == 'human' else 'ai' }: {message.content}"
+    human_message = f"{'human' if message.type == 'human' else 'ai'}: {message.content}"
 
     message = memory.messages[-2]
-    ai_message = f"{'ai' if message.type == 'ai' else 'human' }: {message.content}"
+    ai_message = f"{'human' if message.type == 'human' else 'ai'}: {message.content}"
 
     messages = [human_message, ai_message]
 
