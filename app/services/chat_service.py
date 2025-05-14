@@ -10,8 +10,8 @@ from app.models.database_client import database_client
 from app.services.session_config import SessionConfig
 from app.models.persona_llm_model import persona_llm_model
 from app.models.postgres_client import postgres_client
-
 from app.services.graph_rag_service import get_rag_prompt
+import asyncio
 
 try:
     ollama.pull("gemma3:4b")
@@ -46,7 +46,7 @@ def chat_stream(prompt: str, config: SessionConfig):
     persona = persona_store.get_persona(persona_id=ego_id)
 
     # NOTE. 비동기로 이전 에고 질문과 현재 사용자의 답변으로 문장을 추출한다.
-    save_graphdb(session_id=session_id)
+    asyncio.create_task(save_graphdb(session_id=session_id))
 
     for chunk in main_llm.get_chain().stream(
         input = {
