@@ -50,6 +50,8 @@ class MainLlmModel:
         """
         if session_id not in self.__store:
             self.__store[session_id] = ChatMessageHistory()
+            # TODO: 에고의 첫 대사가 정해지면 수정할 것
+            self.__store[session_id].add_ai_message("오늘은 어떤 일이 있었어?")
         return self.__store[session_id]
 
     def get_chain(self):

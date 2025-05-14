@@ -91,7 +91,7 @@ async def save_graphdb(session_id:str):
     message = memory.messages[-1]
     human_message = f"{'human' if message.type == 'human' else 'ai' }: {message.content}"
 
-    message = memory.messages.index[-2]
+    message = memory.messages[-2]
     ai_message = f"{'ai' if message.type == 'ai' else 'human' }: {message.content}"
 
     messages = [human_message, ai_message]
