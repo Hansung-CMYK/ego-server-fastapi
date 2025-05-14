@@ -1,3 +1,5 @@
+import logging
+
 import ollama
 
 from app.exception.incorrect_answer import IncorrectAnswer
@@ -97,6 +99,7 @@ async def save_graphdb(session_id:str):
     # NOTE 2. 문장을 분리한다.
     try:
         splited_messages = parsing_llm.split_invoke(session_history=messages)
+        logging.info(f"문장 분리 테스트: {splited_messages}")
     except IncorrectAnswer:
         return # 문장 분리 실패 시, 데이터는 저장하지 않는다.
 
