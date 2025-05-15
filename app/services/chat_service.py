@@ -2,13 +2,13 @@ import logging
 
 import ollama
 
-from app.api.chat_api import SessionConfig
 from app.exception.incorrect_answer import IncorrectAnswer
 from app.models.main_llm_model import main_llm
 from app.models.split_llm_model import parsing_llm
 from app.models.database_client import database_client
 from app.services.graph_rag_service import get_rag_prompt
 from app.services.persona_store import persona_store
+from app.services.session_config import SessionConfig
 
 try:
     ollama.pull("gemma3:4b")
