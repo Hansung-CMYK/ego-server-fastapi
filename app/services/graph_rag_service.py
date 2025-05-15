@@ -34,10 +34,12 @@ def get_rag_prompt(ego_id:str, user_speak:str)->str:
             field_name="embedded_subject",
             datas=[embedded_triplets[0] for embedded_triplets in speak_embedding["embedded_triplets"]]
         )
+        triplets_with_similar_subject.extend(database_client.search_triplets_to_milvus(
+            ego_id=ego_id,
+            field_name="embedded_object",
+            datas=[embedded_triplets[0] for embedded_triplets in speak_embedding["embedded_triplets"]]
+        ))
     else: triplets_with_similar_subject = []
-
-    print("주어 반환 값:")
-    print("".join(f"\n{triplet["entity"]["relation"]}" for triplet in triplets_with_similar_subject))
 
     if speak.triplets[0][1] != "":
         triplets_with_similar_object = database_client.search_triplets_to_milvus(
@@ -45,10 +47,12 @@ def get_rag_prompt(ego_id:str, user_speak:str)->str:
             field_name="embedded_object",
             datas=[embedded_triplets[1] for embedded_triplets in speak_embedding["embedded_triplets"]]
         )
+        triplets_with_similar_object.extend(database_client.search_triplets_to_milvus(
+            ego_id=ego_id,
+            field_name="embedded_subject",
+            datas=[embedded_triplets[1] for embedded_triplets in speak_embedding["embedded_triplets"]]
+        ))
     else : triplets_with_similar_object = []
-
-    print("목적어 반환 값:")
-    print("".join(f"\n{triplet["entity"]["relation"]}" for triplet in triplets_with_similar_object))
 
     if speak.relations != "":
         triplets_with_similar_relations = database_client.search_triplets_to_milvus(
