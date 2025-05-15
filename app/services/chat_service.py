@@ -2,16 +2,13 @@ import logging
 
 import ollama
 
+from app.api.chat_api import SessionConfig
 from app.exception.incorrect_answer import IncorrectAnswer
 from app.models.main_llm_model import main_llm
 from app.models.split_llm_model import parsing_llm
-from app.services.persona_store import persona_store
 from app.models.database_client import database_client
-from app.services.session_config import SessionConfig
-from app.models.persona_llm_model import persona_llm_model
-from app.models.postgres_client import postgres_client
 from app.services.graph_rag_service import get_rag_prompt
-import asyncio
+from app.services.persona_store import persona_store
 
 try:
     ollama.pull("gemma3:4b")
@@ -31,6 +28,10 @@ def chat_stream(prompt: str, config: SessionConfig):
     rag_prompt = get_rag_prompt(ego_id=ego_id, user_speak=prompt)
     persona = persona_store.get_persona(persona_id=ego_id)
 
+    print("\n")
+    print(f"rag_prompt 정보:")
+    print(rag_prompt)
+
     for chunk in main_llm.get_chain().stream(
         input = {
             "input": prompt, # LLM에게 하는 질문을 프롬프트로 전달한다.
@@ -38,7 +39,7 @@ def chat_stream(prompt: str, config: SessionConfig):
             "related_story":rag_prompt, # 이전에 한 대화내역 중 관련 대화 내역을 프롬프트로 전달한다.
         },
         config={"configurable": {"session_id":f"{session_id}"}}
-    ): 
+    ):
         yield chunk.content
 
 async def save_graphdb(session_id:str, user_answer:str):

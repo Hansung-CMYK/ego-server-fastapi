@@ -5,8 +5,8 @@ from numpy import ndarray
 from pymilvus import MilvusClient, MilvusException
 import logging
 
-from app.exception.entity_not_found import EntityNotFound
 from app.models.parsed_sentence import ParsedSentence
+from app.exception.entity_not_found import EntityNotFound
 
 # .env 환경 변수 추출
 load_dotenv()
@@ -67,7 +67,7 @@ class DatabaseClient:
                 search_params={
                     "metric_type": "COSINE",
                     "params": {
-                        "radius": 0.4
+                        "radius": 0.7
                     }
                 },
                 output_fields=[
