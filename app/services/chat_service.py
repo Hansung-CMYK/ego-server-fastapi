@@ -26,7 +26,7 @@ def chat_stream(prompt: str, config: SessionConfig):
     session_id:str = f"{ego_id}@{user_id}"
 
     # NOTE. 비동기로 이전 에고 질문과 현재 사용자의 답변으로 문장을 추출한다.
-    asyncio.create_task(save_graphdb(session_id=session_id, user_answer=prompt))
+    # asyncio.create_task(save_graphdb(session_id=session_id, user_answer=prompt))
 
     rag_prompt = get_rag_prompt(ego_id=ego_id, user_speak=prompt)
     persona = persona_store.get_persona(persona_id=ego_id)
