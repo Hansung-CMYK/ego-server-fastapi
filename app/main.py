@@ -4,6 +4,7 @@ import importlib.util
 
 from fastapi import FastAPI, APIRouter
 from app.api import chat_api, voice_chat_api, fal_api, diary_api
+from app.exception.exception_handler import register_exception_handlers
 from app.services.tts_infer import ensure_init
 
 from contextlib import asynccontextmanager
@@ -61,9 +62,13 @@ for route in gpt_sovits_api.app.routes:
         continue
     tts_router.routes.append(route)
 
+register_exception_handlers(app)
+
 app.include_router(tts_router)
 
 app.include_router(chat_api.router,    prefix="/api", tags=["chat"])
 app.include_router(voice_chat_api.router, prefix="/api", tags=["voice-chat"])
 app.include_router(fal_api.router, prefix="/api", tags=["image"])
 app.include_router(diary_api.router, prefix="/api", tags=["diary"])
+
+
