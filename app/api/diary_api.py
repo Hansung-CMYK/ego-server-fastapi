@@ -92,3 +92,7 @@ async def to_diary(body: DiaryRequest):
         message="diary success!",
         data=response
     )
+
+@router.get("/diary/test_exception_diary")
+async def test_exception_diary():
+    raise ControlledException(ErrorCode.CAN_NOT_EXTRACT_DIARY)
