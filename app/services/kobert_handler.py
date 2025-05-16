@@ -13,7 +13,7 @@ _model     = BertForSequenceClassification.from_pretrained(
 _labels = ['화남','불안','행복','평범','슬픔']
 
 
-def extract_emotions(text: str, alpha: float = 0.5, top_k: int = 2):
+def extract_emotions(topics: list[dict], alpha: float = 0.5, top_k: int = 2):
     """
     Args:
         text (str): 분류 대상 텍스트
@@ -23,13 +23,10 @@ def extract_emotions(text: str, alpha: float = 0.5, top_k: int = 2):
     Returns:
         List[str]: 상위 k개 감정 레이블
     """
-    # 1) 문장 분할
-    fragments = [s.strip() for s in re.split(r'[\.!?]+', text) if s.strip()]
-    if not fragments:
-        return []
+    contents = [t['content'] for t in topics]
 
     # 2) 토큰화 & 예측
-    inputs = _tokenizer(fragments, return_tensors='pt', padding=True, truncation=True)
+    inputs = _tokenizer(contents, return_tensors='pt', padding=True, truncation=True)
     with torch.no_grad():
         logits = _model(**inputs).logits  
     probs = F.softmax(logits, dim=-1)    
