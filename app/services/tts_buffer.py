@@ -6,26 +6,27 @@ class TTSBuffer:
         self.send_tts = send_tts_fn
         self.min_length = min_length
 
+    def _avoid_leading_number(self, text: str) -> str:
+        if re.match(r'^\s*\d', text):
+            return '\u200B' + text
+        return text
+
     def feed(self, chunk: str):
         self.buffer += chunk
-        # 청크에 문장부호가 포함되면 검사
         if re.search(r"[,\.\?\!~:]+", chunk):
             text = self.buffer.strip()
-            # 문장부호만 남아있으면 초기화
             if re.fullmatch(r"[,\.\?\!~:]+", text):
                 self.buffer = ""
                 return
-            # 충분히 길면 flush
             if len(text) >= self.min_length:
-                text = re.sub(r"^[,\.\?\!~:]+", "", text).strip()
-                if text:
-                    self.send_tts(text)
+                # 맨 앞 숫자 피하기
+                text = self._avoid_leading_number(text)
+                self.send_tts(text)
                 self.buffer = ""
 
     def flush(self):
         text = self.buffer.strip()
         if text:
-            text = re.sub(r"^[,\.\?\!~:]+", "", text).strip()
-            if text:
-                self.send_tts(text)
+            text = self._avoid_leading_number(text)
+            self.send_tts(text)
         self.buffer = ""

@@ -5,6 +5,8 @@ from app.api.common_response import CommonResponse
 from app.models.diary_llm_model import diary_llm
 from datetime import date
 
+from app.services.kobert_handler import extract_emotions
+
 router = APIRouter()
 
 class DiaryRequest(BaseModel):
@@ -43,9 +45,6 @@ async def to_diary(body: DiaryRequest):
         ]
     ]
 
-    # TODO: 감정 분석
-    feeling = "샘플 감정1, 샘플 감정2"
-
     # TODO: 한줄평 요약
     daily_comment = "샘플 한줄평 요약"
 
@@ -59,6 +58,9 @@ async def to_diary(body: DiaryRequest):
     topics = diary_llm.diary_invoke(story=stories)
     if len(topics) < 1:
         raise Exception("-3: 아무런 주제도 도출되지 못했습니다.")
+    
+    # TODO: 감정 분석
+    feeling = extract_emotions(topics)
 
     for topic in topics:
         content = topic["content"]
