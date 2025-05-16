@@ -81,7 +81,7 @@ class PostgresClient:
                 # 사용자의 채팅방 대화 목록
                 chat_room_log = "".join(
                     f"{'USER' if type == 'U' else 'AI'}: {content} at {chat_at}\n"
-                    for chat_history_id, uid, chat_room_id, content, type, chat_at, is_deleted in cursor.fetchall()
+                    for chat_history_id, uid, chat_room_id, content, type, chat_at, is_deleted, message_hash in cursor.fetchall()
                 ).strip()
 
                 user_all_chat_room_log.append(chat_room_log)

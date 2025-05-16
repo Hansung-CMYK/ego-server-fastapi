@@ -12,7 +12,6 @@ from app.services.kobert_handler import extract_emotions
 router = APIRouter()
 
 class DiaryRequest(BaseModel):
-    message: str
     user_id: str
     ego_id: str
 
