@@ -20,8 +20,8 @@ def generate_image_prompt(user_text: str) -> str:
     
     prompt = TEMPLATE.format(user_text=user_text)
     
-    output = ollama.generate([prompt])
-    return output['response']
+    output = ollama.invoke(prompt)
+    return output
 
 def generate_image(prompt: str) -> str :
     # NOTE: 추후 삭제 (로그)
@@ -39,4 +39,4 @@ def generate_image(prompt: str) -> str :
         on_queue_update=on_queue_update,
     )
 
-    return result.images[0].url
+    return result
