@@ -37,7 +37,7 @@ class PostgresClient:
         return self.__cursor.fetchall()[0]
 
     @staticmethod
-    def search_all_chat(user_id: str) -> list[str]:
+    def search_all_chat(user_id: str):
         """
         user_id에 맞는 사용자의 대화 내역을 불러오는 함수
         """

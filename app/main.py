@@ -3,7 +3,7 @@ import sys
 import importlib.util
 
 from fastapi import FastAPI, APIRouter
-from app.api import chat_api, voice_chat_api
+from app.api import chat_api, voice_chat_api, diary_api
 from app.services.tts_infer import ensure_init
 
 from contextlib import asynccontextmanager
@@ -65,3 +65,4 @@ app.include_router(tts_router)
 
 app.include_router(chat_api.router,    prefix="/api", tags=["chat"])
 app.include_router(voice_chat_api.router, prefix="/api", tags=["voice-chat"])
+app.include_router(diary_api.router, prefix="/api", tags=["diary"])
