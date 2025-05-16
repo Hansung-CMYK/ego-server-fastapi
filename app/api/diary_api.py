@@ -1,10 +1,9 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
 
+from app.api.common_response import CommonResponse
 from app.models.diary_llm_model import diary_llm
-from datetime import datetime
-
-from app.models.postgres_client import postgres_client
+from datetime import datetime, date
 
 router = APIRouter()
 
@@ -48,7 +47,7 @@ async def to_diary(body: DiaryRequest):
     feeling = "샘플 감정1, 샘플 감정2"
 
     # TODO: 한줄평 요약
-    dailyComment = "샘플 한줄평 요약"
+    daily_comment = "샘플 한줄평 요약"
 
     # TODO: 키워드 추출
     keyword = ["샘플1", "샘플2"]
@@ -66,8 +65,19 @@ async def to_diary(body: DiaryRequest):
         # TODO: 이미지 저장하기
         topic.update({"url": f"TODO {content}"})
 
-    created_at = datetime.now()
-
     # TODO: 일기 저장 API 전송
+    request_data = {
+        "uid": body.user_id,
+        "egoId": 1,
+        "feeling": feeling,
+        "dailyComment": daily_comment,
+        "createdAt": date.today(),
+        "keywords": keyword,
+        "topics": topics,
+    }
+
     print(topics)
-    return
+    return CommonResponse(
+        code=200,
+        message="diary success!"
+    )
