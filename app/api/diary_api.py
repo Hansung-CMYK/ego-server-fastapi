@@ -4,6 +4,8 @@ from pydantic import BaseModel
 from app.models.diary_llm_model import diary_llm
 from datetime import datetime
 
+from app.models.postgres_client import postgres_client
+
 router = APIRouter()
 
 class DiaryRequest(BaseModel):
@@ -13,10 +15,8 @@ class DiaryRequest(BaseModel):
 
 @router.post("/diary")
 async def to_diary(body: DiaryRequest):
-    # NOTE: 전달 받는 정보 리스트
-    uid = "001"
-    ego_id = "1"
     # TODO: SQL 조회로 이전하기
+    # stories = postgres_client.search_all_chat(user_id=body.user_id)
     stories = [
         [  # 채팅방 1.
             "AI: 안녕 오늘은 무슨 일이 있었어? at 2025년 05월 16일 05시 34분",
@@ -50,14 +50,14 @@ async def to_diary(body: DiaryRequest):
     # TODO: 한줄평 요약
     dailyComment = "샘플 한줄평 요약"
 
-    # 키워드 추출
+    # TODO: 키워드 추출
     keyword = ["샘플1", "샘플2"]
 
     chat_count = sum(len(story) for story in stories)
     if chat_count < 5:
         raise Exception("-1: 일기를 만들기 위한 대화 수가 부족합니다.")
 
-    topics = diary_llm.diary_invoke(stories)
+    topics = diary_llm.diary_invoke(story=stories)
     if len(topics) < 1:
         raise Exception("-3: 아무런 주제도 도출되지 못했습니다.")
 
@@ -69,4 +69,5 @@ async def to_diary(body: DiaryRequest):
     created_at = datetime.now()
 
     # TODO: 일기 저장 API 전송
+    print(topics)
     return
