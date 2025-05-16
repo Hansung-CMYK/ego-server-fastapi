@@ -2,10 +2,11 @@ import numpy as np
 from collections import defaultdict
 from scipy.sparse import csr_matrix
 
-from app.exception.incorrect_answer import IncorrectAnswer
 from app.models.parsed_sentence import ParsedSentence
-
 from app.models.database_client import database_client
+
+from app.exception.incorrect_answer import IncorrectAnswer
+
 """
 Graph RAG를 활용하기 위한 서비스
 """
@@ -21,28 +22,48 @@ def get_rag_prompt(ego_id:str, user_speak:str)->str:
     try:  # 답변받은 문장을 임베딩 모델을 통해 삼중항, 관계 등으로 분리한다.
         speak = ParsedSentence(user_speak)
         speak_embedding = speak.embedding()
-    except IncorrectAnswer:
-        from collections import defaultdict
-        speak_embedding = defaultdict(list)
+    except IncorrectAnswer: # 문장 구문 분석을 실패한 경우 아무 정보도 반환하지 않는다.
+        return ""
 
     # NOTE 2. Milvus Database에서 사용자 답변과 유사한 Triplet 정보 검색
     # TODO 1. 주어로도 목적어를 조회하고, 목적어로도 주어를 조회할 수 있어야 하는 것 아님?
     # 주어, 목적어, 관계와 유사한 삼중항 조회
-    triplets_with_similar_subject = database_client.search_triplets_to_milvus(
-        ego_id=ego_id,
-        field_name="embedded_subject",
-        datas=[embedded_triplets[0] for embedded_triplets in speak_embedding["embedded_triplets"]]
-    )
-    triplets_with_similar_object = database_client.search_triplets_to_milvus(
-        ego_id=ego_id,
-        field_name="embedded_object",
-        datas=[embedded_triplets[1] for embedded_triplets in speak_embedding["embedded_triplets"]]
-    )
-    triplets_with_similar_relations = database_client.search_triplets_to_milvus(
-        ego_id=ego_id,
-        field_name="embedded_relation",
-        datas=speak_embedding["embedded_relations"]
-    )
+    if speak.triplets[0][0] != "":
+        triplets_with_similar_subject = database_client.search_triplets_to_milvus(
+            ego_id=ego_id,
+            field_name="embedded_subject",
+            datas=[embedded_triplets[0] for embedded_triplets in speak_embedding["embedded_triplets"]]
+        )
+        triplets_with_similar_subject.extend(database_client.search_triplets_to_milvus(
+            ego_id=ego_id,
+            field_name="embedded_object",
+            datas=[embedded_triplets[0] for embedded_triplets in speak_embedding["embedded_triplets"]]
+        ))
+    else: triplets_with_similar_subject = []
+
+    if speak.triplets[0][1] != "":
+        triplets_with_similar_object = database_client.search_triplets_to_milvus(
+            ego_id=ego_id,
+            field_name="embedded_object",
+            datas=[embedded_triplets[1] for embedded_triplets in speak_embedding["embedded_triplets"]]
+        )
+        triplets_with_similar_object.extend(database_client.search_triplets_to_milvus(
+            ego_id=ego_id,
+            field_name="embedded_subject",
+            datas=[embedded_triplets[1] for embedded_triplets in speak_embedding["embedded_triplets"]]
+        ))
+    else : triplets_with_similar_object = []
+
+    if speak.relations != "":
+        triplets_with_similar_relations = database_client.search_triplets_to_milvus(
+            ego_id=ego_id,
+            field_name="embedded_relation",
+            datas=speak_embedding["embedded_relations"]
+        )
+    else : triplets_with_similar_relations = []
+
+    print("관계 반환 값")
+    print("".join(f"\n{triplet["entity"]["relation"]}" for triplet in triplets_with_similar_relations))
 
     # NOTE 3. 검색된 Triplet 정보 중 서로 연결된 관계들을 계산한다.
     related_passages_ids = get_passages_id_from_triplets(

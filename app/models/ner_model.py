@@ -149,7 +149,7 @@ class NerModel:
             subj = self.__select_subject(sent)  # 주어
             obj = self.__select_object(sent)  # 목적어
             comp = "" if obj else self.__select_complement(sent)  # 목적어 없으면 보어 사용
-            triplets.append([subj, obj or comp, sent.text])  # obj 우선 저장
+            triplets.append([subj or "", obj or comp or "", sent.text or ""])  # obj 우선 저장
             sentences.append(sent.text)
         return {
             "triplets": triplets,
