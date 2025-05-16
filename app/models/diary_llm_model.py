@@ -6,6 +6,11 @@ from langchain_ollama import ChatOllama
 from app.exception.exceptions import ControlledException, ErrorCode
 
 class DiaryLLMModel:
+    """
+    Ollama를 통해 LLM 모델을 가져오는 클래스
+
+    채팅내역을 바탕으로 일기를 생성하는 LLM 모델이다.
+    """
     def __init__(self, model_name="gemma3:4b"):
         model = ChatOllama(
             model=model_name,
