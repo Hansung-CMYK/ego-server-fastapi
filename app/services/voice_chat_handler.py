@@ -42,6 +42,7 @@ class VoiceChatHandler:
 
     def _recorder_config(self) -> dict:
         return {
+            'device': 'cuda',
             'spinner': False,
             'use_microphone': False,
             'model': 'large-v3',
@@ -53,7 +54,8 @@ class VoiceChatHandler:
             'min_gap_between_recordings': 0,
             'enable_realtime_transcription': True,
             'realtime_processing_pause': 0,
-            'realtime_model_type': 'large-v3-turbo',
+            'use_main_model_for_realtime':True,
+            'compute_type':'int8'
         }
 
     def handle_audio(self, msg: bytes):
@@ -111,6 +113,8 @@ class VoiceChatHandler:
             clean = self._clean_text(sentence)
             if not clean:
                 return
+            
+            print(clean)
             pcm = self._generate_tts(clean, cancel_event)
             if cancel_event.is_set():
                 return

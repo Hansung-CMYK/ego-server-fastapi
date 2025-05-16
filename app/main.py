@@ -12,7 +12,7 @@ import app.services.kafka_handler as kh
 import asyncio
 
 import logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.ERROR)
 
 here = os.path.dirname(__file__)
 api_file_path = os.path.abspath(os.path.join(here, "../modules/GPT-SoVITS/api.py"))
