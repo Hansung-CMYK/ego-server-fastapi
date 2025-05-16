@@ -3,7 +3,7 @@ from pydantic import BaseModel
 
 from app.api.common_response import CommonResponse
 from app.models.diary_llm_model import diary_llm
-from datetime import datetime, date
+from datetime import date
 
 router = APIRouter()
 
