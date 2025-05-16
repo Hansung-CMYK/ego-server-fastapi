@@ -6,7 +6,7 @@ from pymilvus import MilvusClient, MilvusException
 import logging
 
 from app.exception.exception_handler import ControlledException
-from app.exception.exceptions import PassageNotFound, ErrorCode
+from app.exception.exceptions import ErrorCode
 from app.models.parsed_sentence import ParsedSentence
 
 # .env 환경 변수 추출
