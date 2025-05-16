@@ -3,6 +3,7 @@ import os
 from fastapi import APIRouter
 from pydantic import BaseModel
 
+from app.api.common_response import CommonResponse
 from app.services.chat_service import chat_stream
 from app.services.session_config import SessionConfig
 
@@ -12,11 +13,6 @@ class ChatRequest(BaseModel):
     message: str
     user_id: str
     ego_id: str
-
-class ChatResponse(BaseModel):
-    code: int
-    message: str
-    response: str
 
 @router.post("/chat/ollama_chat")
 async def ollama_chat(body: ChatRequest):
@@ -32,10 +28,10 @@ async def ollama_chat(body: ChatRequest):
     ):
         answer += chunk
 
-    return ChatResponse(
+    return CommonResponse(
         code=200,
         message="answer success!",
-        response=answer
+        data=answer
     )
 
 class AdminRequest(BaseModel):
