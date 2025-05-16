@@ -4,8 +4,7 @@ from app.api.common_response import CommonResponse
 import logging
 
 from app.exception.exceptions import ControlledException
-
-app = FastAPI()
+from app.main import app
 
 @app.exception_handler(ControlledException)
 async def controlled_exception_handler(request: Request, exception: ControlledException):
