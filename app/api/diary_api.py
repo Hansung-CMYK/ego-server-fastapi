@@ -66,7 +66,7 @@ async def to_diary(body: DiaryRequest):
         topic.update({"url": f"TODO {content}"})
 
     # TODO: 일기 저장 API 전송
-    request_data = {
+    print({
         "uid": body.user_id,
         "egoId": 1,
         "feeling": feeling,
@@ -74,9 +74,8 @@ async def to_diary(body: DiaryRequest):
         "createdAt": date.today(),
         "keywords": keyword,
         "topics": topics,
-    }
+    })
 
-    print(topics)
     return CommonResponse(
         code=200,
         message="diary success!"
