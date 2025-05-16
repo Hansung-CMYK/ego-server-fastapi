@@ -37,13 +37,17 @@ class PostgresClient:
         self.__cursor.execute(sql, (persona_id, ))
         result = self.__cursor.fetchall()
 
-        if len(result) == 0: return {
-            "name": "카리나",
-            "age": 25,
-            "gender": "여자",
-            "mbti": "ENTP",
-            "updated_at": datetime.now().isoformat()
-        } # 페르소나 조회 실패 시, 예외처리 # TODO: 사용자 생성 업데이트 되면, 제거할 것
+        if len(result) == 0: return [
+            persona_id,
+            "카리나",
+            {
+                "name": "카리나",
+                "age": 25,
+                "gender": "여자",
+                "mbti": "ENTP",
+                "updated_at": datetime.now().isoformat()
+            }
+        ] # 페르소나 조회 실패 시, 예외처리 # TODO: 사용자 생성 업데이트 되면, 제거할 것
         else: return self.__cursor.fetchall()[0] # 페르소나 결과 반환
 
     @staticmethod
