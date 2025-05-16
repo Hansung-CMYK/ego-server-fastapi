@@ -20,7 +20,7 @@ def generate_image_prompt(user_text: str) -> str:
     
     prompt = TEMPLATE.format(user_text=user_text)
     
-    output = ollama.generate(prompt)
+    output = ollama.generate([prompt])
     return output['response']
 
 def generate_image(prompt: str) -> str :
