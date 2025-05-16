@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from app.services.fal_handler import generate_image, generate_image_prompt
 
-router = APIRouter(prefix="/", tags=["image"])
+router = APIRouter()
 
 @router.post("/image")
 async def create_image_prompt(ko_prompt: str):
