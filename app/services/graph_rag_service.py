@@ -5,8 +5,6 @@ from scipy.sparse import csr_matrix
 from app.models.parsed_sentence import ParsedSentence
 from app.models.database_client import database_client
 
-from app.exception.incorrect_answer import IncorrectAnswer
-
 """
 Graph RAG를 활용하기 위한 서비스
 """
@@ -19,11 +17,8 @@ def get_rag_prompt(ego_id:str, user_speak:str)->str:
         user_speak (str): 사용자가 말한 음성 정보이다. 해당 정보를 활용해 관계를 조회한다.
     """
     # NOTE 1. 답변 받은 문장을 Graph RAG에 맞는 형식으로 변환한다.
-    try:  # 답변받은 문장을 임베딩 모델을 통해 삼중항, 관계 등으로 분리한다.
-        speak = ParsedSentence(user_speak)
-        speak_embedding = speak.embedding()
-    except IncorrectAnswer: # 문장 구문 분석을 실패한 경우 아무 정보도 반환하지 않는다.
-        return ""
+    speak = ParsedSentence(user_speak)
+    speak_embedding = speak.embedding()
 
     # NOTE 2. Milvus Database에서 사용자 답변과 유사한 Triplet 정보 검색
     # TODO 1. 주어로도 목적어를 조회하고, 목적어로도 주어를 조회할 수 있어야 하는 것 아님?

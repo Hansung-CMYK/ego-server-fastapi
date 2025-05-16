@@ -1,8 +1,5 @@
-import logging
-
 import ollama
 
-from app.exception.incorrect_answer import IncorrectAnswer
 from app.models.main_llm_model import main_llm
 from app.models.split_llm_model import parsing_llm
 from app.models.database_client import database_client
@@ -61,11 +58,8 @@ async def save_graphdb(session_id:str, user_answer:str):
     messages = [ai_message, human_message]
 
     # NOTE 2. 문장을 분리한다.
-    try:
-        splited_messages = parsing_llm.split_invoke(session_history=messages)
-        logging.info(f"문장 분리 테스트: {splited_messages}")
-    except IncorrectAnswer:
-        return # 문장 분리 실패 시, 데이터는 저장하지 않는다.
+    splited_messages = parsing_llm.split_invoke(session_history=messages)
+    if len(splited_messages) == 0: return # 문장 분리 실패 시, 데이터는 저장하지 않는다.
 
     # NOTE 3. 에고에 맞게 삼중항을 저장한다.
     database_client.insert_messages_into_milvus(splited_messages=splited_messages, ego_id=ego_id)

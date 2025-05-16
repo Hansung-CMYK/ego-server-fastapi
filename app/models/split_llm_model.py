@@ -4,7 +4,6 @@ from textwrap import dedent
 from langchain_ollama import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate
 
-from app.exception.incorrect_answer import IncorrectAnswer
 import json
 import logging
 
@@ -43,7 +42,7 @@ class SplitLlmModel:
         except json.JSONDecodeError:
             logging.warning(f"LLM이 대화내역을 단일문장으로 분리하지 못했습니다.")
             logging.warning(f"원본 문장: {split_messages_string}")
-            raise IncorrectAnswer
+            return []
 
     __SPLIT_TEMPLATE = [
         ("system", "/json\n/no_think\n"),
