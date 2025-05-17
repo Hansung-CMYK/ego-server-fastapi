@@ -11,3 +11,5 @@ venv/
 
 **/*.log
 *.log
+
+test.py
