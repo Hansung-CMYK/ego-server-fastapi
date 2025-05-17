@@ -77,7 +77,7 @@ def to_response_type(msg: dict) -> dict:
     content : str = ""
     try:
         session_config = SessionConfig(msg.get("from"), msg.get('to'))
-        prompt = str(msg.get('prompt'))
+        prompt = str(msg.get('content'))
         if len(prompt) == 0:
             raise Exception
         
@@ -86,7 +86,7 @@ def to_response_type(msg: dict) -> dict:
             content += chunk
 
     except Exception as e:
-        LOG.info(f"메시지 처리간 오류가 발생했습니다. from:{msg.get('from')} to:{msg.get('to')} {traceback.format_exc()} {e}")
+        LOG.error(f"메시지 처리간 오류가 발생했습니다. from:{msg.get('from')} to:{msg.get('to')} {traceback.format_exc()} {e}")
         
     finally:
         # NOTE 메시지 타입 지정 필요 (ERROR, NORMAL ...)
