@@ -91,6 +91,7 @@ def to_response_type(msg: dict) -> dict:
     finally:
         # NOTE 메시지 타입 지정 필요 (ERROR, NORMAL ...)
         return {
+            "chatRoomId":msg.get('chatRoomId'),
             "from":      msg.get('to'),
             "to":        msg.get('from'),
             "content":   content,
