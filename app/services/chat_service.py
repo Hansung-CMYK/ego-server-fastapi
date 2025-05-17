@@ -1,7 +1,7 @@
 import ollama
 
-from app.models.main_llm_model import main_llm
-from app.models.split_llm_model import parsing_llm
+from app.models.main_llm import main_llm
+from app.models.split_llm import split_llm
 from app.models.database_client import database_client
 from app.services.graph_rag_service import get_rag_prompt
 from app.services.persona_store import persona_store
@@ -58,7 +58,7 @@ async def save_graphdb(session_id:str, user_answer:str):
     messages = [ai_message, human_message]
 
     # NOTE 2. 문장을 분리한다.
-    splited_messages = parsing_llm.split_invoke(session_history=messages)
+    splited_messages = split_llm.split_invoke(session_history=messages)
     if len(splited_messages) == 0: return # 문장 분리 실패 시, 데이터는 저장하지 않는다.
 
     # NOTE 3. 에고에 맞게 삼중항을 저장한다.

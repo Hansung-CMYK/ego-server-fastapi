@@ -5,7 +5,7 @@ from langchain_ollama import ChatOllama
 
 from app.exception.exceptions import ControlledException, ErrorCode
 
-class DiaryLLMModel:
+class DiaryLlm:
     """
     Ollama를 통해 LLM 모델을 가져오는 클래스
 
@@ -83,4 +83,4 @@ class DiaryLLMModel:
     ]
     """
 
-diary_llm = DiaryLLMModel()
+diary_llm = DiaryLlm()

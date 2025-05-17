@@ -11,7 +11,7 @@ from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 # 로깅 에러 문구 제거
 warnings.filterwarnings("ignore", category=LangChainDeprecationWarning)
 
-class MainLlmModel:
+class MainLlm:
     """
     Ollama를 통해 LLM 모델을 가져오는 클래스
     """
@@ -86,4 +86,4 @@ class MainLlmModel:
         ("human", "{input}")
     ]
 
-main_llm = MainLlmModel()
+main_llm = MainLlm()

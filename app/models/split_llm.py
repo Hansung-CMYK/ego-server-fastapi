@@ -1,4 +1,5 @@
 import datetime
+from os.path import split
 from textwrap import dedent
 
 from langchain_ollama import ChatOllama
@@ -7,7 +8,7 @@ from langchain_core.prompts import ChatPromptTemplate
 import json
 import logging
 
-class SplitLlmModel:
+class SplitLlm:
     """
     Ollama를 통해 LLM 모델을 가져오는 클래스
     """
@@ -83,4 +84,4 @@ class SplitLlmModel:
         }
     """).strip()
 
-parsing_llm = SplitLlmModel()
+split_llm = SplitLlm()

@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from app.api.common_response import CommonResponse
 from app.exception.exceptions import ControlledException, ErrorCode
 from app.models.postgres_client import postgres_client
-from app.models.diary_llm_model import diary_llm
+from app.models.diary_llm import diary_llm
 from app.models.keyword_model import keyword_model
 from datetime import date
 

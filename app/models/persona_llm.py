@@ -5,7 +5,7 @@ from langchain_ollama import ChatOllama
 import json
 import logging
 
-class PersonaLlmModel:
+class PersonaLlm:
     """
     Ollama를 통해 LLM 모델을 가져오는 클래스
 
@@ -98,4 +98,4 @@ class PersonaLlmModel:
         return text
 
 # 싱글톤 생성
-persona_llm_model = PersonaLlmModel()
+persona_llm = PersonaLlm()
