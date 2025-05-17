@@ -72,6 +72,7 @@ class PostgresClient:
             sql = "SELECT * FROM chat_room WHERE DATE(last_chat_at) = CURRENT_DATE"
             cursor.execute(sql)
             chat_room_ids = [chat_room_id for chat_room_id, uid, egoId, last_chat_at, isDeleted in cursor.fetchall()]
+            print(chat_room_ids)
 
             user_all_chat_room_log:list[str] = [] # 사용자의 모든 채팅방 대화 목록
             for chat_room_id in chat_room_ids:
