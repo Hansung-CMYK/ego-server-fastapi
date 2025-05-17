@@ -62,4 +62,6 @@ async def save_graphdb(session_id:str, user_answer:str):
     if len(splited_messages) == 0: return # 문장 분리 실패 시, 데이터는 저장하지 않는다.
 
     # NOTE 3. 에고에 맞게 삼중항을 저장한다.
+    # TODO: 유저 정보로 해당 유저의 에고 아이디 조회가 필요하다. (하단 코드는 잘못된 로직)
+    # TODO: `ego_id_of_user = <api>(user_id)` BE API에 필요
     database_client.insert_messages_into_milvus(splited_messages=splited_messages, ego_id=ego_id)

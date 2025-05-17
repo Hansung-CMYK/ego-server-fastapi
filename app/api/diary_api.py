@@ -75,7 +75,10 @@ async def to_diary(body: DiaryRequest):
         # TODO: 이미지 저장하기
         topic.update({"url": f"TODO {content}"})
 
-    # NOTE 7. FE 반환 response 객체 생성
+    # NOTE 7. 에고 페르소나 수정
+    # TODO: 에고 페르소나 저장
+
+    # NOTE 8. FE 반환 response 객체 생성
     response = {
         "uid": body.user_id,
         "egoId": 1,
