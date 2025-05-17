@@ -50,6 +50,7 @@ async def to_diary(body: DiaryRequest):
 
     # NOTE 2. 키워드 추출
     keyword = keyword_model.get_keywords(stories=stories, count=5)
+    if len(keyword) == 0: keyword = keyword_model.get_keywords_textranker(stories=stories, count=5)
 
     # NOTE 3. 일기 생성
     # 예외처리: 일기 생성 전, 일기를 생성하기 위한 문장 수가 충분한지 확인

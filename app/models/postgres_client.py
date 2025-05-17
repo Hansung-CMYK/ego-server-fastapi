@@ -73,16 +73,13 @@ class PostgresClient:
             cursor.execute(sql)
             chat_room_ids = [chat_room_id for chat_room_id, uid, egoId, last_chat_at, isDeleted in cursor.fetchall()]
 
-            user_all_chat_room_log:list[str] = [] # 사용자의 모든 채팅방 대화 목록
+            user_all_chat_room_log:list[list[str]] = [] # 사용자의 모든 채팅방 대화 목록
             for chat_room_id in chat_room_ids:
                 sql = "SELECT * FROM chat_history WHERE chat_room_id = %s"
                 cursor.execute(sql, (chat_room_id, ))
 
                 # 사용자의 채팅방 대화 목록
-                chat_room_log = "".join(
-                    f"{'USER' if type == 'U' else 'AI'}: {content} at {chat_at}\n"
-                    for chat_history_id, uid, chat_room_id, content, type, chat_at, is_deleted, message_hash in cursor.fetchall()
-                ).strip()
+                chat_room_log = [f"{'USER' if type == 'U' else 'AI'}: {content} at {chat_at}" for chat_history_id, uid, chat_room_id, content, type, chat_at, is_deleted, message_hash in cursor.fetchall()]
 
                 user_all_chat_room_log.append(chat_room_log)
         except Exception as e:
