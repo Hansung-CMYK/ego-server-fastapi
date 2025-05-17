@@ -5,8 +5,9 @@ from numpy import ndarray
 from pymilvus import MilvusClient, MilvusException
 import logging
 
+from app.exception.exception_handler import ControlledException
+from app.exception.exceptions import ErrorCode
 from app.models.parsed_sentence import ParsedSentence
-from app.exception.entity_not_found import EntityNotFound
 
 # .env 환경 변수 추출
 load_dotenv()
@@ -120,7 +121,7 @@ class DatabaseClient:
                 에러 발생 데이터: {datas}
                 예외 내용: {e}
             """)
-            raise EntityNotFound
+            raise ControlledException(ErrorCode.PASSAGE_NOT_FOUND)
 
     def insert_messages_into_milvus(
             self,

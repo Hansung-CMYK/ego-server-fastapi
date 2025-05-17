@@ -1,6 +1,7 @@
 import os
 
 import psycopg2
+from datetime import datetime
 from dotenv import load_dotenv
 import json
 
@@ -34,7 +35,20 @@ class PostgresClient:
     def select_persona_to_id(self, persona_id: int):
         sql = "SELECT * FROM persona WHERE persona_id = %s"
         self.__cursor.execute(sql, (persona_id, ))
-        return self.__cursor.fetchall()[0]
+        result = self.__cursor.fetchall()
+
+        if len(result) == 0: return [
+            persona_id,
+            "카리나",
+            {
+                "name": "카리나",
+                "age": 25,
+                "gender": "여자",
+                "mbti": "ENTP",
+                "updated_at": datetime.now().isoformat()
+            }
+        ] # 페르소나 조회 실패 시, 예외처리 # TODO: 사용자 생성 업데이트 되면, 제거할 것
+        else: return self.__cursor.fetchall()[0] # 페르소나 결과 반환
 
     @staticmethod
     def search_all_chat(user_id: str):
@@ -67,7 +81,7 @@ class PostgresClient:
                 # 사용자의 채팅방 대화 목록
                 chat_room_log = "".join(
                     f"{'USER' if type == 'U' else 'AI'}: {content} at {chat_at}\n"
-                    for chat_history_id, uid, chat_room_id, content, type, chat_at, is_deleted in cursor.fetchall()
+                    for chat_history_id, uid, chat_room_id, content, type, chat_at, is_deleted, message_hash in cursor.fetchall()
                 ).strip()
 
                 user_all_chat_room_log.append(chat_room_log)

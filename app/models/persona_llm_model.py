@@ -1,11 +1,9 @@
 from json import JSONDecodeError
 from textwrap import dedent
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.prompts import ChatPromptTemplate
 from langchain_ollama import ChatOllama
 import json
 import logging
-
-from app.exception.incorrect_answer import IncorrectAnswer
 
 class PersonaLlmModel:
     """

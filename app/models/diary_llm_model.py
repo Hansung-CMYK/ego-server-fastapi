@@ -3,8 +3,14 @@ import json
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_ollama import ChatOllama
 
+from app.exception.exceptions import ControlledException, ErrorCode
 
 class DiaryLLMModel:
+    """
+    Ollama를 통해 LLM 모델을 가져오는 클래스
+
+    채팅내역을 바탕으로 일기를 생성하는 LLM 모델이다.
+    """
     def __init__(self, model_name="gemma3:4b"):
         model = ChatOllama(
             model=model_name,
@@ -16,13 +22,16 @@ class DiaryLLMModel:
         self.__prompt = prompt | model
 
     def diary_invoke(self, story: str) -> list[dict]:
+        """
+        일기를 생성하는 함수이다.
+        """
         answer = self.__prompt.invoke({"input": story, "example": self.__EXAMPLE}).content
         try:
             diary = json.loads(answer)["diary"]
         except json.JSONDecodeError:
-            raise Exception("-2: 일기 생성 중 JSON 변환이 실패되었습니다.")
+            raise ControlledException(ErrorCode.FAILURE_JSON_PARSING)
         except KeyError:
-            raise Exception("-4: LLM이 잘못된 데이터 타입을 생성했습니다.")
+            raise ControlledException(ErrorCode.INVALID_DATA_TYPE)
         return diary
 
     __DIARY_TEMPLATE = [
@@ -47,7 +56,6 @@ class DiaryLLMModel:
             9. 작성된 시간을 고려해 다른 연관 정보도 함께 사용 가능 
             10. 하나의 주제도 도출하지 못했다면, empty list 반환
             11. 전체 구조는 SCHEMA EXAMPLE을 참고
-
             </WRITING INSTRUCTIONS>
 
             <SCHEMA EXAMPLE>
@@ -74,6 +82,5 @@ class DiaryLLMModel:
         ...
     ]
     """
-
 
 diary_llm = DiaryLLMModel()

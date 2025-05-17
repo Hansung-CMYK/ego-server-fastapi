@@ -1,9 +1,9 @@
-from typing import TypeVar, Generic
+from typing import Generic, TypeVar, Optional
+from pydantic import BaseModel
 
 T = TypeVar('T')
 
-class CommonResponse(Generic[T]):
-    def __init__(self, code: int, message: str, data: T = None):
-        self.code = code
-        self.message = message
-        self.data = data
+class CommonResponse(BaseModel, Generic[T]):
+    code: int
+    message: str
+    data: Optional[T] = None
