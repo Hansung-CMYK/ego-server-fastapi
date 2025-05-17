@@ -5,6 +5,7 @@ from app.api.common_response import CommonResponse
 from app.exception.exceptions import ControlledException, ErrorCode
 from app.models.postgres_client import postgres_client
 from app.models.diary_llm_model import diary_llm
+from app.models.keyword_model import keyword_model
 from datetime import date
 
 from app.services.kobert_handler import extract_emotions
@@ -52,8 +53,7 @@ async def to_diary(body: DiaryRequest):
     daily_comment = "샘플 한줄평 요약"
 
     # NOTE 3. 키워드 추출
-    # TODO: 키워드 추출
-    keyword = ["샘플1", "샘플2"]
+    keyword = keyword_model.get_keywords(stories=stories, count=5)
 
     # NOTE 4. 일기 생성
     # 예외처리: 일기 생성 전, 일기를 생성하기 위한 문장 수가 충분한지 확인
