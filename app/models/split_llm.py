@@ -1,5 +1,4 @@
 import datetime
-from os.path import split
 from textwrap import dedent
 
 from langchain_ollama import ChatOllama
@@ -14,10 +13,8 @@ class SplitLlm:
     """
 
     def __init__(self):
-        TRIPLET_LLM_MODEL = "qwen3:8b"
-
         model = ChatOllama(
-            model=TRIPLET_LLM_MODEL,
+            model="qwen3:8b",
             temperature=0.0,
             format="json"
         )

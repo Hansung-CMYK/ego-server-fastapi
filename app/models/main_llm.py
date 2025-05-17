@@ -20,10 +20,8 @@ class MainLlm:
     __store : dict[str, ChatMessageHistory] = {}
 
     def __init__(self):
-        MAIN_LLM_MODEL = "gemma3"
-
         model = ChatOllama(
-            model=MAIN_LLM_MODEL,
+            model="gemma3",
             temperature=0.7
         )
 

@@ -11,9 +11,9 @@ class DiaryLlm:
 
     채팅내역을 바탕으로 일기를 생성하는 LLM 모델이다.
     """
-    def __init__(self, model_name="gemma3:4b"):
+    def __init__(self):
         model = ChatOllama(
-            model=model_name,
+            model="qwen3:8b", # 원래 gemma3:4b
             temperature=0.0,
             format="json"
         )

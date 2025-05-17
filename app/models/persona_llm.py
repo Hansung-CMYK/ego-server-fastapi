@@ -54,9 +54,8 @@ class PersonaLlm:
         """
         Ollama와 LangChain을 이용하여 LLM 모델을 생성
         """
-
         model = ChatOllama(
-            model="qwen3:4b",
+            model="qwen3:8b", # 원래 qwen3:4b
             temperature=0.0,
             format="json" # 반환을 json으로 하도록 설정
         )
