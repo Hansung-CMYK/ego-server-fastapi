@@ -7,7 +7,10 @@ class KeywordModel:
     __keyword_model = KeyBERT(__model)
     __kiwi = Kiwi()
 
-    def get_keywords(self, stories:list[list[str]], count:int=5):
+    def get_keywords_vector_embedding(self, stories:list[list[str]], count:int=5):
+        """
+        KeyBERT를 통해 벡터 임베딩을 통한 코사인 유사도로 키워드 추출
+        """
         nouns_list = []
 
         texts = [chat for story in stories for chat in story]

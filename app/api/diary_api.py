@@ -48,14 +48,10 @@ async def to_diary(body: DiaryRequest):
     #     ]
     # ]
 
-    # NOTE 2. 한줄평 요약
-    # TODO: 한줄평 요약
-    daily_comment = "샘플 한줄평 요약"
-
-    # NOTE 3. 키워드 추출
+    # NOTE 2. 키워드 추출
     keyword = keyword_model.get_keywords(stories=stories, count=5)
 
-    # NOTE 4. 일기 생성
+    # NOTE 3. 일기 생성
     # 예외처리: 일기 생성 전, 일기를 생성하기 위한 문장 수가 충분한지 확인
     if sum(len(story) for story in stories) < 5: # 리스트에 있는 전체 문장 수가 5개 이상이어야 한다.
         raise ControlledException(ErrorCode.CHAT_COUNT_NOT_ENOUGH)
@@ -66,19 +62,23 @@ async def to_diary(body: DiaryRequest):
     # 예외처리: 일기로 아무 내용이 반환되지 않았는지 확인한다.
     if len(topics) < 1: raise ControlledException(ErrorCode.CAN_NOT_EXTRACT_DIARY)
 
-    # NOTE 5. 감정 분석
+    # NOTE 4. 감정 분석
     feeling = extract_emotions(topics)
 
-    # NOTE 6. 이미지 저장
+    # NOTE 5. 이미지 저장
     for topic in topics:
         content = topic["content"]
         # TODO: 이미지 저장하기
         topic.update({"url": f"TODO {content}"})
 
-    # NOTE 7. 에고 페르소나 수정
+    # NOTE 7. 한줄 요약 문장 생성
+    daily_comment = "샘플 한줄평 요약"
+
+    # NOTE 6. 에고 페르소나 수정
     # TODO: 에고 페르소나 저장
 
     # NOTE 8. FE 반환 response 객체 생성
+    # TODO: 문장 변경 가능성 있음.
     response = {
         "uid": body.user_id,
         "egoId": 1,
@@ -86,9 +86,8 @@ async def to_diary(body: DiaryRequest):
         "dailyComment": daily_comment,
         "createdAt": date.today(),
         "keywords": keyword,
-        "topics": topics,
+        "topics": topics
     }
-    print(response) # 테스트용 로그
 
     return CommonResponse(
         code=200,
