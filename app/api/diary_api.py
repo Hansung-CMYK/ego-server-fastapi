@@ -9,7 +9,7 @@ from app.models.daily_comment_llm import daily_comment_llm
 from app.models.postgres_client import postgres_client
 from app.models.topic_llm import topic_llm
 from app.models.keyword_model import keyword_model
-from datetime import date
+from datetime import datetime, date
 
 from app.services.kobert_handler import extract_emotions
 
@@ -17,16 +17,13 @@ router = APIRouter()
 
 class DiaryRequest(BaseModel):
     user_id: str
-
-    def __init__(self, user_id: str, /, **data: Any):
-        super().__init__(**data)
-        self.user_id = user_id
+    target_time: datetime
 
 @router.post("/diary")
 async def to_diary(body: DiaryRequest):
     # NOTE 1. SQL 조회로 이전하기
     # TODO: SQL 조회로 이전하기
-    stories = postgres_client.search_all_chat(user_id=body.user_id)
+    stories = postgres_client.search_all_chat(user_id=body.user_id, target_time=body.target_time)
 
     # NOTE 2. 키워드 추출
     keywords = keyword_model.get_keywords(stories=stories, count=5)
@@ -46,10 +43,10 @@ async def to_diary(body: DiaryRequest):
     feeling = extract_emotions(topics)
 
     # NOTE 5. 이미지 저장
-    for topic in topics:
-        content = topic["content"]
-        # TODO: 이미지 저장하기
-        topic.update({"url": f"TODO {content}"})
+    # for topic in topics:
+    #     content = topic["content"]
+    #     # TODO: 이미지 저장하기
+    #     topic.update({"url": f"TODO {content}"})
 
     # NOTE 7. 한줄 요약 문장 생성
     daily_comment = daily_comment_llm.invoke(diaries=topics, feeling=feeling, keywords=keywords)
@@ -64,9 +61,9 @@ async def to_diary(body: DiaryRequest):
         "egoId": 1,
         "feeling": feeling,
         "dailyComment": daily_comment,
-        "createdAt": date.today(),
+        "createdAt": body.target_time.date(),
         "keywords": keywords,
-        "topics": topics
+        "topics":  topics
     }
 
     return CommonResponse(

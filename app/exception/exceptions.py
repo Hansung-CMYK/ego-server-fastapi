@@ -16,6 +16,9 @@ class ErrorCode(Enum):
     CAN_NOT_EXTRACT_DIARY = (-202, "아무런 주제도 도출되지 못했습니다.")
     FAILURE_JSON_PARSING = (-203, "일기 생성 중 JSON 변환이 실패되었습니다.")
     INVALID_DATA_TYPE = (-204, "LLM이 잘못된 데이터 타입을 생성했습니다.")
+    POSTGRES_ACCESS_DENIED = (-205, "PostgreSQL 접속(or 스키마 접속)에 실패하였습니다.")
+    INVALID_SQL_ERROR = (-206, "잘못된 SQL로 에러가 발생했습니다.")
+
 
 class ControlledException(RuntimeError):
     """
