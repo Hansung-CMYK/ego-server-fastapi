@@ -1,6 +1,7 @@
 import os
 
 import ollama
+import base64
 
 from fastapi import APIRouter, UploadFile, File, Form
 from pydantic import BaseModel
@@ -41,9 +42,11 @@ async def ollama_image(
     file: UploadFile = File(..., description="이미지 파일"),
     user_id: str    = Form(..., description="사용자 ID"),
     ego_id:  str    = Form(..., description="페르소나 ID"),
-):
-    contents = await file.read()
-    response = ollama.generate(model='gemma3:4b', prompt=contents)
+):  
+    raw_bytes = await file.read()
+
+    b64_str = base64.b64encode(raw_bytes).decode("utf-8")
+    response = ollama.generate(model='gemma3:4b', prompt=b64_str)
     # for chunk in chat_stream(
     #     prompt=contents,
     #     config=SessionConfig(user_id, ego_id)
