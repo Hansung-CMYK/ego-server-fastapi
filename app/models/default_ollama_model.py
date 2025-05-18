@@ -27,7 +27,7 @@ TopicLlm: 일기의 주제를 추출하고, 그에 대한 이야기를 서술하
 DailyCommentLLM: 일기 생성 시, 일기를 한 줄로 요약하는 모델이다.
 """
 task_model = ChatOllama(
-    model="qwen3:8b",
+    model="qwen3:4b",
     temperature=0.0,
     format="json"
 )
