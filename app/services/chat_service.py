@@ -58,7 +58,7 @@ async def save_graphdb(session_id:str, user_answer:str):
     messages = [ai_message, human_message]
 
     # NOTE 2. 문장을 분리한다.
-    splited_messages = split_llm.split_invoke(session_history=messages)
+    splited_messages = split_llm.invoke(session_history=messages)
     if len(splited_messages) == 0: return # 문장 분리 실패 시, 데이터는 저장하지 않는다.
 
     # NOTE 3. 에고에 맞게 삼중항을 저장한다.

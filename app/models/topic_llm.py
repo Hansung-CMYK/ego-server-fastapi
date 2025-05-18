@@ -5,7 +5,7 @@ from langchain_ollama import ChatOllama
 
 from app.exception.exceptions import ControlledException, ErrorCode
 
-class DiaryLlm:
+class TopicLlm:
     """
     Ollama를 통해 LLM 모델을 가져오는 클래스
 
@@ -21,13 +21,13 @@ class DiaryLlm:
         prompt = ChatPromptTemplate.from_messages(self.__DIARY_TEMPLATE)
         self.__prompt = prompt | model
 
-    def diary_invoke(self, story: str) -> list[dict]:
+    def invoke(self, story: str) -> list[dict]:
         """
         일기를 생성하는 함수이다.
         """
         answer = self.__prompt.invoke({"input": story, "example": self.__EXAMPLE}).content
         try:
-            diary = json.loads(answer)["diary"]
+            diary = json.loads(answer)["topics"]
         except json.JSONDecodeError:
             raise ControlledException(ErrorCode.FAILURE_JSON_PARSING)
         except KeyError:
@@ -42,12 +42,12 @@ class DiaryLlm:
             <WRITING INSTRUCTIONS>
             1. **무조건** JSON **문자열**만 출력 (자연어 해설 금지)
             2 1인칭 일기체 사용(“나는 …했다.” “오늘은 …였다”)
-            3. 최상위 키값은 'diary'만 존재.
+            3. 최상위 키값은 'topics'만 존재.
                 - 타입은 list로 저장. 
                 - 타입 list 내부에는 주제가 dict 타입으로 저장 
             4. 키·값 모두 쌍따옴표("), 마지막 콤마 금지. 
-            5. 주제(topic) 제한
-                - 각 topic은 **1문장 이내** 핵심어
+            5. 주제(title) 제한
+                - 각 title은 **1문장 이내** 핵심어
                 - content : 3~10문장, 감각 묘사 ≥1문장
             6. 본문(content) 규칙
                 - 가능하면 감정·환경 묘사(시각/청각/후각) 한 줄 삽입 
@@ -70,17 +70,17 @@ class DiaryLlm:
     ]
 
     __EXAMPLE = """
-    "diary": [
+    "topics": [
         {
-            "topic": "<주제 1>", 
+            "title": "<주제 1>", 
             "content": "<본문 1>. <본문 2>..."
         },
         {
-            "topic": "<주제 2>",
+            "title": "<주제 2>",
             "content": "..."
         },
         ...
     ]
     """
 
-diary_llm = DiaryLlm()
+topic_llm = TopicLlm()

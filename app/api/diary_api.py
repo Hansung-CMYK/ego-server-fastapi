@@ -1,3 +1,5 @@
+from typing import Any
+
 from fastapi import APIRouter
 from pydantic import BaseModel
 
@@ -5,7 +7,7 @@ from app.api.common_response import CommonResponse
 from app.exception.exceptions import ControlledException, ErrorCode
 from app.models.daily_comment_llm import daily_comment_llm
 from app.models.postgres_client import postgres_client
-from app.models.diary_llm import diary_llm
+from app.models.topic_llm import topic_llm
 from app.models.keyword_model import keyword_model
 from datetime import date
 
@@ -15,11 +17,10 @@ router = APIRouter()
 
 class DiaryRequest(BaseModel):
     user_id: str
-    ego_id: str
 
-    def add(self, user_id: str, ego_id: str):
+    def __init__(self, user_id: str, /, **data: Any):
+        super().__init__(**data)
         self.user_id = user_id
-        self.ego_id = ego_id
 
 @router.post("/diary")
 async def to_diary(body: DiaryRequest):
@@ -36,44 +37,40 @@ async def to_diary(body: DiaryRequest):
         raise ControlledException(ErrorCode.CHAT_COUNT_NOT_ENOUGH)
 
     # 일기 생성
-    diaries = diary_llm.diary_invoke(story=stories)
+    topics = topic_llm.invoke(story=stories)
 
     # 예외처리: 일기로 아무 내용이 반환되지 않았는지 확인한다.
-    if len(diaries) < 1: raise ControlledException(ErrorCode.CAN_NOT_EXTRACT_DIARY)
+    if len(topics) < 1: raise ControlledException(ErrorCode.CAN_NOT_EXTRACT_DIARY)
 
     # NOTE 4. 감정 분석
-    feeling = extract_emotions(diaries)
+    feeling = extract_emotions(topics)
 
     # NOTE 5. 이미지 저장
-    for diary in diaries:
-        content = diary["content"]
+    for topic in topics:
+        content = topic["content"]
         # TODO: 이미지 저장하기
-        diary.update({"url": f"TODO {content}"})
+        topic.update({"url": f"TODO {content}"})
 
     # NOTE 7. 한줄 요약 문장 생성
-    daily_comment = daily_comment_llm.invoke(diaries=diaries, feeling=feeling, keywords=keywords)
+    daily_comment = daily_comment_llm.invoke(diaries=topics, feeling=feeling, keywords=keywords)
 
     # NOTE 6. 에고 페르소나 수정
     # TODO: 에고 페르소나 저장
 
-    # NOTE 8. FE 반환 response 객체 생성
+    # NOTE 8. FE 반환 diary 객체 생성
     # TODO: 문장 변경 가능성 있음.
-    response = {
+    diary = {
         "uid": body.user_id,
         "egoId": 1,
         "feeling": feeling,
         "dailyComment": daily_comment,
         "createdAt": date.today(),
         "keywords": keywords,
-        "topics": diaries
+        "topics": topics
     }
 
     return CommonResponse(
         code=200,
         message="diary success!",
-        data=response
+        data=diary
     )
-
-@router.get("/diary/test_exception_diary")
-async def test_exception_diary():
-    raise ControlledException(ErrorCode.CAN_NOT_EXTRACT_DIARY)
