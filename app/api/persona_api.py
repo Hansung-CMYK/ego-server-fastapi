@@ -31,7 +31,7 @@ async def create_persona(body: PersonaRequest):
     persona = {k: v for k, v in body.model_dump().items() if v is not None}
 
     # NOTE 3. 에고 정보를 JSON으로 만들어 저장한다.
-    postgres_database.insert_persona(persona=persona)
+    postgres_database.insert_persona(ego_id= body.ego_id, persona=persona)
 
     return CommonResponse(
         code=200,

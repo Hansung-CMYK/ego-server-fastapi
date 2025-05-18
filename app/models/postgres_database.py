@@ -24,9 +24,9 @@ class PostgresDatabase:
         self.__database.close()
         self.__cursor.close()
 
-    def insert_persona(self, persona: dict):
-        sql = "INSERT INTO persona (persona) VALUES (%s)"
-        self.__cursor.execute(sql, (json.dumps(persona),))
+    def insert_persona(self, ego_id: str, persona: dict):
+        sql = "INSERT INTO persona (ego_id, persona) VALUES (%s, %s)"
+        self.__cursor.execute(sql, (ego_id, json.dumps(persona),))
         self.__database.commit()
 
     def update_persona(self, ego_id: str, persona_json: dict):
