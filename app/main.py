@@ -70,5 +70,6 @@ app.include_router(chat_api.router,    prefix="/api", tags=["chat"])
 app.include_router(voice_chat_api.router, prefix="/api", tags=["voice-chat"])
 app.include_router(fal_api.router, prefix="/api", tags=["image"])
 app.include_router(diary_api.router, prefix="/api", tags=["diary"])
+app.include_router(diary_api.router, prefix="/api", tags=["persona"])
 
 
