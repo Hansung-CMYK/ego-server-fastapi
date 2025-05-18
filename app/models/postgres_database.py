@@ -30,12 +30,12 @@ class PostgresDatabase:
         self.__database.commit()
 
     def update_persona(self, ego_id: str, persona_json: dict):
-        sql = "UPDATE persona SET persona = %s WHERE persona_id = %s"
+        sql = "UPDATE persona SET persona = %s WHERE ego_id = %s"
         self.__cursor.execute(sql, (json.dumps(persona_json), ego_id,))
         self.__database.commit()
 
     def select_persona_to_id(self, ego_id: str):
-        sql = "SELECT * FROM persona WHERE persona_id = %s"
+        sql = "SELECT * FROM persona WHERE ego_id = %s"
         self.__cursor.execute(sql, (ego_id,))
         result = self.__cursor.fetchall()
 
@@ -43,7 +43,7 @@ class PostgresDatabase:
         else: return result[0] # 페르소나 결과 반환
 
     def already_persona(self, ego_id: str) -> bool:
-        sql = "SELECT * FROM persona WHERE persona_id = %s"
+        sql = "SELECT * FROM persona WHERE ego_id = %s"
         self.__cursor.execute(sql, (ego_id,))
         result = self.__cursor.fetchall()
         if len(result) == 0: return False
