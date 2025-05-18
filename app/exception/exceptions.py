@@ -10,7 +10,7 @@ class ErrorCode(Enum):
 
     # 음성&채팅 메세지
     PASSAGE_NOT_FOUND = (-100, "해당 passage_id로 조회된 본문(passage)이 없습니다.")
-    PERSONA_NOT_FOUNT = (-101, "해당 ego_id로 조회된 페르소나(persona)가 없습니다.")
+    PERSONA_NOT_FOUND = (-101, "해당 ego_id로 조회된 페르소나(persona)가 없습니다.")
     # 일기 생성
     CHAT_COUNT_NOT_ENOUGH = (-201, "일기를 만들기 위한 문장 수가 부족합니다.")
     CAN_NOT_EXTRACT_DIARY = (-202, "아무런 주제도 도출되지 못했습니다.")

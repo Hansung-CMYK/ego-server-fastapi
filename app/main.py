@@ -3,7 +3,7 @@ import sys
 import importlib.util
 
 from fastapi import FastAPI, APIRouter
-from app.api import chat_api, voice_chat_api, fal_api, diary_api
+from app.api import chat_api, voice_chat_api, fal_api, diary_api, persona_api
 from app.exception.exception_handler import register_exception_handlers
 from app.services.tts_infer import ensure_init
 
@@ -70,5 +70,6 @@ app.include_router(chat_api.router,    prefix="/api", tags=["chat"])
 app.include_router(voice_chat_api.router, prefix="/api", tags=["voice-chat"])
 app.include_router(fal_api.router, prefix="/api", tags=["image"])
 app.include_router(diary_api.router, prefix="/api", tags=["diary"])
+app.include_router(persona_api.router, prefix="/api", tags=["persona"])
 
 

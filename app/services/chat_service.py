@@ -23,7 +23,7 @@ def chat_stream(prompt: str, config: SessionConfig):
     # asyncio.create_task(save_graphdb(session_id=session_id, user_answer=prompt))
 
     rag_prompt = get_rag_prompt(ego_id=ego_id, user_speak=prompt)
-    persona = persona_store.get_persona(persona_id=ego_id)
+    persona = persona_store.get_persona(ego_id=ego_id)
 
     for chunk in main_llm.get_chain().stream(
         input = {

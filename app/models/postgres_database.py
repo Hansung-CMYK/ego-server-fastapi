@@ -24,33 +24,30 @@ class PostgresDatabase:
         self.__database.close()
         self.__cursor.close()
 
-    def insert_persona(self, persona_name: str, persona_json: dict):
-        sql = "INSERT INTO persona (name, persona) VALUES (%s, %s)"
-        self.__cursor.execute(sql, (persona_name, json.dumps(persona_json), ))
+    def insert_persona(self, ego_id: str, persona: dict):
+        sql = "INSERT INTO persona (ego_id, persona) VALUES (%s, %s)"
+        self.__cursor.execute(sql, (ego_id, json.dumps(persona),))
         self.__database.commit()
 
-    def update_persona(self, persona_id: int, persona_json: dict):
-        sql = "UPDATE persona SET persona = %s WHERE persona_id = %s"
-        self.__cursor.execute(sql, (json.dumps(persona_json), persona_id, ))
+    def update_persona(self, ego_id: str, persona_json: dict):
+        sql = "UPDATE persona SET persona = %s WHERE ego_id = %s"
+        self.__cursor.execute(sql, (json.dumps(persona_json), ego_id,))
         self.__database.commit()
 
-    def select_persona_to_id(self, persona_id: int):
-        sql = "SELECT * FROM persona WHERE persona_id = %s"
-        self.__cursor.execute(sql, (persona_id, ))
+    def select_persona_to_id(self, ego_id: str):
+        sql = "SELECT * FROM persona WHERE ego_id = %s"
+        self.__cursor.execute(sql, (ego_id,))
         result = self.__cursor.fetchall()
 
-        if len(result) == 0: return [
-            persona_id,
-            "카리나",
-            {
-                "name": "카리나",
-                "age": 25,
-                "gender": "여자",
-                "mbti": "ENTP",
-                "updated_at": datetime.now().isoformat()
-            }
-        ] # 페르소나 조회 실패 시, 예외처리 # TODO: 사용자 생성 업데이트 되면, 제거할 것
+        if len(result) == 0: raise ControlledException(ErrorCode.PERSONA_NOT_FOUND)
         else: return result[0] # 페르소나 결과 반환
+
+    def already_persona(self, ego_id: str) -> bool:
+        sql = "SELECT * FROM persona WHERE ego_id = %s"
+        self.__cursor.execute(sql, (ego_id,))
+        result = self.__cursor.fetchall()
+        if len(result) == 0: return False
+        else: return True
 
     @staticmethod
     def search_all_chat(user_id: str, target_time: datetime):
@@ -98,7 +95,7 @@ class PostgresDatabase:
         return user_all_chat_room_log
 
     def create_persona(self):
-        sql = "CREATE TABLE persona (persona_id SERIAL PRIMARY KEY, name VARCHAR(255) NOT NULL UNIQUE, persona JSON NOT NULL)"
+        sql = "CREATE TABLE persona (ego_id INT PRIMARY KEY, persona JSON NOT NULL)"
         self.__cursor.execute(sql)
         self.__database.commit()
 
