@@ -1,16 +1,57 @@
 from json import JSONDecodeError
 from textwrap import dedent
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_ollama import ChatOllama
 import json
 import logging
 
-class PersonaLlmModel:
+from app.models.default_ollama_model import task_model
+
+
+class PersonaLlm:
     """
     Ollama를 통해 LLM 모델을 가져오는 클래스
 
     대화 내역을 바탕으로 사용자의 페르소나를 재구성해주는 모델이다.
     """
+    def __init__(self):
+        """
+        Ollama와 LangChain을 이용하여 LLM 모델을 생성
+        """
+        # 메인 모델 프롬프트 적용 + 랭체인 생성
+        prompt = ChatPromptTemplate.from_messages(self.__PERSONA_TEMPLATE)
+        self.__persona_chain = prompt | task_model
+
+    def invoke(self, current_persona: str, session_history: str) -> dict:
+        """
+        사용자의 대화기록을 바탕으로 페르소나를 수정한다.
+
+        :param current_persona: 현재 페르소나 json 정보
+        :param session_history: 최근 대화 내역
+        :return: json 정보를 가진 dict
+        """
+        answer = self.__persona_chain.invoke(
+            {"session_history": session_history, "sample_json": self.__SAMPLE_JSON, "current_persona": [current_persona]}
+        ).content
+        clean_answer = self.__clean_json_string(answer)
+
+        # dict로 자료형 변경
+        try:
+            return json.loads(clean_answer)
+        except JSONDecodeError:
+            logging.warning(f"::Error Exception(JSONDecodeError):: 변경할 persona가 없습니다. 변경사항을 반영하지 않습니다.")
+            return {}
+
+    @staticmethod
+    def __clean_json_string(text: str) -> str:
+        """
+        LLM이 출력한 문자열에서 ```json 및 ``` 마커를 제거하고 공백을 정리한다.
+        """
+        text = text.strip()
+        if text.startswith("```json"):
+            text = text[len("```json"):].strip()
+        if text.endswith("```"):
+            text = text[:-3].strip()
+        return text
 
     __PERSONA_TEMPLATE = [
         ("system", "/no_think\n"),
@@ -50,52 +91,5 @@ class PersonaLlmModel:
             "$unset": {...}
         """
 
-    def __init__(self):
-        """
-        Ollama와 LangChain을 이용하여 LLM 모델을 생성
-        """
-
-        model = ChatOllama(
-            model="qwen3:4b",
-            temperature=0.0,
-            format="json" # 반환을 json으로 하도록 설정
-        )
-
-        # 메인 모델 프롬프트 적용 + 랭체인 생성
-        prompt = ChatPromptTemplate.from_messages(self.__PERSONA_TEMPLATE)
-        self.__persona_chain = prompt | model
-
-    def invoke(self, current_persona: str, session_history: str) -> dict:
-        """
-        사용자의 대화기록을 바탕으로 페르소나를 수정한다.
-
-        :param current_persona: 현재 페르소나 json 정보
-        :param session_history: 최근 대화 내역
-        :return: json 정보를 가진 dict
-        """
-        answer = self.__persona_chain.invoke(
-            {"session_history": session_history, "sample_json": self.__SAMPLE_JSON, "current_persona": [current_persona]}
-        ).content
-        clean_answer = self.__clean_json_string(answer)
-
-        # dict로 자료형 변경
-        try:
-            return json.loads(clean_answer)
-        except JSONDecodeError:
-            logging.warning(f"::Error Exception(JSONDecodeError):: 변경할 persona가 없습니다. 변경사항을 반영하지 않습니다.")
-            return {}
-
-    @staticmethod
-    def __clean_json_string(text: str) -> str:
-        """
-        LLM이 출력한 문자열에서 ```json 및 ``` 마커를 제거하고 공백을 정리한다.
-        """
-        text = text.strip()
-        if text.startswith("```json"):
-            text = text[len("```json"):].strip()
-        if text.endswith("```"):
-            text = text[:-3].strip()
-        return text
-
 # 싱글톤 생성
-persona_llm_model = PersonaLlmModel()
+persona_llm = PersonaLlm()

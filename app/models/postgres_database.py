@@ -1,13 +1,15 @@
 import os
 
 import psycopg2
-from datetime import datetime
+from datetime import datetime, timedelta
 from dotenv import load_dotenv
 import json
 
+from app.exception.exceptions import ControlledException, ErrorCode
+
 load_dotenv()
 
-class PostgresClient:
+class PostgresDatabase:
     def __init__(self):
         self.__database = psycopg2.connect(
             host=os.getenv("POSTGRES_URI"),
@@ -51,7 +53,7 @@ class PostgresClient:
         else: return result[0] # 페르소나 결과 반환
 
     @staticmethod
-    def search_all_chat(user_id: str):
+    def search_all_chat(user_id: str, target_time: datetime):
         """
         user_id에 맞는 사용자의 대화 내역을 불러오는 함수
         """
@@ -69,8 +71,11 @@ class PostgresClient:
             # TODO: 현재 날짜 설정이 자정을 넘어가면 연산 방식을 바꿔야함. ex) 현재시간부터 -24시간 이내
 
             # 오늘 한번이라도 대화한 채팅방의 정보를 조회한다.
-            sql = "SELECT * FROM chat_room WHERE DATE(last_chat_at) = CURRENT_DATE"
-            cursor.execute(sql)
+            start_time = target_time - timedelta(hours=24)
+            end_time = target_time
+
+            sql = "SELECT * FROM chat_room WHERE last_chat_at BETWEEN %s AND %s"
+            cursor.execute(sql, (start_time, end_time))
             chat_room_ids = [chat_room_id for chat_room_id, uid, egoId, last_chat_at, isDeleted in cursor.fetchall()]
 
             user_all_chat_room_log:list[list[str]] = [] # 사용자의 모든 채팅방 대화 목록
@@ -82,9 +87,10 @@ class PostgresClient:
                 chat_room_log = [f"{'USER' if type == 'U' else 'AI'}: {content} at {chat_at}" for chat_history_id, uid, chat_room_id, content, type, chat_at, is_deleted, message_hash in cursor.fetchall()]
 
                 user_all_chat_room_log.append(chat_room_log)
-        except Exception as e:
-            print("personalized 접속 실패")
-            raise e
+        except psycopg2.OperationalError:
+            raise ControlledException(ErrorCode.POSTGRES_ACCESS_DENIED)
+        except psycopg2.ProgrammingError:
+            raise ControlledException(ErrorCode.INVALID_SQL_ERROR)
         finally:
             cursor.close()
             database.close()
@@ -96,4 +102,4 @@ class PostgresClient:
         self.__cursor.execute(sql)
         self.__database.commit()
 
-postgres_client = PostgresClient()
+postgres_database = PostgresDatabase()

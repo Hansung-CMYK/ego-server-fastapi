@@ -1,31 +1,25 @@
 import datetime
 from textwrap import dedent
 
-from langchain_ollama import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate
 
 import json
 import logging
 
-class SplitLlmModel:
+from app.models.default_ollama_model import task_model
+
+
+class SplitLlm:
     """
     Ollama를 통해 LLM 모델을 가져오는 클래스
     """
 
     def __init__(self):
-        TRIPLET_LLM_MODEL = "qwen3:8b"
-
-        model = ChatOllama(
-            model=TRIPLET_LLM_MODEL,
-            temperature=0.0,
-            format="json"
-        )
-
         # 문장 분리 프롬프트 적용 + 랭체인 생성
         split_prompt = ChatPromptTemplate.from_messages(self.__SPLIT_TEMPLATE)
-        self.__split_chain = split_prompt | model
+        self.__split_chain = split_prompt | task_model
 
-    def split_invoke(self, session_history:str)->list:
+    def invoke(self, session_history:str)->list:
         """
         전달 받은 문장들을 하나의 단일 의미나 사건으로 분리한다.
         :param session_history: 복합 의미를 가진 문장
@@ -62,6 +56,7 @@ class SplitLlmModel:
             9. ai의 문장은 맥락을 이해하는데 참고하되, ai 답변은 절대 문장 추출 금지
             10. 아무런 정보가 없는 문장은 문장 추출에서 제외(예: 아 배고파, 뭐하지, 심심해 ...) 
 
+            [예시]
             {example}
         """)),
         ("human", "{input}")
@@ -83,4 +78,4 @@ class SplitLlmModel:
         }
     """).strip()
 
-parsing_llm = SplitLlmModel()
+split_llm = SplitLlm()

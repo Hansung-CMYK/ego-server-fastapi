@@ -3,7 +3,7 @@ from collections import defaultdict
 from scipy.sparse import csr_matrix
 
 from app.models.parsed_sentence import ParsedSentence
-from app.models.database_client import database_client
+from app.models.milvus_database import milvus_database
 
 """
 Graph RAG를 활용하기 위한 서비스
@@ -24,12 +24,12 @@ def get_rag_prompt(ego_id:str, user_speak:str)->str:
     # TODO 1. 주어로도 목적어를 조회하고, 목적어로도 주어를 조회할 수 있어야 하는 것 아님?
     # 주어, 목적어, 관계와 유사한 삼중항 조회
     if speak.triplets[0][0] != "":
-        triplets_with_similar_subject = database_client.search_triplets_to_milvus(
+        triplets_with_similar_subject = milvus_database.search_triplets_to_milvus(
             ego_id=ego_id,
             field_name="embedded_subject",
             datas=[embedded_triplets[0] for embedded_triplets in speak_embedding["embedded_triplets"]]
         )
-        triplets_with_similar_subject.extend(database_client.search_triplets_to_milvus(
+        triplets_with_similar_subject.extend(milvus_database.search_triplets_to_milvus(
             ego_id=ego_id,
             field_name="embedded_object",
             datas=[embedded_triplets[0] for embedded_triplets in speak_embedding["embedded_triplets"]]
@@ -37,12 +37,12 @@ def get_rag_prompt(ego_id:str, user_speak:str)->str:
     else: triplets_with_similar_subject = []
 
     if speak.triplets[0][1] != "":
-        triplets_with_similar_object = database_client.search_triplets_to_milvus(
+        triplets_with_similar_object = milvus_database.search_triplets_to_milvus(
             ego_id=ego_id,
             field_name="embedded_object",
             datas=[embedded_triplets[1] for embedded_triplets in speak_embedding["embedded_triplets"]]
         )
-        triplets_with_similar_object.extend(database_client.search_triplets_to_milvus(
+        triplets_with_similar_object.extend(milvus_database.search_triplets_to_milvus(
             ego_id=ego_id,
             field_name="embedded_subject",
             datas=[embedded_triplets[1] for embedded_triplets in speak_embedding["embedded_triplets"]]
@@ -50,7 +50,7 @@ def get_rag_prompt(ego_id:str, user_speak:str)->str:
     else : triplets_with_similar_object = []
 
     if speak.relations != "":
-        triplets_with_similar_relations = database_client.search_triplets_to_milvus(
+        triplets_with_similar_relations = milvus_database.search_triplets_to_milvus(
             ego_id=ego_id,
             field_name="embedded_relation",
             datas=speak_embedding["embedded_relations"]
@@ -68,7 +68,7 @@ def get_rag_prompt(ego_id:str, user_speak:str)->str:
     )
 
     # NOTE 4. 연결된 관계들의 원문을 조회한다.
-    related_passages = database_client.search_passages_to_milvus(
+    related_passages = milvus_database.search_passages_to_milvus(
         ego_id=ego_id,
         datas=related_passages_ids
     )

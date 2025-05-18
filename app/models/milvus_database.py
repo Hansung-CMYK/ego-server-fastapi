@@ -13,7 +13,7 @@ from app.models.parsed_sentence import ParsedSentence
 load_dotenv()
 URI = os.getenv('URI')
 
-class DatabaseClient:
+class MilvusDatabase:
     """
     Milvus를 이용하기 위한 Client이다.
 
@@ -180,4 +180,4 @@ class DatabaseClient:
                 data=triplet_datas
             )
 
-database_client = DatabaseClient()
+milvus_database = MilvusDatabase()

@@ -5,13 +5,14 @@ from langchain_core._api import LangChainDeprecationWarning
 from langchain_core.chat_history import BaseChatMessageHistory
 from langchain_community.chat_message_histories import ChatMessageHistory
 from langchain_core.runnables import RunnableWithMessageHistory
-from langchain_ollama import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+
+from app.models.default_ollama_model import chat_model
 
 # 로깅 에러 문구 제거
 warnings.filterwarnings("ignore", category=LangChainDeprecationWarning)
 
-class MainLlmModel:
+class MainLlm:
     """
     Ollama를 통해 LLM 모델을 가져오는 클래스
     """
@@ -20,16 +21,9 @@ class MainLlmModel:
     __store : dict[str, ChatMessageHistory] = {}
 
     def __init__(self):
-        MAIN_LLM_MODEL = "gemma3"
-
-        model = ChatOllama(
-            model=MAIN_LLM_MODEL,
-            temperature=0.7
-        )
-
         # 메인 모델 프롬프트 적용 + 랭체인 생성
         prompt = ChatPromptTemplate.from_messages(self.__MAIN_TEMPLATE)
-        main_chain = prompt | model
+        main_chain = prompt | chat_model
 
         self.__prompt = RunnableWithMessageHistory(
             main_chain,
@@ -86,4 +80,4 @@ class MainLlmModel:
         ("human", "{input}")
     ]
 
-main_llm = MainLlmModel()
+main_llm = MainLlm()
