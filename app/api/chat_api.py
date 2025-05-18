@@ -1,20 +1,22 @@
 import os
 
-from fastapi import APIRouter
+import ollama
+
+from fastapi import APIRouter, UploadFile, File, Form
 from pydantic import BaseModel
 
 from app.api.common_response import CommonResponse
 from app.services.chat_service import chat_stream
 from app.services.session_config import SessionConfig
 
-router = APIRouter()
+router = APIRouter(prefix="/chat")
 
 class ChatRequest(BaseModel):
     message: str
     user_id: str
     ego_id: str
 
-@router.post("/chat/ollama_chat")
+@router.post("/text")
 async def ollama_chat(body: ChatRequest):
     """
     채팅을 통한 페르소나 대화
@@ -32,6 +34,26 @@ async def ollama_chat(body: ChatRequest):
         code=200,
         message="answer success!",
         data=answer
+    )
+
+@router.post("/image")
+async def ollama_image(
+    file: UploadFile = File(..., description="이미지 파일"),
+    user_id: str    = Form(..., description="사용자 ID"),
+    ego_id:  str    = Form(..., description="페르소나 ID"),
+):
+    contents = await file.read()
+    response = ollama.generate(model='gemma3:4b', prompt=contents)
+    # for chunk in chat_stream(
+    #     prompt=contents,
+    #     config=SessionConfig(user_id, ego_id)
+    # ):
+    #     answer += chunk
+
+    return CommonResponse(
+        code=200,
+        message="answer success!",
+        data=response
     )
 
 class AdminRequest(BaseModel):
