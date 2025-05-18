@@ -51,12 +51,41 @@ async def consume_loop():
     async for msg in consumer:
         asyncio.create_task(handle_message(msg))
 
+async def handle_image(data: dict[str, any]):
+    b64_img = data.get('content')
+    # 이미지 검증
+
+    # 일반 이미지면
+    # if 
+    # b64_str = base64.b64encode(raw_bytes).decode("utf-8")
+
+    # 메시지 형식 만들기
+    # data_uri = f"data:{file.content_type};base64,{b64_str}"
+    # human_msg = HumanMessage(
+    #     content=[
+    #         {"type": "image_url", "image_url": data_uri},
+    #         {"type": "text",      "text": "What's this? Provide a description in korean without leading or trailing text or markdown syntax."}
+    #     ]
+    # )
+
+    # 답변 요청
+    # NOTE: singleton 공유 가능한 모델 정의 필요
+    # llm = ChatOllama(
+    #     model="gemma3:4b",              
+    #     temperature=0.0,
+    # )
+
+    # 답변을 session_id를 통해 수동으로 업데이트
+    # ai_msg = llm.invoke([human_msg])
+
 async def handle_message(msg):
-    print(msg)
+    LOG.debug(msg)
     try:
         data = msg.value
+        # 이미지 일 때
         if data.get("type") != "TEXT":
             await consumer.commit()
+            await handle_image()
             return
 
         user = data["from"]
