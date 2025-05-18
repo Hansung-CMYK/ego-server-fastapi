@@ -10,8 +10,8 @@ class DailyCommentLLM:
         prompt = ChatPromptTemplate.from_messages(self.__DAILY_TEMPLATE)
         self.__daily_chain = prompt | model
 
-    def invoke(self, stories:list[list[str]] , feeling:list[str], keywords:list[str]):
-        events = [story for story in stories]
+    def invoke(self, diaries:list[dict] , feeling:list[str], keywords:list[str]):
+        events = [diary[""] for diary in diaries]
         return self.__daily_chain.invoke({"events": events, "feeling": feeling, "keywords":keywords}).content.strip()
 
     __DAILY_TEMPLATE = [
@@ -20,3 +20,4 @@ class DailyCommentLLM:
         ("system", "{events}가 있었던 오늘, {feelings} 감정이 하루를 지배했고, {keywords}가 곁을 맴돌았어요."),
     ]
 
+daily_comment_llm = DailyCommentLLM()

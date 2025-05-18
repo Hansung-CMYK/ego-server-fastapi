@@ -72,12 +72,12 @@ class DiaryLlm:
     __EXAMPLE = """
     "diary": [
         {
-            topic: "<주제 1>", 
-            content: "<본문 1>. <본문 2>..."
+            "topic": "<주제 1>", 
+            "content": "<본문 1>. <본문 2>..."
         },
         {
-            topic: "<주제 2>",
-            content: "..."
+            "topic": "<주제 2>",
+            "content": "..."
         },
         ...
     ]
