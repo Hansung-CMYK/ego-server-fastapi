@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from app.models.postgres_client import postgres_client
+from app.models.postgres_database import postgres_database
 
 class PersonaStore:
     """
@@ -53,7 +53,7 @@ class PersonaStore:
         사용자의 페르소나 정보를 반환하는 함수
         """
         if self.__store.get(persona_id) is None: # 기존 store에 persona_id가 저장되어 있지않다면,
-            new_persona = postgres_client.select_persona_to_id(persona_id) # postgres에서 정보를 가져와서,
+            new_persona = postgres_database.select_persona_to_id(persona_id) # postgres에서 정보를 가져와서,
             self.__store[persona_id] = new_persona # store에 저장한다.
 
         return self.__store[persona_id][2]
@@ -83,7 +83,7 @@ class PersonaStore:
         self.__store[persona_id][2]["updated_at"] = datetime.now().isoformat()
 
         # 데이터베이스에 저장
-        postgres_client.update_persona(persona_id=persona_id, persona_json=self.__store[persona_id][2])
+        postgres_database.update_persona(persona_id=persona_id, persona_json=self.__store[persona_id][2])
 
     @staticmethod
     def __apply_unset(original_data: dict, unset_data: dict) -> None:

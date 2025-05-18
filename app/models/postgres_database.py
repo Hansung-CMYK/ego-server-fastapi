@@ -9,7 +9,7 @@ from app.exception.exceptions import ControlledException, ErrorCode
 
 load_dotenv()
 
-class PostgresClient:
+class PostgresDatabase:
     def __init__(self):
         self.__database = psycopg2.connect(
             host=os.getenv("POSTGRES_URI"),
@@ -102,4 +102,4 @@ class PostgresClient:
         self.__cursor.execute(sql)
         self.__database.commit()
 
-postgres_client = PostgresClient()
+postgres_database = PostgresDatabase()

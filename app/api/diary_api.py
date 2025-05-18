@@ -7,7 +7,7 @@ from app.models.daily_comment_llm import daily_comment_llm
 from app.models.topic_llm import topic_llm
 from app.models.keyword_model import keyword_model
 from datetime import datetime
-from app.models.postgres_client import postgres_client
+from app.models.postgres_database import postgres_database
 
 from app.services.kobert_handler import extract_emotions
 
@@ -15,12 +15,13 @@ router = APIRouter()
 
 class DiaryRequest(BaseModel):
     user_id: str
+    ego_id: str
     target_time: datetime
 
 @router.post("/diary")
 async def to_diary(body: DiaryRequest):
     # NOTE 1. SQL 조회로 이전하기
-    stories = postgres_client.search_all_chat(user_id=body.user_id, target_time=body.target_time)
+    stories = postgres_database.search_all_chat(user_id=body.user_id, target_time=body.target_time)
 
     # NOTE 2. 키워드 추출
     keywords = keyword_model.get_keywords(stories=stories, count=5)
@@ -55,7 +56,7 @@ async def to_diary(body: DiaryRequest):
     # TODO: 문장 변경 가능성 있음.
     diary = {
         "uid": body.user_id,
-        "egoId": 1,
+        "egoId": body.ego_id,
         "feeling": feeling,
         "dailyComment": daily_comment,
         "createdAt": body.target_time.date(),
