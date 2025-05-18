@@ -28,7 +28,7 @@ async def create_persona(body: PersonaRequest):
         )
 
     # NOTE 2. None이 아닌 값만 필터링해서 저장
-    persona = {k: v for k, v in body.items() if v is not None}
+    persona = {k: v for k, v in body.model_dump().items() if v is not None}
 
     # NOTE 3. 에고 정보를 JSON으로 만들어 저장한다.
     postgres_database.insert_persona(persona=persona)
