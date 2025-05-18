@@ -12,7 +12,7 @@ class PersonaRequest(BaseModel):
     """
     에고 페르소나 JSON을 만드는데 필요한 정보들이다.
     """
-    ego_id: Optional[str] = None
+    ego_id: str
     name: Optional[str] = None
     age: Optional[int] = None
     gender: Optional[str] = None
@@ -28,7 +28,7 @@ async def create_persona(body: PersonaRequest):
         )
 
     # NOTE 2. None이 아닌 값만 필터링해서 저장
-    persona = {k: v for k, v in body.model_dump().items() if v is not None}
+    persona = {k: v for k, v in body.model_dump().items() if k != "ego_id" and v is not None}
 
     # NOTE 3. 에고 정보를 JSON으로 만들어 저장한다.
     postgres_database.insert_persona(ego_id= body.ego_id, persona=persona)
