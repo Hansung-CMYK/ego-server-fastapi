@@ -1,8 +1,5 @@
 import os
-import traceback, logging
-
-import ollama
-import base64
+import traceback, logging, base64
 
 from fastapi import APIRouter, UploadFile, File, Form
 from pydantic import BaseModel
@@ -10,6 +7,8 @@ from pydantic import BaseModel
 from app.api.common_response import CommonResponse
 from app.services.chat_service import chat_stream
 from app.services.session_config import SessionConfig
+from langchain_ollama import ChatOllama
+from langchain_core.messages import HumanMessage
 
 logger = logging.getLogger("chat_api")
 
@@ -47,22 +46,33 @@ async def ollama_image(
     ego_id:  str    = Form(..., description="페르소나 ID"),
 ):  
     try :
+        session_id:str = f"{ego_id}@{user_id}"
         raw_bytes = await file.read()
 
         b64_str = base64.b64encode(raw_bytes).decode("utf-8")
-        response = ollama.generate(
-            model='gemma3:4b',
-            prompt="What's this? Provide a description in korean without leading or trailing text or markdown syntax.",
-            images=[b64_str]
+
+
+        data_uri = f"data:{file.content_type};base64,{b64_str}"
+        human_msg = HumanMessage(
+            content=[
+                {"type": "image_url", "image_url": data_uri},
+                {"type": "text",      "text": "What's this? Provide a description in korean without leading or trailing text or markdown syntax."}
+            ]
         )
 
+        llm = ChatOllama(
+            model="gemma3:4b",              
+            temperature=0.0,
+        )
+
+        ai_msg = llm.invoke([human_msg])
         return CommonResponse(
             code=200,
             message="answer success!",
-            data=response['response']
+            data=ai_msg.content
         )
     except Exception:
-        logger.error(f"이미지 처리 에러 {traceback.format_exc}")
+        logger.error(f"이미지 처리 에러 {traceback.format_exc()}")
         return None
 
 class AdminRequest(BaseModel):
