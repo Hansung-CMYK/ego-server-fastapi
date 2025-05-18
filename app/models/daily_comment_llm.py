@@ -1,14 +1,12 @@
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_ollama import ChatOllama
+
+from app.models.default_ollama_model import task_model
+
 
 class DailyCommentLLM:
     def __init__(self):
-        model = ChatOllama(
-            model="gemma3",
-            temperature=0.7
-        )
         prompt = ChatPromptTemplate.from_messages(self.__DAILY_TEMPLATE)
-        self.__daily_chain = prompt | model
+        self.__daily_chain = prompt | task_model
 
     def invoke(self, diaries:list[dict] , feeling:list[str], keywords:list[str]):
         events = [diary[""] for diary in diaries]

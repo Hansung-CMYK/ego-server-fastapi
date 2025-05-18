@@ -1,9 +1,10 @@
 import json
 
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_ollama import ChatOllama
 
 from app.exception.exceptions import ControlledException, ErrorCode
+from app.models.default_ollama_model import task_model
+
 
 class TopicLlm:
     """
@@ -12,14 +13,8 @@ class TopicLlm:
     채팅내역을 바탕으로 일기를 생성하는 LLM 모델이다.
     """
     def __init__(self):
-        model = ChatOllama(
-            model="qwen3:8b", # 원래 gemma3:4b
-            temperature=0.0,
-            format="json"
-        )
-
         prompt = ChatPromptTemplate.from_messages(self.__DIARY_TEMPLATE)
-        self.__prompt = prompt | model
+        self.__prompt = prompt | task_model
 
     def invoke(self, story: str) -> list[dict]:
         """

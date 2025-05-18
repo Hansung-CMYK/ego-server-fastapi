@@ -1,11 +1,13 @@
 import datetime
 from textwrap import dedent
 
-from langchain_ollama import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate
 
 import json
 import logging
+
+from app.models.default_ollama_model import task_model
+
 
 class SplitLlm:
     """
@@ -13,15 +15,9 @@ class SplitLlm:
     """
 
     def __init__(self):
-        model = ChatOllama(
-            model="qwen3:8b",
-            temperature=0.0,
-            format="json"
-        )
-
         # 문장 분리 프롬프트 적용 + 랭체인 생성
         split_prompt = ChatPromptTemplate.from_messages(self.__SPLIT_TEMPLATE)
-        self.__split_chain = split_prompt | model
+        self.__split_chain = split_prompt | task_model
 
     def invoke(self, session_history:str)->list:
         """
