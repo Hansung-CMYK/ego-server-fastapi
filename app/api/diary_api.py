@@ -59,7 +59,7 @@ async def to_diary(body: DiaryRequest):
         "egoId": body.ego_id,
         "feeling": ",".join(feeling),
         "dailyComment": daily_comment,
-        "createdAt": body.target_time.date(),
+        "createdAt": body.target_date,
         "keywords": keywords,
         "topics":  topics
     }

@@ -3,6 +3,9 @@ import os
 import requests
 from datetime import date
 
+from dotenv import load_dotenv
+
+load_dotenv()
 SPRING_URI = os.getenv('SPRING_URI')
 
 def get_all_chat(user_id: str, target_time: date):
