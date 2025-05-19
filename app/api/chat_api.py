@@ -58,7 +58,7 @@ async def ollama_image(
         return CommonResponse(
             code=200,
             message="answer success!",
-            data=ImageDescriptor().invoke(data_uri)
+            data=ImageDescriptor.invoke(data_uri)
         )
     
     except Exception:
