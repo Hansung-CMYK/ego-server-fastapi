@@ -54,9 +54,9 @@ class DailyCommentLLM:
     ]
 
     __DAILY_TEMPLATE_EXAMPLE = """
-    1. {"comment": "[event] 가 있었던 오늘, [feeling] 감정이 하루를 지배했고, [keyword] 가 곁을 맴돌았어요."}
-    2. {"comment": "[event] 일로 인해, [feeling] 한 하루였어요. [keyword] 가 기억에 남아요."}
-    3. {"comment": "[keyword] 과 함께, [event] 를 겪으며, [feeling] 을 느꼈어요}
+    1. {"comment": "~ 가 있었던 오늘, ~ 감정이 하루를 지배했고, ~ 가 곁을 맴돌았어요."}
+    2. {"comment": "~ 일로 인해, ~ 한 하루였어요. ~ 가 기억에 남아요."}
+    3. {"comment": "~ 과 함께, ~ 를 겪으며, ~ 을 느꼈어요}
     """
 
 daily_comment_llm = DailyCommentLLM()
