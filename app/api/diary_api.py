@@ -23,6 +23,7 @@ async def to_diary(body: DiaryRequest):
     # NOTE 1. SQL 조회로 이전하기
     all_chat = get_all_chat(user_id=body.user_id, target_time=body.target_date)
 
+    print(f"all_chat: {all_chat}\n")
     stories = ["".join(chat_room) for chat_room in all_chat]
 
     # NOTE 2. 키워드 추출
@@ -35,6 +36,7 @@ async def to_diary(body: DiaryRequest):
 
     # 일기 생성
     topics = topic_llm.invoke(story=stories)
+    print(f"topics: {topics}\n")
 
     # 예외처리: 일기로 아무 내용이 반환되지 않았는지 확인한다.
     if len(topics) < 1: raise ControlledException(ErrorCode.CAN_NOT_EXTRACT_DIARY)
