@@ -3,7 +3,7 @@ import base64
 from app.services.session_config import SessionConfig
 from langchain_core.messages import HumanMessage
 from app.models.default_model import chat_model as vision_model
-from app.models.chatting.main_llm import main_llm
+from app.models.chat.main_llm import main_llm
 
 class ImageDescriptor:
     @staticmethod

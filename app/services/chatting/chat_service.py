@@ -1,6 +1,4 @@
-import ollama
-
-from app.models.chatting.main_llm import main_llm
+from app.models.chat.main_llm import main_llm
 from app.models.normalization.split_llm import split_llm
 from app.models.database.milvus_database import milvus_database
 from app.services.chatting.graph_rag_service import get_rag_prompt
