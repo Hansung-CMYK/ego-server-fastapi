@@ -10,6 +10,8 @@ from app.services.session_config import SessionConfig
 from langchain_ollama import ChatOllama
 from langchain_core.messages import HumanMessage
 
+from app.models.image_descriptor import ImageDescriptor
+
 logger = logging.getLogger("chat_api")
 
 router = APIRouter(prefix="/chat")
@@ -51,26 +53,14 @@ async def ollama_image(
 
         b64_str = base64.b64encode(raw_bytes).decode("utf-8")
 
-
         data_uri = f"data:{file.content_type};base64,{b64_str}"
-        human_msg = HumanMessage(
-            content=[
-                {"type": "image_url", "image_url": data_uri},
-                {"type": "text",      "text": "What's this? Provide a description in korean without leading or trailing text or markdown syntax."}
-            ]
-        )
-
-        llm = ChatOllama(
-            model="gemma3:4b",              
-            temperature=0.0,
-        )
-
-        ai_msg = llm.invoke([human_msg])
+        
         return CommonResponse(
             code=200,
             message="answer success!",
-            data=ai_msg.content
+            data=ImageDescriptor().invoke(data_uri)
         )
+    
     except Exception:
         logger.error(f"이미지 처리 에러 {traceback.format_exc()}")
         return None
