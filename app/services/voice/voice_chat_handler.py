@@ -22,7 +22,7 @@ silero_model, silero_utils = torch.hub.load(
 (get_speech_timestamps, _, read_audio, *_ ) = silero_utils
 
 REALTIME_STT_PATH = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "../../modules/RealtimeSTT")
+    os.path.join(os.path.dirname(__file__), "../../../modules/RealtimeSTT")
 )
 if REALTIME_STT_PATH not in sys.path:
     sys.path.insert(0, REALTIME_STT_PATH)
