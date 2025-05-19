@@ -45,4 +45,4 @@ class PreferenceModel:
         ("human", "{input}"),
     ]
 
-prefence_model = PreferenceModel()
+preference_model = PreferenceModel()
