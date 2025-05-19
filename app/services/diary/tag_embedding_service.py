@@ -1,15 +1,9 @@
-"""
-keyword_index.py
-- 키워드 사전 → 벡터로 임베딩 → keyword_index.npz 에 저장
-- 이미 저장돼 있으면 재임베딩 없이 즉시 로드
-"""
 from __future__ import annotations
 import os
 import numpy as np
 from app.models.normalization.embedding_model import embedding_model
 
-# ────────────────────────────────────────────────────────
-_KEYWORDS={
+__TAGS = {
     "늘정주나": "정주행 몰입 콘텐츠",
     "시간마술사": "지각 시간조절 변명",
     "존댓말자동완성": "예의 어색함 사회초년생",
@@ -44,13 +38,14 @@ _KEYWORDS={
     "K-약속러": "시간약속 지각 한국인습관"
 }
 
-_SAVE_PATH = os.path.join(os.path.dirname(__file__), "keyword_index.npz")
+__SAVING_TAG_PATH = os.path.join(os.path.dirname(__file__), "keyword_index.npz")
 
-
-def _build_and_save(path: str = _SAVE_PATH) -> tuple[list[str], np.ndarray]:
-    """키워드 사전을 임베딩하고 .npz 파일에 저장한다."""
+def __build_tag(path: str = __SAVING_TAG_PATH) -> tuple[list[str], np.ndarray]:
+    """
+    태그 사전을 임베딩하고 임베딩 값을 .npz 파일에 저장한다.
+    """
     keys, embeds = [], []
-    for k, phrase in _KEYWORDS.items():
+    for k, phrase in __TAGS.items():
         vec = embedding_model.embeded_documents(phrase)[0]  # (dim,)
         keys.append(k)
         embeds.append(vec.astype(np.float32))
@@ -59,20 +54,19 @@ def _build_and_save(path: str = _SAVE_PATH) -> tuple[list[str], np.ndarray]:
     np.savez_compressed(path, keys=np.asarray(keys), embeds=embeds)
     return keys, embeds
 
-
 def load_index() -> tuple[list[str], np.ndarray]:
     """
-    (keys, embeds)를 반환한다.
+    태그들의 key와 임베딩 값들을 반환한다.
     - 파일이 없으면 자동으로 생성 후 저장
-    - keys: list[str]          embeds: np.ndarray[float32] (k, dim)
-    """
-    if not os.path.exists(_SAVE_PATH):
-        return _build_and_save(_SAVE_PATH)
 
-    data = np.load(_SAVE_PATH, allow_pickle=True)
+    Returns:
+        keys: list[str]
+        embeds: np.ndarray[float32] (k, dim)
+    """
+    if not os.path.exists(__SAVING_TAG_PATH):
+        return __build_tag(__SAVING_TAG_PATH)
+
+    data = np.load(__SAVING_TAG_PATH, allow_pickle=True)
     keys   = data["keys"].tolist()        # ndarray → list
     embeds = data["embeds"].astype(np.float32)
     return keys, embeds
-
-if __name__ == "__main__":
-    _build_and_save()
