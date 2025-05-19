@@ -156,7 +156,8 @@ class VoiceChatHandler:
                     text=clean,
                     text_language="ko",
                     sample_steps=8,
-                    speed=1.2
+                    speed=1.2,
+                    spk="karina"
                 )
                 for chunk in gen:
                     if cancel_event.is_set():
