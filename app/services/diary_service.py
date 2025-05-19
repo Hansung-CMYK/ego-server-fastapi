@@ -17,11 +17,10 @@ def get_all_chat(user_id: str, target_time: date):
     for chat_room in chat_rooms:
         chat_room_log = []
         for chat in chat_room:
-            if chat["type"] == "U": name = "User"
-            elif chat["type"] == "E": name = "AI"
-            else: name = chat["uid"]
+            if chat["type"] == "U": name = "Human"
+            else: name = chat["id"]
 
-            chat_room_log.append(f"{name}: {chat["content"]} at {chat["chat_at"]}")
+            chat_room_log.append(f"{chat["type"]}@{name}: {chat["content"]} at {chat["chat_at"]}")
 
         user_all_chat_room_log.append(chat_room_log)
     return user_all_chat_room_log

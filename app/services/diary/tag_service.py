@@ -10,17 +10,18 @@ from app.services.diary.tag_embedding_service import load_index
 
 __KEYS, __EMBEDS = load_index()
 
-def sentence_embedding(user_chat_logs: str) -> np.ndarray:
+def sentence_embedding(stories: list[str]) -> np.ndarray:
     """
     사용자 메세지를 정제하는 함수이다.
     
     Parameters:
-        user_chat_logs: 사용자의 원본 문장
+        stories: 사용자의 원본 문장
 
     Returns:
         사용자 문장의 명사만 추출해서 임베딩한 결과
     """
     # 명사만 추출해 노이즈 감소
+    user_chat_logs = "\n".join(stories)
     nouns = [tok.form for sent in kiwi.analyze(user_chat_logs) for tok in sent[0] if tok.tag.startswith("NN")]
     message = " ".join(nouns) if nouns else user_chat_logs
     return embedding_model.embeded_documents([message])[0].astype(np.float32)

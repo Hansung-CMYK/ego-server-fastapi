@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
+import asyncio
 
 from app.api.common_response import CommonResponse
 from app.exception.exceptions import ControlledException, ErrorCode
@@ -8,9 +9,9 @@ from app.models.diary.topic_llm import topic_llm
 from app.models.diary.keyword_model import keyword_model
 from datetime import date
 from app.services.diary_service import get_all_chat
+from app.services.diary.diary_service import async_save
 
 from app.services.diary.kobert_handler import extract_emotions
-
 router = APIRouter()
 
 class DiaryRequest(BaseModel):
@@ -42,19 +43,13 @@ async def to_diary(body: DiaryRequest):
     # NOTE 4. 감정 분석
     feeling = extract_emotions(topics)
 
-    # NOTE 5. 이미지 저장
-    # for topic in topics:
-    #     content = topic["content"]
-    #     # TODO: 이미지 저장하기
-    #     topic.update({"url": f"TODO {content}"})
-
-    # NOTE 7. 한줄 요약 문장 생성
+    # NOTE 5. 한줄 요약 문장 생성
     daily_comment = daily_comment_llm.invoke(diaries=topics, feeling=feeling, keywords=keywords)
 
     # NOTE 6. 에고 페르소나 수정
-    # TODO: 에고 페르소나 저장
+    asyncio.create_task(async_save(user_id=body.user_id, all_chat=all_chat))
 
-    # NOTE 8. FE 반환 diary 객체 생성
+    # NOTE 7. FE 반환 diary 객체 생성
     # TODO: 문장 변경 가능성 있음.
     diary = {
         "uid": body.user_id,
