@@ -15,7 +15,7 @@ router = APIRouter()
 
 class DiaryRequest(BaseModel):
     user_id: str
-    ego_id: str
+    ego_id: int
     target_date: date
 
 @router.post("/diary")
