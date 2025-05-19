@@ -1,4 +1,5 @@
 from langchain_ollama import ChatOllama
+from sentence_transformers import SentenceTransformer
 
 """
 채팅을 생성하는 모델이다.
@@ -31,3 +32,5 @@ task_model = ChatOllama(
     temperature=0.0,
     format="json"
 )
+
+sentence_transformer = SentenceTransformer("snunlp/KR-SBERT-V40K-klueNLI-augSTS")  # 한국어 SBERT

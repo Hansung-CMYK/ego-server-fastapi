@@ -1,10 +1,11 @@
 from keybert import KeyBERT
 from kiwipiepy import Kiwi
-from sentence_transformers import SentenceTransformer
+
+from app.models.default_model import sentence_transformer
+
 
 class KeywordModel:
-    __model = SentenceTransformer("snunlp/KR-SBERT-V40K-klueNLI-augSTS")  # 한국어 SBERT
-    __keyword_model = KeyBERT(__model)
+    __keyword_model = KeyBERT(sentence_transformer)
     __kiwi = Kiwi()
 
     def get_keywords(self, stories:list[list[str]], count:int=5):

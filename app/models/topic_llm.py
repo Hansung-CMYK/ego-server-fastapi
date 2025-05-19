@@ -3,7 +3,7 @@ import json
 from langchain_core.prompts import ChatPromptTemplate
 
 from app.exception.exceptions import ControlledException, ErrorCode
-from app.models.default_ollama_model import task_model
+from app.models.default_model import task_model
 
 
 class TopicLlm:

@@ -1,6 +1,6 @@
 from langchain_core.prompts import ChatPromptTemplate
 
-from app.models.default_ollama_model import task_model
+from app.models.default_model import task_model
 import json
 import logging
 
