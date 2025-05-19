@@ -6,3 +6,4 @@ class SessionConfig:
     ):
         self.user_id = user_id
         self.ego_id = ego_id
+        self.session_id = f"{ego_id}@{user_id}"
