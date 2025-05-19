@@ -48,17 +48,18 @@ async def ollama_image(
     ego_id:  str    = Form(..., description="페르소나 ID"),
 ):  
     try :
-        session_id:str = f"{ego_id}@{user_id}"
+        session_config = SessionConfig(user_id, ego_id)
         raw_bytes = await file.read()
 
-        b64_str = base64.b64encode(raw_bytes).decode("utf-8")
+        b64_image = base64.b64encode(raw_bytes).decode("utf-8")
 
-        data_uri = f"data:{file.content_type};base64,{b64_str}"
+        image_description = ImageDescriptor.invoke(b64_image=b64_image)
+        ImageDescriptor.store(image_description, session_config)
         
         return CommonResponse(
             code=200,
             message="answer success!",
-            data=ImageDescriptor.invoke(data_uri)
+            data=image_description
         )
     
     except Exception:

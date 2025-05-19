@@ -6,6 +6,7 @@ import asyncio
 from aiokafka import AIOKafkaConsumer, AIOKafkaProducer
 from app.services.chat_service import chat_stream
 
+from app.models.image_descriptor import ImageDescriptor
 from app.services.session_config import SessionConfig
 
 LOG = logging.getLogger("kafka-handler")
@@ -52,31 +53,10 @@ async def consume_loop():
         asyncio.create_task(handle_message(msg))
 
 async def handle_image(data: dict[str, any]):
-    b64_img = data.get('content')
-    # 이미지 검증
+    b64_image = data.get('content')
 
-    # 일반 이미지면
-    # if 
-    # b64_str = base64.b64encode(raw_bytes).decode("utf-8")
-
-    # 메시지 형식 만들기
-    # data_uri = f"data:{file.content_type};base64,{b64_str}"
-    # human_msg = HumanMessage(
-    #     content=[
-    #         {"type": "image_url", "image_url": data_uri},
-    #         {"type": "text",      "text": "What's this? Provide a description in korean without leading or trailing text or markdown syntax."}
-    #     ]
-    # )
-
-    # 답변 요청
-    # NOTE: singleton 공유 가능한 모델 정의 필요
-    # llm = ChatOllama(
-    #     model="gemma3:4b",              
-    #     temperature=0.0,
-    # )
-
-    # 답변을 session_id를 통해 수동으로 업데이트
-    # ai_msg = llm.invoke([human_msg])
+    image_description = ImageDescriptor.invoke(b64_image=b64_image)
+    ImageDescriptor.store(image_description, SessionConfig(data.get("from"), data.get('to')))
 
 async def handle_message(msg):
     LOG.debug(msg)
@@ -102,11 +82,11 @@ async def handle_message(msg):
     except Exception:
         LOG.exception("Error processing message")
 
-def to_response_type(msg: dict) -> dict:
+def to_response_type(data: dict) -> dict:
     content : str = ""
     try:
-        session_config = SessionConfig(msg.get("from"), msg.get('to'))
-        prompt = str(msg.get('content'))
+        session_config = SessionConfig(data.get("from"), data.get('to'))
+        prompt = str(data.get('content'))
         if len(prompt) == 0:
             raise Exception
         
@@ -115,14 +95,14 @@ def to_response_type(msg: dict) -> dict:
             content += chunk
 
     except Exception as e:
-        LOG.error(f"메시지 처리간 오류가 발생했습니다. from:{msg.get('from')} to:{msg.get('to')} {traceback.format_exc()} {e}")
+        LOG.error(f"메시지 처리간 오류가 발생했습니다. from:{session_config.user_id} to:{session_config.ego_id} {traceback.format_exc()} {e}")
         
     finally:
         # NOTE 메시지 타입 지정 필요 (ERROR, NORMAL ...)
         return {
-            "chatRoomId":msg.get('chatRoomId'),
-            "from":      msg.get('to'),
-            "to":        msg.get('from'),
+            "chatRoomId":data.get('chatRoomId'),
+            "from":      data.get('to'),
+            "to":        data.get('from'),
             "content":   content,
             "type":      "TEXT",
             "mcpEnabled": False,

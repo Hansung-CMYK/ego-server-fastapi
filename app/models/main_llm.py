@@ -64,6 +64,9 @@ class MainLlm:
 
         return message_list
 
+    def add_message_in_session_history(self, session_id:str, message:str):
+        self.__store[session_id].add_user_message(message)
+
     __MAIN_TEMPLATE = [
         ("system", "/no_think\n"),
         ("system", dedent("""
