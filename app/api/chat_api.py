@@ -1,20 +1,27 @@
 import os
+import traceback, logging, base64
 
-from fastapi import APIRouter
+from fastapi import APIRouter, UploadFile, File, Form
 from pydantic import BaseModel
 
 from app.api.common_response import CommonResponse
 from app.services.chat_service import chat_stream
 from app.services.session_config import SessionConfig
+from langchain_ollama import ChatOllama
+from langchain_core.messages import HumanMessage
 
-router = APIRouter()
+from app.models.image_descriptor import ImageDescriptor
+
+logger = logging.getLogger("chat_api")
+
+router = APIRouter(prefix="/chat")
 
 class ChatRequest(BaseModel):
     message: str
     user_id: str
     ego_id: str
 
-@router.post("/chat/ollama_chat")
+@router.post("/text")
 async def ollama_chat(body: ChatRequest):
     """
     채팅을 통한 페르소나 대화
@@ -33,6 +40,31 @@ async def ollama_chat(body: ChatRequest):
         message="answer success!",
         data=answer
     )
+
+@router.post("/image")
+async def ollama_image(
+    file: UploadFile = File(..., description="이미지 파일"),
+    user_id: str    = Form(..., description="사용자 ID"),
+    ego_id:  str    = Form(..., description="페르소나 ID"),
+):  
+    try :
+        session_config = SessionConfig(user_id, ego_id)
+        raw_bytes = await file.read()
+
+        b64_image = base64.b64encode(raw_bytes).decode("utf-8")
+
+        image_description = ImageDescriptor.invoke(b64_image=b64_image)
+        ImageDescriptor.store(image_description, session_config)
+        
+        return CommonResponse(
+            code=200,
+            message="answer success!",
+            data=image_description
+        )
+    
+    except Exception:
+        logger.error(f"이미지 처리 에러 {traceback.format_exc()}")
+        return None
 
 class AdminRequest(BaseModel):
     admin_id: str

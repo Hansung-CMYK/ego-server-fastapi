@@ -6,6 +6,7 @@ import asyncio
 from aiokafka import AIOKafkaConsumer, AIOKafkaProducer
 from app.services.chat_service import chat_stream
 
+from app.models.image_descriptor import ImageDescriptor
 from app.services.session_config import SessionConfig
 
 LOG = logging.getLogger("kafka-handler")
@@ -51,12 +52,20 @@ async def consume_loop():
     async for msg in consumer:
         asyncio.create_task(handle_message(msg))
 
+async def handle_image(data: dict[str, any]):
+    b64_image = data.get('content')
+
+    image_description = ImageDescriptor.invoke(b64_image=b64_image)
+    ImageDescriptor.store(image_description, SessionConfig(data.get("from"), data.get('to')))
+
 async def handle_message(msg):
-    print(msg)
+    LOG.debug(msg)
     try:
         data = msg.value
+        # 이미지 일 때
         if data.get("type") != "TEXT":
             await consumer.commit()
+            await handle_image()
             return
 
         user = data["from"]
@@ -73,11 +82,11 @@ async def handle_message(msg):
     except Exception:
         LOG.exception("Error processing message")
 
-def to_response_type(msg: dict) -> dict:
+def to_response_type(data: dict) -> dict:
     content : str = ""
     try:
-        session_config = SessionConfig(msg.get("from"), msg.get('to'))
-        prompt = str(msg.get('content'))
+        session_config = SessionConfig(data.get("from"), data.get('to'))
+        prompt = str(data.get('content'))
         if len(prompt) == 0:
             raise Exception
         
@@ -86,14 +95,14 @@ def to_response_type(msg: dict) -> dict:
             content += chunk
 
     except Exception as e:
-        LOG.error(f"메시지 처리간 오류가 발생했습니다. from:{msg.get('from')} to:{msg.get('to')} {traceback.format_exc()} {e}")
+        LOG.error(f"메시지 처리간 오류가 발생했습니다. from:{session_config.user_id} to:{session_config.ego_id} {traceback.format_exc()} {e}")
         
     finally:
         # NOTE 메시지 타입 지정 필요 (ERROR, NORMAL ...)
         return {
-            "chatRoomId":msg.get('chatRoomId'),
-            "from":      msg.get('to'),
-            "to":        msg.get('from'),
+            "chatRoomId":data.get('chatRoomId'),
+            "from":      data.get('to'),
+            "to":        data.get('from'),
             "content":   content,
             "type":      "TEXT",
             "mcpEnabled": False,
