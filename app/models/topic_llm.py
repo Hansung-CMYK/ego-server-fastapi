@@ -16,13 +16,13 @@ class TopicLlm:
         prompt = ChatPromptTemplate.from_messages(self.__DIARY_TEMPLATE)
         self.__prompt = prompt | task_model
 
-    def invoke(self, story: str) -> list[dict]:
+    def invoke(self, story: list[str]) -> list[dict]:
         """
         일기를 생성하는 함수이다.
         """
         answer = self.__prompt.invoke({"input": story, "example": self.__EXAMPLE}).content
         try:
-            diary = json.loads(answer)["topics"]
+            diary = json.loads(answer)["result"]
         except json.JSONDecodeError:
             raise ControlledException(ErrorCode.FAILURE_JSON_PARSING)
         except KeyError:
@@ -37,9 +37,10 @@ class TopicLlm:
             <WRITING INSTRUCTIONS>
             1. **무조건** JSON **문자열**만 출력 (자연어 해설 금지)
             2 1인칭 일기체 사용(“나는 …했다.” “오늘은 …였다”)
-            3. 최상위 키값은 'topics'만 존재.
+            3. 최상위 키값은 'result'만 존재.
                 - 타입은 list로 저장. 
-                - 타입 list 내부에는 주제가 dict 타입으로 저장 
+                - 타입 list 내부에는 주제가 dict 타입으로 저장
+                - 상위 key 값에는 **무조건** `title`, `content`만 가능
             4. 키·값 모두 쌍따옴표("), 마지막 콤마 금지. 
             5. 주제(title) 제한
                 - 각 title은 **1문장 이내** 핵심어
@@ -65,7 +66,7 @@ class TopicLlm:
     ]
 
     __EXAMPLE = """
-    "topics": [
+    "result": [
         {
             "title": "<주제 1>", 
             "content": "<본문 1>. <본문 2>..."

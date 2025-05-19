@@ -21,7 +21,9 @@ class DiaryRequest(BaseModel):
 @router.post("/diary")
 async def to_diary(body: DiaryRequest):
     # NOTE 1. SQL 조회로 이전하기
-    stories = get_all_chat(user_id=body.user_id, target_time=body.target_date)
+    all_chat = get_all_chat(user_id=body.user_id, target_time=body.target_date)
+
+    stories = ["".join(chat_room) for chat_room in all_chat]
 
     # NOTE 2. 키워드 추출
     keywords = keyword_model.get_keywords(stories=stories, count=5)
