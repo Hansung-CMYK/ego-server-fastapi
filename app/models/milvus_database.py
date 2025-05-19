@@ -11,7 +11,7 @@ from app.models.parsed_sentence import ParsedSentence
 
 # .env 환경 변수 추출
 load_dotenv()
-URI = os.getenv('URI')
+MILVUS_URI = os.getenv('MILVUS_URI')
 
 class MilvusDatabase:
     """
@@ -23,7 +23,7 @@ class MilvusDatabase:
     """
     def  __init__(self):
         self.__milvus_client = MilvusClient(
-            uri=URI,
+            uri=MILVUS_URI,
             token="root:Milvus"
         )
 

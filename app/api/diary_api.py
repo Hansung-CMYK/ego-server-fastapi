@@ -6,8 +6,8 @@ from app.exception.exceptions import ControlledException, ErrorCode
 from app.models.daily_comment_llm import daily_comment_llm
 from app.models.topic_llm import topic_llm
 from app.models.keyword_model import keyword_model
-from datetime import datetime
-from app.models.postgres_database import postgres_database
+from datetime import date
+from app.services.diary_service import get_all_chat
 
 from app.services.kobert_handler import extract_emotions
 
@@ -16,12 +16,12 @@ router = APIRouter()
 class DiaryRequest(BaseModel):
     user_id: str
     ego_id: str
-    target_time: datetime
+    target_date: date
 
 @router.post("/diary")
 async def to_diary(body: DiaryRequest):
     # NOTE 1. SQL 조회로 이전하기
-    stories = postgres_database.search_all_chat(user_id=body.user_id, target_time=body.target_time)
+    stories = get_all_chat(user_id=body.user_id, target_time=body.target_date)
 
     # NOTE 2. 키워드 추출
     keywords = keyword_model.get_keywords(stories=stories, count=5)
