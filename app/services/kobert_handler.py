@@ -23,8 +23,7 @@ def extract_emotions(topics: list[dict], alpha: float = 0.5, top_k: int = 2):
     Returns:
         List[str]: 상위 k개 감정 레이블
     """
-    print(topics)
-    contents = [t.get("content", "") for t in topics]
+    contents = [t['content'] for t in topics]
 
     # 2) 토큰화 & 예측
     inputs = _tokenizer(contents, return_tensors='pt', padding=True, truncation=True)

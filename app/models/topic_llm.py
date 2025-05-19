@@ -16,7 +16,7 @@ class TopicLlm:
         prompt = ChatPromptTemplate.from_messages(self.__DIARY_TEMPLATE)
         self.__prompt = prompt | task_model
 
-    def invoke(self, story: str) -> list[dict]:
+    def invoke(self, story: list[str]) -> list[dict]:
         """
         일기를 생성하는 함수이다.
         """

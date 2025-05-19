@@ -39,6 +39,7 @@ class DailyCommentLLM:
                    • events  ─> 제목들을 간단히 묶어 요약 (띄어쓰기 포함 15자 이내)  
                    • feeling ─> 리스트 내 단어를 전부 *'단일따옴표* 로 감싸서 사용  
                    • keywords─> 리스트 내 단어를 전부 *'단일따옴표* 로 감싸서 사용
+                   • 만약 요소가 없다면, 해당 요소를 생략하고 자연스럽게 문장을 연결할 것 
                 5. 사용 형식 예시  
                    {example}
                 </OUTPUT RULES>
@@ -53,9 +54,9 @@ class DailyCommentLLM:
     ]
 
     __DAILY_TEMPLATE_EXAMPLE = """
-    {
-        comment: "~가 있었던 오늘, ~ 감정이 하루를 지배했고, ~가 곁을 맴돌았어요."
-    }
+    1. {"comment": "[event] 가 있었던 오늘, [feeling] 감정이 하루를 지배했고, [keyword] 가 곁을 맴돌았어요."}
+    2. {"comment": "[event] 일로 인해, [feeling] 한 하루였어요. [keyword] 가 기억에 남아요."}
+    3. {"comment": "[keyword] 과 함께, [event] 를 겪으며, [feeling] 을 느꼈어요}
     """
 
 daily_comment_llm = DailyCommentLLM()
