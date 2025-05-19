@@ -49,51 +49,6 @@ class PostgresDatabase:
         if len(result) == 0: return False
         else: return True
 
-    @staticmethod
-    def search_all_chat(user_id: str, target_time: datetime):
-        """
-        user_id에 맞는 사용자의 대화 내역을 불러오는 함수
-        """
-        try:
-            database = psycopg2.connect(
-                host=os.getenv("POSTGRES_URI"),
-                database="personalized-data",
-                user=os.getenv("POSTGRES_USER"),
-                password=os.getenv("POSTGRES_PASSWORD"),
-                port=os.getenv("POSTGRES_PORT"),
-                options=f"-c search_path={user_id}"
-            )
-            cursor = database.cursor()
-
-            # TODO: 현재 날짜 설정이 자정을 넘어가면 연산 방식을 바꿔야함. ex) 현재시간부터 -24시간 이내
-
-            # 오늘 한번이라도 대화한 채팅방의 정보를 조회한다.
-            start_time = target_time - timedelta(hours=24)
-            end_time = target_time
-
-            sql = "SELECT * FROM chat_room WHERE last_chat_at BETWEEN %s AND %s"
-            cursor.execute(sql, (start_time, end_time))
-            chat_room_ids = [chat_room_id for chat_room_id, uid, egoId, last_chat_at, isDeleted in cursor.fetchall()]
-
-            user_all_chat_room_log:list[list[str]] = [] # 사용자의 모든 채팅방 대화 목록
-            for chat_room_id in chat_room_ids:
-                sql = "SELECT * FROM chat_history WHERE chat_room_id = %s"
-                cursor.execute(sql, (chat_room_id, ))
-
-                # 사용자의 채팅방 대화 목록
-                chat_room_log = [f"{'USER' if type == 'U' else 'AI'}: {content} at {chat_at}" for chat_history_id, uid, chat_room_id, content, type, chat_at, is_deleted, message_hash in cursor.fetchall()]
-
-                user_all_chat_room_log.append(chat_room_log)
-        except psycopg2.OperationalError:
-            raise ControlledException(ErrorCode.POSTGRES_ACCESS_DENIED)
-        except psycopg2.ProgrammingError:
-            raise ControlledException(ErrorCode.INVALID_SQL_ERROR)
-        finally:
-            cursor.close()
-            database.close()
-
-        return user_all_chat_room_log
-
     def create_persona(self):
         sql = "CREATE TABLE persona (ego_id INT PRIMARY KEY, persona JSON NOT NULL)"
         self.__cursor.execute(sql)

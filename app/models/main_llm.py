@@ -7,7 +7,7 @@ from langchain_community.chat_message_histories import ChatMessageHistory
 from langchain_core.runnables import RunnableWithMessageHistory
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 
-from app.models.default_ollama_model import chat_model
+from app.models.default_model import chat_model
 
 # 로깅 에러 문구 제거
 warnings.filterwarnings("ignore", category=LangChainDeprecationWarning)
