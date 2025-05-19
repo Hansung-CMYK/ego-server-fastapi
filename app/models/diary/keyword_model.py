@@ -1,12 +1,11 @@
 from keybert import KeyBERT
-from kiwipiepy import Kiwi
+from langchain.embeddings import sentence_transformer
 
-from app.models.default_model import sentence_transformer
+from app.models.default_model import kiwi
 
 
 class KeywordModel:
     __keyword_model = KeyBERT(sentence_transformer)
-    __kiwi = Kiwi()
 
     def get_keywords(self, stories:list[list[str]], count:int=5):
         """
@@ -17,7 +16,8 @@ class KeywordModel:
         texts = [chat for story in stories for chat in story]
         sentences = " ".join(text for text in texts)
 
-        for sentence in self.__kiwi.analyze(sentences):
+        # NOTE 1. 문장에서 명사만 남겨둔다.
+        for sentence in kiwi.analyze(sentences):
             nouns = [token.form for token in sentence[0] if token.tag.startswith('NN')]
             if nouns: nouns_list.extend(nouns)
         result_text = ' '.join(nouns_list)

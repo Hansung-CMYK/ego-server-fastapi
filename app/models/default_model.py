@@ -1,3 +1,5 @@
+from keybert import KeyBERT
+from kiwipiepy import Kiwi
 from langchain_ollama import ChatOllama
 from sentence_transformers import SentenceTransformer
 
@@ -36,4 +38,6 @@ task_model = ChatOllama(
     format="json"
 )
 
-sentence_transformer = SentenceTransformer("snunlp/KR-SBERT-V40K-klueNLI-augSTS")  # 한국어 SBERT
+kiwi = Kiwi() # 형태소 분석기(명사만 남기기 위함)
+sentence_transformer = SentenceTransformer("snunlp/KR-SBERT-V40K-klueNLI-augSTS")
+keyword_model = KeyBERT(sentence_transformer) # 한국어 SBERT
