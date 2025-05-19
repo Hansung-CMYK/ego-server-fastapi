@@ -2,7 +2,7 @@ from langchain_core.prompts import ChatPromptTemplate
 
 from app.models.default_model import chat_model
 
-class PreferenceModel:
+class PreferenceLlm:
     def __init__(self):
         # 메인 모델 프롬프트 적용 + 랭체인 생성
         prompt = ChatPromptTemplate.from_messages(self.__PREFERENCE_TEMPLATE)
@@ -45,4 +45,4 @@ class PreferenceModel:
         ("human", "{input}"),
     ]
 
-preference_model = PreferenceModel()
+preference_llm= PreferenceLlm()
