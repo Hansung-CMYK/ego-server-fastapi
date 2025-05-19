@@ -7,10 +7,8 @@ from pydantic import BaseModel
 from app.api.common_response import CommonResponse
 from app.services.chatting.chat_service import chat_stream
 from app.services.session_config import SessionConfig
-from langchain_ollama import ChatOllama
-from langchain_core.messages import HumanMessage
 
-from app.models.image_descriptor import ImageDescriptor
+from app.models.image.image_descriptor import ImageDescriptor
 
 logger = logging.getLogger("chat_api")
 

@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from app.models.image_generator import ImageGenerator
+from app.models.image.image_generator import ImageGenerator
 router = APIRouter()
 
 @router.post("/image")
