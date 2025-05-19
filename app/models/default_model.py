@@ -5,6 +5,8 @@ from sentence_transformers import SentenceTransformer
 채팅을 생성하는 모델이다.
 
 MainLLM: 사용자에게 에고를 투영하여 알맞은 답변을 제공하는 모델이다.
+PreferenceModel: 관계 분석 
+    - 파인 튜닝 예정
 """
 chat_model = ChatOllama( # MainLlm
     model="gemma3:12b",
@@ -24,8 +26,9 @@ chat_model = ChatOllama( # MainLlm
 
 PersonaLlm: 사용자의 페르소나를 분석하고, 페르소나의 변화를 탐지하는 모델이다.
 SplitLlm: 여러 의미를 가지고 있는 복합 문장을 단일의 사실과 의미로 분리하는 모델이다.
-TopicLlm: 일기의 주제를 추출하고, 그에 대한 이야기를 서술하는 모델이다.
 DailyCommentLLM: 일기 생성 시, 일기를 한 줄로 요약하는 모델이다.
+TopicLlm: 일기의 주제를 추출하고, 그에 대한 이야기를 서술하는 모델이다. 
+    - json으로 사용안하도록. 위험도가 있음
 """
 task_model = ChatOllama(
     model="qwen3:8b",
