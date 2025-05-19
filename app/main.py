@@ -30,7 +30,12 @@ sys.modules["gpt_sovits_api"] = gpt_sovits_api
 spec.loader.exec_module(gpt_sovits_api)
 
 def init_models():
-    model_id    = "default"
+    model_id    = "karina"
+    gpt_path    = "/path/to/gpt_weights"
+    sovits_path = "/path/to/sovits_weights"
+    ensure_init(model_id, gpt_path, sovits_path)
+
+    model_id    = "berina"
     gpt_path    = "/path/to/gpt_weights"
     sovits_path = "/path/to/sovits_weights"
     ensure_init(model_id, gpt_path, sovits_path)
