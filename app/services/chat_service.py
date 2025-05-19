@@ -1,16 +1,9 @@
-import ollama
-
 from app.models.main_llm import main_llm
 from app.models.split_llm import split_llm
 from app.models.milvus_database import milvus_database
 from app.services.graph_rag_service import get_rag_prompt
 from app.services.persona_store import persona_store
 from app.services.session_config import SessionConfig
-
-try:
-    ollama.pull("gemma3:4b")
-except Exception:
-    pass
 
 # NOTE: GraphRAG O, Persona O
 def chat_stream(prompt: str, config: SessionConfig):

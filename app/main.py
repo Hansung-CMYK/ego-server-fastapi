@@ -20,6 +20,9 @@ api_file_path = os.path.abspath(os.path.join(here, "../modules/GPT-SoVITS/api.py
 gpt_sovits_root = os.path.dirname(api_file_path)
 gpt_sovits_sub  = os.path.join(gpt_sovits_root, "GPT_SoVITS")
 
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+GPT_SOVITS_ROOT = os.path.join(BASE_DIR, "modules", "GPT-SoVITS", "GPT_SoVITS", "pretrained_models")
+
 for path in (gpt_sovits_root, gpt_sovits_sub):
     if path not in sys.path:
         sys.path.insert(0, path)
@@ -29,11 +32,13 @@ gpt_sovits_api = importlib.util.module_from_spec(spec)
 sys.modules["gpt_sovits_api"] = gpt_sovits_api
 spec.loader.exec_module(gpt_sovits_api)
 
-def init_models():
-    model_id    = "default"
-    gpt_path    = "/path/to/gpt_weights"
-    sovits_path = "/path/to/sovits_weights"
-    ensure_init(model_id, gpt_path, sovits_path)
+async def init_models():
+    #NOTE 필요시 모델 추가 로드
+    await ensure_init(
+        "karina",
+        os.path.join(GPT_SOVITS_ROOT, "s1v3.ckpt"),
+        os.path.join(GPT_SOVITS_ROOT, "s2Gv3.pth"),
+    )
 
 async def on_startup():
     await kh.init_kafka()
@@ -46,7 +51,7 @@ async def on_shutdown():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    init_models()
+    await init_models()
     await on_startup()
     
     yield
