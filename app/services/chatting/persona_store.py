@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from app.models.postgres_database import postgres_database
+from app.models.database.postgres_database import postgres_database
 
 class PersonaStore:
     """

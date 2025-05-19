@@ -1,5 +1,5 @@
-from app.models.ner_model import ner_model
-from app.models.embedding_model import embedding_model
+from app.models.normalization.ner_model import ner_model
+from app.models.normalization.embedding_model import embedding_model
 
 class ParsedSentence:
     """

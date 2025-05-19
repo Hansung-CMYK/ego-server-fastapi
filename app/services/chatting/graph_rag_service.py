@@ -3,7 +3,7 @@ from collections import defaultdict
 from scipy.sparse import csr_matrix
 
 from app.models.parsed_sentence import ParsedSentence
-from app.models.milvus_database import milvus_database
+from app.models.database.milvus_database import milvus_database
 
 """
 Graph RAG를 활용하기 위한 서비스

@@ -30,8 +30,8 @@ if REALTIME_STT_PATH not in sys.path:
 from RealtimeSTT.audio_recorder import AudioToTextRecorder
 from app.util.audio_utils import decode_and_resample
 from .tts_buffer import TTSBuffer
-from app.services.chat_service import chat_stream
-from .session_config import SessionConfig
+from app.services.chatting.chat_service import chat_stream
+from app.services.session_config import SessionConfig
 
 CHAR_TO_SEC = 0.05
 TIMEOUT_MARGIN = 2.5

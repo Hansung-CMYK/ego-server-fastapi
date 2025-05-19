@@ -1,5 +1,5 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
-from app.services.voice_chat_manager import VoiceChatSessionManager
+from app.services.voice.voice_chat_manager import VoiceChatSessionManager
 from app.services.session_config import SessionConfig
 router = APIRouter()
 session_manager = VoiceChatSessionManager()

@@ -1,8 +1,10 @@
-from app.models.main_llm import main_llm
-from app.models.split_llm import split_llm
-from app.models.milvus_database import milvus_database
-from app.services.graph_rag_service import get_rag_prompt
-from app.services.persona_store import persona_store
+import ollama
+
+from app.models.chatting.main_llm import main_llm
+from app.models.normalization.split_llm import split_llm
+from app.models.database.milvus_database import milvus_database
+from app.services.chatting.graph_rag_service import get_rag_prompt
+from app.services.chatting.persona_store import persona_store
 from app.services.session_config import SessionConfig
 
 # NOTE: GraphRAG O, Persona O

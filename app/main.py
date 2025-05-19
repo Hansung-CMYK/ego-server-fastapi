@@ -5,11 +5,11 @@ import importlib.util
 from fastapi import FastAPI, APIRouter
 from app.api import chat_api, voice_chat_api, fal_api, diary_api, persona_api
 from app.exception.exception_handler import register_exception_handlers
-from app.services.tts_infer import ensure_init
+from app.services.voice.tts_infer import ensure_init
 
 from contextlib import asynccontextmanager
 
-import app.services.kafka_handler as kh
+import app.services.kafka.kafka_handler as kh
 import asyncio
 
 import logging

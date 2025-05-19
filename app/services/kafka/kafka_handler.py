@@ -4,7 +4,7 @@ import traceback
 import asyncio
 
 from aiokafka import AIOKafkaConsumer, AIOKafkaProducer
-from app.services.chat_service import chat_stream
+from app.services.chatting.chat_service import chat_stream
 
 from app.models.image_descriptor import ImageDescriptor
 from app.services.session_config import SessionConfig

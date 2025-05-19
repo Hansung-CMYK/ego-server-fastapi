@@ -16,7 +16,7 @@ _labels = ['화남','불안','행복','평범','슬픔']
 def extract_emotions(topics: list[dict], alpha: float = 0.5, top_k: int = 2):
     """
     Args:
-        text (str): 분류 대상 텍스트
+        normalization (str): 분류 대상 텍스트
         alpha (float): 빈도 vs 확률 가중치 (0~1, default=0.5)
         top_k (int): 반환할 상위 감정 개수 (default=2)
 

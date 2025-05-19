@@ -40,7 +40,7 @@ class NerModel:
         """
             주어진 토큰(tok)을 중심으로 수식·병렬 의존어를 재귀 수집하여 자연스러운 명사구 문자열을 반환.
             같은 토큰 중복을 막기 위해 `seen` 집합 사용
-            `parts` 리스트에 (id, text)를 모아 토큰 id 기준 오름차순 정렬 후 join
+            `parts` 리스트에 (id, normalization)를 모아 토큰 id 기준 오름차순 정렬 후 join
         """
         stack = [tok]  # DFS용 스택 초기화 (현재 토큰부터)
         parts = []  # 최종 명사구로 만들 토큰들 저장

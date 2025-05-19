@@ -3,7 +3,7 @@ import importlib
 from app.services.tts_model_registry import register_model, has_model
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-is_half = True 
+is_half = True
 
 async def ensure_init(
     model_id: str,
