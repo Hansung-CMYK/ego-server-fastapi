@@ -1,5 +1,5 @@
 from .voice_chat_handler import VoiceChatHandler
-from .session_config import SessionConfig
+from app.services.session_config import SessionConfig
 
 class VoiceChatSessionManager:
     def __init__(self):

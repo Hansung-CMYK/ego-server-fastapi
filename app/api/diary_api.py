@@ -3,13 +3,13 @@ from pydantic import BaseModel
 
 from app.api.common_response import CommonResponse
 from app.exception.exceptions import ControlledException, ErrorCode
-from app.models.daily_comment_llm import daily_comment_llm
-from app.models.topic_llm import topic_llm
-from app.models.keyword_model import keyword_model
+from app.models.diary.daily_comment_llm import daily_comment_llm
+from app.models.diary.topic_llm import topic_llm
+from app.models.diary.keyword_model import keyword_model
 from datetime import date
 from app.services.diary_service import get_all_chat
 
-from app.services.kobert_handler import extract_emotions
+from app.services.diary.kobert_handler import extract_emotions
 
 router = APIRouter()
 

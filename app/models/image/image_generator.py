@@ -1,6 +1,7 @@
 import fal_client
 from langchain_core.messages import HumanMessage
-from app.models.main_llm import chat_model
+
+from app.models.default_model import chat_model
 
 class ImageGenerator:
     @staticmethod
@@ -27,7 +28,7 @@ class ImageGenerator:
             """
         )
         prompt_eng = chat_model.invoke([human_msg]).content
-        
+
         result = fal_client.subscribe(
             "fal-ai/flux-lora",
             arguments={

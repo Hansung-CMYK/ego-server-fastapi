@@ -1,5 +1,5 @@
-from app.models.ner_model import ner_model
-from app.models.embedding_model import embedding_model
+from app.models.normalization.ner_model import ner_model
+from app.models.normalization.embedding_model import embedding_model
 
 class ParsedSentence:
     """
@@ -32,9 +32,9 @@ class ParsedSentence:
         """
 
         # NOTE 1. Speak 객체의 속성을 모두 임베딩 한다.
-        embedded_triplets = [embedding_model.embed_documents(triplet) for triplet in self.triplets]
-        embedded_relations = embedding_model.embed_documents(self.relations)
-        embedded_passage = embedding_model.embed_documents([self.passage])[0]
+        embedded_triplets = [embedding_model.embeded_documents(triplet) for triplet in self.triplets]
+        embedded_relations = embedding_model.embeded_documents(self.relations)
+        embedded_passage = embedding_model.embeded_documents([self.passage])[0]
         return {
             "embedded_triplets": embedded_triplets,
             "embedded_relations": embedded_relations,

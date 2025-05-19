@@ -22,7 +22,7 @@ silero_model, silero_utils = torch.hub.load(
 (get_speech_timestamps, _, read_audio, *_ ) = silero_utils
 
 REALTIME_STT_PATH = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "../../modules/RealtimeSTT")
+    os.path.join(os.path.dirname(__file__), "../../../modules/RealtimeSTT")
 )
 if REALTIME_STT_PATH not in sys.path:
     sys.path.insert(0, REALTIME_STT_PATH)
@@ -30,8 +30,8 @@ if REALTIME_STT_PATH not in sys.path:
 from RealtimeSTT.audio_recorder import AudioToTextRecorder
 from app.util.audio_utils import decode_and_resample
 from .tts_buffer import TTSBuffer
-from app.services.chat_service import chat_stream
-from .session_config import SessionConfig
+from app.services.chatting.chat_service import chat_stream
+from app.services.session_config import SessionConfig
 
 CHAR_TO_SEC = 0.05
 TIMEOUT_MARGIN = 2.5

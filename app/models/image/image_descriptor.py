@@ -2,7 +2,8 @@ import base64
 
 from app.services.session_config import SessionConfig
 from langchain_core.messages import HumanMessage
-from app.models.main_llm import chat_model as vision_model, main_llm
+from app.models.default_model import chat_model as vision_model
+from app.models.chat.main_llm import main_llm
 
 class ImageDescriptor:
     @staticmethod
@@ -14,7 +15,7 @@ class ImageDescriptor:
             ]
         )
         return vision_model.invoke([human_msg]).content
-    
+
     @staticmethod
     def store(image_description : str, session_config : SessionConfig):
         main_llm.add_message_in_session_history(session_id=session_config.session_id, message=image_description)

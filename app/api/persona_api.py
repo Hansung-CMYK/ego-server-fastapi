@@ -4,7 +4,7 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 
 from app.api.common_response import CommonResponse
-from app.models.postgres_database import postgres_database
+from app.models.database.postgres_database import postgres_database
 
 router = APIRouter()
 
