@@ -25,28 +25,35 @@ def sentence_embedding(user_chat_logs: str) -> np.ndarray:
     message = " ".join(nouns) if nouns else user_chat_logs
     return embedding_model.embeded_documents([message])[0].astype(np.float32)
 
-
-def rank_tags(
+def search_tags(
     embedded_user_chat_logs: np.ndarray,
     top_k: int = 5,
-    min_sim: float = 0.30,
+    min_sim: float = 0.4,
 ) -> List[str]:
     """
-    Parameters:
-        embedded_user_chat_logs: 사용자 문장의 명사만 추출해서 임베딩한 결과
-        top_k: 반환 개수 (default: 5)
-        min_sim: 유사도 필터 기준(default: 0.30)
+    Parameters
+    ----------
+    embedded_user_chat_logs : np.ndarray[float32]  # (dim,) 문장 임베딩
+    top_k   : int   반환할 최대 키워드 개수
+    min_sim : float 유사도 필터(코사인 기준)
 
-    Returns:
-        List[<keyword>]
+    Returns
+    -------
+    List[str]  # 필터·정렬된 키워드
     """
-    msg_vec  = torch.from_numpy(embedded_user_chat_logs).unsqueeze(0)
-    key_vecs = torch.from_numpy(__EMBEDS)
+    # (1) torch Tensor 변환
+    msg_vec  = torch.from_numpy(embedded_user_chat_logs).unsqueeze(0)  # (1, dim)
+    key_vecs = torch.from_numpy(__EMBEDS)                              # (k, dim)
 
-    msg_vec  = F.normalize(msg_vec,  dim=1) # L2 정규화
+    # (2) L2 정규화 후 코사인 유사도
+    msg_vec  = F.normalize(msg_vec,  dim=1)
     key_vecs = F.normalize(key_vecs, dim=1)
+    sims = torch.mm(msg_vec, key_vecs.T).squeeze(0)                    # (k,)
 
-    sims = torch.mm(msg_vec, key_vecs.T).squeeze(0) # (k,)
-
+    # (3) Top-k 추출 + threshold 필터
     top_scores, idx = torch.topk(sims, k=min(top_k, sims.size(0)))
-    return [__KEYS[i] for j, i in idx if top_scores[j] >= min_sim]
+    return [
+        __KEYS[i]
+        for j, i in enumerate(idx)        # enumerate로 (순번, index) 튜플 획득
+        if top_scores[j] >= min_sim       # 임계값 이상만
+    ]
