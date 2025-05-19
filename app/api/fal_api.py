@@ -1,12 +1,10 @@
 from fastapi import APIRouter, HTTPException
-from app.services.fal_handler import generate_image, generate_image_prompt
-
+from app.models.image_generator import ImageGenerator
 router = APIRouter()
 
 @router.post("/image")
-async def create_image_prompt(ko_prompt: str):
+async def create_image_prompt(prompt_ko: str):
     try:
-        prompt = generate_image_prompt(ko_prompt)
-        return generate_image(prompt=prompt)
+        return ImageGenerator.generate(prompt_ko)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
