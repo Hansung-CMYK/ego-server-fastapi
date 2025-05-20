@@ -13,20 +13,27 @@ import json
 load_dotenv()
 SPRING_URI = os.getenv('SPRING_URI')
 
-async def async_save(user_id:str, all_chat:list[list[str]]):
-    stories = ["".join(chat_room) for chat_room in all_chat]
-
-    # TODO: user_id로 ego_id 추출하기
-    ego_id = 1
-
+async def async_save(user_id:str, all_chat:list[list[str]], ego_id = 1):
     """
     일기 작성에서 비동기 작업을 실행하는 함수이다.
     """
+    stories = ["".join(chat_room) for chat_room in all_chat]
+
+    # TODO: user_id로 ego_id 추출하기
+    # ego_id = 1
+
+    # 페르소나 저장
     save_persona(ego_id=ego_id, stories=stories)
+
+    # 관계 저장
     for chat_room in all_chat:
         if chat_room[0][0] == "E": # 첫 채팅 타입이 E인 경우에만 작성(에고 채팅은 무조건 에고가 먼저)
             save_relation(chat_room)
+
+    # 태그 저장
     save_tags(ego_id=ego_id, stories=stories)
+
+    print("async_save success")
     return
 
 def save_relation(chat_room:list[str]):
@@ -38,6 +45,7 @@ def save_relation(chat_room:list[str]):
     relation = preference_llm.invoke(input=chat_room)
 
     # TODO: API 실행
+    print(f"relation success: {relation}")
     return
 
 def save_persona(ego_id:int, stories:list[str]):
@@ -49,13 +57,14 @@ def save_persona(ego_id:int, stories:list[str]):
         current_persona=user_persona,
         session_history=stories
     )
-    print(f"delta_persona: {delta_persona}")
+
     persona_store.update(persona_id=ego_id, delta_persona=delta_persona)  # 변경사항 업데이트
 
     postgres_database.update_persona(
         persona_id=ego_id,
         persona_json=persona_store.get_persona(persona_id=ego_id)
     )  # 데이터베이스에 업데이트 된 페르소나 저장
+    print(f"delta_persona success: {delta_persona}")
 
 def save_tags(ego_id:int, stories:list[str]):
     """
@@ -69,3 +78,4 @@ def save_tags(ego_id:int, stories:list[str]):
     headers = {"Content-Type": "application/json"}
 
     requests.patch(url=url, data=json.dumps(update_data), headers=headers)
+    print(f"tags success: {tags}")
