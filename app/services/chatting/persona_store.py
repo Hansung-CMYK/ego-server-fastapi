@@ -80,10 +80,10 @@ class PersonaStore:
             )
 
         # 업데이트 된 시간 변경
-        self.__store[ego_id][2]["updated_at"] = datetime.now().isoformat()
+        self.__store[ego_id][1]["updated_at"] = datetime.now().isoformat()
 
         # 데이터베이스에 저장
-        postgres_database.update_persona(ego_id=ego_id, persona_json=self.__store[ego_id][2])
+        postgres_database.update_persona(ego_id=ego_id, persona_json=self.__store[ego_id][1])
 
     @staticmethod
     def __apply_unset(original_data: dict, unset_data: dict) -> None:
@@ -93,9 +93,6 @@ class PersonaStore:
         * 리스트     → 주어진 항목(targets)을 제거, 비면 키 통째 삭제
         * 원시 타입  → 키 통째 삭제
         """
-        print("-----unset_data-----")
-        print(unset_data)
-
         for key, value in unset_data.items():
             # 오리지널 데이터에 존재하지 않는 값은 제외한다.
             if key not in original_data: continue
@@ -115,9 +112,6 @@ class PersonaStore:
         :param original_data: 기존 페르소나 데이터
         :param set_data: 추가될 페르소나 데이터
         """
-        print("-----set_data-----")
-        print(set_data)
-
         for key, value in set_data.items():
             # 키 값의 내부 데이터가 list인 경우
             if key in original_data and isinstance(original_data[key], list) and isinstance(value, list):
