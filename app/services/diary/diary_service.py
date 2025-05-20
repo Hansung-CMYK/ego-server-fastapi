@@ -1,4 +1,5 @@
 import os
+from datetime import date
 
 from app.models.diary.preference_llm import preference_llm
 from app.models.chat.persona_llm import persona_llm
@@ -12,6 +13,24 @@ import json
 
 load_dotenv()
 SPRING_URI = os.getenv('SPRING_URI')
+
+def get_all_chat(user_id: str, target_time: date):
+    url = f"{SPRING_URI}/api/v1/chat-history/{user_id}/{target_time}"
+    response = requests.get(url)
+    chat_rooms = response.json()["data"]
+
+    user_all_chat_room_log: list[list[str]] = []  # 사용자의 모든 채팅방 대화 목록
+    for chat_room in chat_rooms:
+        chat_room_log = []
+        for chat in chat_room:
+            if chat["type"] == "U": name = "Human"
+            # else: name = chat["id"]
+            else: name = chat["uid"]
+
+            chat_room_log.append(f"{chat["type"]}@{name}: {chat["content"]} at {chat["chat_at"]}")
+
+        user_all_chat_room_log.append(chat_room_log)
+    return user_all_chat_room_log
 
 async def async_save(user_id:str, all_chat:list[list[str]], ego_id = 1):
     """
@@ -58,7 +77,7 @@ def save_persona(ego_id:int, stories:list[str]):
         session_history=stories
     )
 
-    persona_store.update(persona_id=ego_id, delta_persona=delta_persona)  # 변경사항 업데이트
+    persona_store.update(ego_id=ego_id, delta_persona=delta_persona)  # 변경사항 업데이트
 
     postgres_database.update_persona(
         persona_id=ego_id,

@@ -8,8 +8,7 @@ from app.models.diary.daily_comment_llm import daily_comment_llm
 from app.models.diary.topic_llm import topic_llm
 from app.models.diary.keyword_model import keyword_model
 from datetime import date
-from app.services.diary_service import get_all_chat
-from app.services.diary.diary_service import async_save
+from app.services.diary.diary_service import async_save, get_all_chat
 
 from app.services.diary.kobert_handler import extract_emotions
 router = APIRouter()
