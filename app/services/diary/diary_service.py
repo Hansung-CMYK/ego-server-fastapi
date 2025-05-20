@@ -44,13 +44,13 @@ async def async_save(user_id:str, all_chat:list[list[str]], ego_id = 1):
     # 페르소나 저장
     save_persona(ego_id=ego_id, stories=stories)
 
+    # 태그 저장
+    save_tags(ego_id=ego_id, stories=stories)
+
     # 관계 저장
     for chat_room in all_chat:
         if chat_room[0][0] == "E": # 첫 채팅 타입이 E인 경우에만 작성(에고 채팅은 무조건 에고가 먼저)
             save_relation(chat_room)
-
-    # 태그 저장
-    save_tags(ego_id=ego_id, stories=stories)
 
     print("async_save success")
     return
