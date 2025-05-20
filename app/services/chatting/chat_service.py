@@ -1,9 +1,19 @@
+import threading
+
 from app.models.chat.main_llm import main_llm
 from app.models.normalization.split_llm import split_llm
 from app.models.database.milvus_database import milvus_database
 from app.services.chatting.graph_rag_service import get_rag_prompt
 from app.services.chatting.persona_store import persona_store
 from app.services.session_config import SessionConfig
+import asyncio
+
+MAIN_LOOP = asyncio.new_event_loop()
+threading.Thread(target=MAIN_LOOP.run_forever, daemon=True).start()
+
+def worker(session_id:str, user_answer:str):
+    future = asyncio.run_coroutine_threadsafe(save_graphdb(session_id=session_id, user_answer=user_answer), MAIN_LOOP)
+    print("worker work:", future.result())
 
 # NOTE: GraphRAG O, Persona O
 def chat_stream(prompt: str, config: SessionConfig):
@@ -13,7 +23,7 @@ def chat_stream(prompt: str, config: SessionConfig):
     session_id:str = f"{ego_id}@{user_id}"
 
     # NOTE. 비동기로 이전 에고 질문과 현재 사용자의 답변으로 문장을 추출한다.
-    # asyncio.create_task(save_graphdb(session_id=session_id, user_answer=prompt))
+    worker(session_id=session_id, user_answer=prompt)
 
     rag_prompt = get_rag_prompt(ego_id=ego_id, user_speak=prompt)
     persona = persona_store.get_persona(ego_id=ego_id)
@@ -54,3 +64,4 @@ async def save_graphdb(session_id:str, user_answer:str):
     # TODO: 유저 정보로 해당 유저의 에고 아이디 조회가 필요하다. (하단 코드는 잘못된 로직)
     # TODO: `ego_id_of_user = <api>(user_id)` BE API에 필요
     milvus_database.insert_messages_into_milvus(splited_messages=splited_messages, ego_id=ego_id)
+    print(f"save_graphdb success: {splited_messages}")

@@ -80,8 +80,8 @@ def save_persona(ego_id:int, stories:list[str]):
     persona_store.update(ego_id=ego_id, delta_persona=delta_persona)  # 변경사항 업데이트
 
     postgres_database.update_persona(
-        persona_id=ego_id,
-        persona_json=persona_store.get_persona(persona_id=ego_id)
+        ego_id=ego_id,
+        persona_json=persona_store.get_persona(ego_id=ego_id)
     )  # 데이터베이스에 업데이트 된 페르소나 저장
     print(f"delta_persona success: {delta_persona}")
 
