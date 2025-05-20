@@ -46,7 +46,7 @@ async def to_diary(body: DiaryRequest):
     daily_comment = daily_comment_llm.invoke(diaries=topics, feeling=feeling, keywords=keywords)
 
     # NOTE 6. 에고 페르소나 수정
-    asyncio.create_task(async_save(user_id=body.user_id, all_chat=all_chat))
+    asyncio.create_task(async_save(user_id=body.user_id, all_chat=all_chat, target_date=body.target_date))
 
     # NOTE 7. FE 반환 diary 객체 생성
     # TODO: 문장 변경 가능성 있음.
