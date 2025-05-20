@@ -18,7 +18,8 @@ def get_all_chat(user_id: str, target_time: date):
         chat_room_log = []
         for chat in chat_room:
             if chat["type"] == "U": name = "Human"
-            else: name = chat["id"]
+            # else: name = chat["id"]
+            else: name = chat["uid"]
 
             chat_room_log.append(f"{chat["type"]}@{name}: {chat["content"]} at {chat["chat_at"]}")
 
