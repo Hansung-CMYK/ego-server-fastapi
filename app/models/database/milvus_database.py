@@ -27,6 +27,9 @@ class MilvusDatabase:
             token="root:Milvus"
         )
 
+    def get_milvus_client(self):
+        return self.__milvus_client
+
     def search_triplets_to_milvus(self, ego_id: str, field_name: str, datas: list[ndarray]) -> list[dict]:
         """
             triplets 컬렉션에서 연관된 삼중항을 조회하는 함수이다.
@@ -68,7 +71,7 @@ class MilvusDatabase:
                 search_params={
                     "metric_type": "COSINE",
                     "params": {
-                        "radius": 0.7
+                        "radius": 0.5
                     }
                 },
                 output_fields=[

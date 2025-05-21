@@ -30,7 +30,7 @@ class PersonaLlm:
         :return: json 정보를 가진 dict
         """
         answer = self.__persona_chain.invoke(
-            {"session_history": session_history, "sample_json": self.__SAMPLE_JSON, "current_persona": [current_persona]}
+            {"session_history": session_history, "sample_json": self.__SAMPLE_JSON, "current_persona": current_persona}
         ).content
         clean_answer = self.__clean_json_string(answer)
 
@@ -56,7 +56,7 @@ class PersonaLlm:
     __PERSONA_TEMPLATE = [
         ("system", "/no_think\n"),
         ("system", dedent("""
-            대화 기록을 보고 사용자의 Persona 변화를 JSON으로 정리
+            대화 기록을 보고 **Human**의 **Persona** 변화를 JSON으로 정리
 
             [규칙]
             - CURRENT_PERSONA를 참고해 ‘변경, 추가’ 해야 할 필드만 무조건 JSON으로 출력
