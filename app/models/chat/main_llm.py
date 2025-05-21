@@ -1,4 +1,5 @@
 import warnings
+from collections import defaultdict
 from textwrap import dedent
 
 from langchain_core._api import LangChainDeprecationWarning
@@ -22,7 +23,7 @@ class MainLlm:
 
     def __init__(self):
         # 메인 모델 프롬프트 적용 + 랭체인 생성
-        prompt = ChatPromptTemplate.from_messages(self.__NEW_TEMPLATE)
+        prompt = ChatPromptTemplate.from_messages(self.__MAIN_TEMPLATE)
         main_chain = prompt | chat_model
 
         self.__prompt = RunnableWithMessageHistory(
@@ -48,8 +49,24 @@ class MainLlm:
             self.__store[session_id].add_ai_message("오늘은 어떤 일이 있었어?")
         return self.__store[session_id]
 
-    def get_chain(self):
-        return self.__prompt
+    def stream(self, input:str, persona:defaultdict, rag_prompt:str, session_id:str):
+        for chunk in self.__prompt.stream(
+            input={
+                "name": persona["name"],
+                "age": persona["age"],
+                "gender": persona["gender"],
+                "likes": persona["likes"],
+                "dislikes": persona["dislikes"],
+                "personality": persona["personality"],
+                "mbti": persona["mbti"],
+                "mbti_description": self.get_mbti(mbti=persona["mbti"]),
+                "history": rag_prompt,
+                "tone": "", # TODO: 말투 프롬프트 추가하기
+                "input": input,
+            },
+            config={"configurable": {"session_id": f"{session_id}"}}
+        ):
+            yield chunk.content
 
     def get_human_messages_in_memory(self, session_id:str) -> list[str]:
         """
@@ -68,22 +85,6 @@ class MainLlm:
         self.__store[session_id].add_user_message(message)
 
     __MAIN_TEMPLATE = [
-        ("system", "/no_think\n"),
-        ("system", dedent("""
-                너는 나의 대화 상대야.
-                - 답변은 'persona'를 기반으로 답해줘.
-                - 답변은 2–4문장(30~80토큰) 안에서 간결-명확하게.
-                - 제공된 'history'와 'related_story' 외 새로운 사실은 채택하지 말 것.
-                - 'related_story'는 각 개체의 사건 + 의미 정보로 사건의 맥락을 인식할 것   
-                - 필요하다면 인용부호 없이 자연스럽게 대화 기록을 재사용해.
-            """).strip()),
-        ("system", "{persona}"),
-        MessagesPlaceholder(variable_name="history"),
-        ("system", "{related_story}"),
-        ("human", "{input}")
-    ]
-
-    __NEW_TEMPLATE = [
         ("system", "/no_think\n"),
         MessagesPlaceholder(variable_name="history"),
         ("system", dedent("""
@@ -119,7 +120,8 @@ class MainLlm:
         """).strip()),
     ]
 
-    def get_mbti(self, mbti:str):
+    @staticmethod
+    def get_mbti(mbti:str):
         if mbti == "ISTJ": return "실제 사실에 대하여 정확하고 체계적으로 기억하며, 일 처리에 있어서도 신중하고 책임감이 있다. 강한 집중력과 현실 감각을 지녔으며, 조직적이고 침착하다. 이들은 보수적인 경향이 있으며, 문제를 해결하는 데 과거의 경험을 잘 적용한다. 또한 반복되는 일상적인 일에 대한 인내력이 강하다."
         elif mbti == "ISTP": return "낙관적이고 실용적이며, 즉흥적이면서도 합리적, 위기 대처 능력 뛰어나다, 우선순위를 잘 정한다. 사회적으로 지나치게 개인주의적이며 내성적이다. 이들은 위험한 행동을 잘하며, 감정에 무감각하다. 하는 일에 쉽게 지루해한다."
         elif mbti == "ISFJ": return "타인을 향한 연민과 동정심이 있으면서도 가족이나 친구를 보호할 때는 단호하고 가차 없는 모습을 보인다. 이 외에도 한마디로 정의 내리기 힘든 다양한 성향을 내포하고 있다. 하지만 대체로 차분하고 따뜻하며, 내면에 강한 책임감과 인내심을 갖고 있다. 겉으로는 조용해 보여도 마음속에는 단단한 의지를 품고 살아간다."

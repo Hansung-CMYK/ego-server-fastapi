@@ -28,7 +28,7 @@ def chat_stream(prompt: str, config: SessionConfig):
     rag_prompt = get_rag_prompt(ego_id=ego_id, user_speak=prompt)
     persona = persona_store.get_persona(ego_id=ego_id)
 
-    for chunk in main_llm.get_chain().stream(
+    for chunk in main_llm.stream(
         input = {
             "input": prompt, # LLM에게 하는 질문을 프롬프트로 전달한다.
             "persona": persona,
