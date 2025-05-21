@@ -49,7 +49,7 @@ class PersonaStore:
     def remove_all_persona(self):
         self.__store.clear()
 
-    def get_persona(self, ego_id:str) -> defaultdict:
+    def get_persona(self, ego_id:str) -> dict:
         """
         사용자의 페르소나 정보를 반환하는 함수
         """
@@ -57,7 +57,7 @@ class PersonaStore:
             new_persona = postgres_database.select_persona_to_id(ego_id=ego_id) # postgres에서 정보를 가져와서,
             self.__store[ego_id] = new_persona # store에 저장한다.
 
-        return defaultdict(self.__store[ego_id][1])
+        return self.__store[ego_id][1]
 
     def update(self, ego_id:str, delta_persona: dict):
         """

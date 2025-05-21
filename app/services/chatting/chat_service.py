@@ -29,14 +29,12 @@ def chat_stream(prompt: str, config: SessionConfig):
     persona = persona_store.get_persona(ego_id=ego_id)
 
     for chunk in main_llm.stream(
-        input = {
-            "input": prompt, # LLM에게 하는 질문을 프롬프트로 전달한다.
-            "persona": persona,
-            "related_story":rag_prompt, # 이전에 한 대화내역 중 관련 대화 내역을 프롬프트로 전달한다.
-        },
-        config={"configurable": {"session_id":f"{session_id}"}}
+        input = prompt,
+        persona = persona,
+        rag_prompt = rag_prompt,
+        session_id = session_id
     ):
-        yield chunk.content
+        yield chunk
 
 async def save_graphdb(session_id:str, user_answer:str):
     """
