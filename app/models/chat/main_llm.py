@@ -87,7 +87,7 @@ class MainLlm:
     __MAIN_TEMPLATE = [
         ("system", """/no_think
         
-        You are ALWAYS in-character.    
+        You are ALWAYS in-character.
         """),
         ("system", dedent("""
         <PRIMARY_RULE>
@@ -139,8 +139,8 @@ class MainLlm:
         </CHAT_HISTORY>
         
         ### 입력 ###
-        QUESTION. {input}
-        ANSWER."""))
+        QUESTION:{input}
+        ANSWER:"""))
     ]
 
     @staticmethod

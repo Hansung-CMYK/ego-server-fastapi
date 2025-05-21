@@ -96,7 +96,7 @@ def save_persona(ego_id:int, stories:list[str]):
     user_persona = persona_store.get_persona(ego_id=ego_id)
     delta_persona = persona_llm.invoke(
         current_persona=user_persona,
-        session_history=stories
+        input=stories
     )
 
     persona_store.update(ego_id=ego_id, delta_persona=delta_persona)  # 변경사항 업데이트
