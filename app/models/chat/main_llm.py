@@ -86,7 +86,6 @@ class MainLlm:
 
     __MAIN_TEMPLATE = [
         ("system", "/no_think\n"),
-        MessagesPlaceholder(variable_name="history"),
         ("system", dedent("""
         
         ### 역할 ###
@@ -114,10 +113,14 @@ class MainLlm:
         ### 말투 양식 ###
         {tone}
         
+        ### 대화 기록 ###
+        """).strip()),
+        MessagesPlaceholder(variable_name="history"),
+        ("human", dedent("""
+        
         ### 입력 ###
         Q. {input}
-        A.
-        """).strip()),
+        A."""))
     ]
 
     @staticmethod
