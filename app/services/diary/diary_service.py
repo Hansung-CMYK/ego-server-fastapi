@@ -2,7 +2,6 @@ import os
 from datetime import date, datetime
 
 from app.exception.exceptions import ControlledException, ErrorCode
-from app.models.diary.preference_llm import preference_llm
 from app.models.chat.persona_llm import persona_llm
 from app.services.diary.tag_service import sentence_embedding, search_tags
 from app.services.chatting.persona_store import persona_store
@@ -44,15 +43,15 @@ async def async_save(user_id:str, all_chat:list[list[str]], target_date:date):
     stories = ["".join(chat_room) for chat_room in all_chat]
 
     # user_id로 my_ego 추출
-    url = f"{SPRING_URI}/api/v1/ego/{user_id}/list"
+    url = f"{SPRING_URI}/api/v1/ego/user/{user_id}"
     response = requests.get(url)
-    my_ego = response.json()["data"][0]
+    my_ego = response.json()["data"]
 
     # 페르소나 저장
-    save_persona(ego_id=my_ego["id"], stories=stories)
+    save_persona(ego_id=my_ego["egoId"], stories=stories)
 
     # 태그 저장
-    save_tags(ego_id=my_ego["id"], stories=stories)
+    save_tags(ego_id=my_ego["egoId"], stories=stories)
 
     # 관계 저장
     for chat_room in all_chat:
@@ -73,9 +72,10 @@ def save_relation(user_id:str, chat_room:list[str], target_date:date):
     """
     ego_id = chat_room[0].split('@')[1].split(':')[0]
 
-    relation = preference_llm.invoke(input=chat_room)
+    # TODO relation 추출해서 연결하기
+    # relation = preference_llm.invoke(input=chat_room)
     # relationship_id = relationship_id_mapper(relation)
-    relationship_id = 1
+    relationship_id = 1 # NOTE: 임시 데이터
 
     url = f"{SPRING_URI}/api/v1/ego-relationship"
     post_data = {"uid": user_id, "egoId": ego_id, "relationshipId": relationship_id, "createdAt": target_date.isoformat()}

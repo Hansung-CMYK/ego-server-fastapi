@@ -1,11 +1,11 @@
 import threading
 
 from app.models.chat.main_llm import main_llm
-from app.models.normalization.split_llm import split_llm
 from app.models.database.milvus_database import milvus_database
 from app.services.chatting.graph_rag_service import get_rag_prompt
 from app.services.chatting.persona_store import persona_store
 from app.services.diary.diary_service import SPRING_URI
+from app.models.txtnorm.split_llm import split_llm
 from app.services.session_config import SessionConfig
 import asyncio
 import requests
@@ -60,9 +60,9 @@ async def save_graphdb(session_id:str, user_answer:str):
 
     # NOTE 3. 에고에 맞게 삼중항을 저장한다.
     # user_id로 my_ego 추출
-    url = f"{SPRING_URI}/api/v1/ego/{user_id}/list"
+    url = f"{SPRING_URI}/api/v1/ego/user/{user_id}"
     response = requests.get(url)
-    my_ego = response.json()["data"][0]
+    my_ego = response.json()["data"]
 
     milvus_database.insert_messages_into_milvus(splited_messages=splited_messages, ego_id=my_ego["id"])
     print(f"save_graphdb success: {splited_messages}")

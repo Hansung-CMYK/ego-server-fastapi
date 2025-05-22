@@ -1,7 +1,8 @@
 from __future__ import annotations
 import os
 import numpy as np
-from app.models.normalization.embedding_model import embedding_model
+
+from app.models.txtnorm.embedding_model import embedding_model
 
 __TAGS = {
     "늘정주나": "정주행 몰입 콘텐츠",
