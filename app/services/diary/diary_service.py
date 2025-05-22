@@ -43,16 +43,16 @@ async def async_save(user_id:str, all_chat:list[list[str]], target_date:date):
     """
     stories = ["".join(chat_room) for chat_room in all_chat]
 
-    # user_id로 ego 추출
-    url = f"{SPRING_URI}/api/v1/ego/{user_id}/list"
+    # user_id로 my_ego 추출
+    url = f"{SPRING_URI}/api/v1/my_ego/{user_id}/list"
     response = requests.get(url)
-    ego = response.json()["data"][0]
+    my_ego = response.json()["data"][0]
 
     # 페르소나 저장
-    save_persona(ego_id=ego["id"], stories=stories)
+    save_persona(ego_id=my_ego["id"], stories=stories)
 
     # 태그 저장
-    save_tags(ego_id=ego["id"], stories=stories)
+    save_tags(ego_id=my_ego["id"], stories=stories)
 
     # 관계 저장
     for chat_room in all_chat:

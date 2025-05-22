@@ -5,8 +5,10 @@ from app.models.normalization.split_llm import split_llm
 from app.models.database.milvus_database import milvus_database
 from app.services.chatting.graph_rag_service import get_rag_prompt
 from app.services.chatting.persona_store import persona_store
+from app.services.diary.diary_service import SPRING_URI
 from app.services.session_config import SessionConfig
 import asyncio
+import requests
 
 MAIN_LOOP = asyncio.new_event_loop()
 threading.Thread(target=MAIN_LOOP.run_forever, daemon=True).start()
@@ -16,7 +18,6 @@ def worker(session_id:str, user_answer:str):
 
 # NOTE: GraphRAG O, Persona O
 def chat_stream(prompt: str, config: SessionConfig):
-    # TODO: ego_name으로 조회하는데, ego_id로 조회하고 있다. 수정할 것 (로직 자체는 이상 없음)
     ego_id:str = config.ego_id
     user_id:str = config.user_id
     session_id:str = f"{ego_id}@{user_id}"
@@ -58,7 +59,10 @@ async def save_graphdb(session_id:str, user_answer:str):
     if len(splited_messages) == 0: return # 문장 분리 실패 시, 데이터는 저장하지 않는다.
 
     # NOTE 3. 에고에 맞게 삼중항을 저장한다.
-    # TODO: 유저 정보로 해당 유저의 에고 아이디 조회가 필요하다. (하단 코드는 잘못된 로직)
-    # TODO: `ego_id_of_user = <api>(user_id)` BE API에 필요
-    milvus_database.insert_messages_into_milvus(splited_messages=splited_messages, ego_id=ego_id)
+    # user_id로 my_ego 추출
+    url = f"{SPRING_URI}/api/v1/my_ego/{user_id}/list"
+    response = requests.get(url)
+    my_ego = response.json()["data"][0]
+
+    milvus_database.insert_messages_into_milvus(splited_messages=splited_messages, ego_id=my_ego["id"])
     print(f"save_graphdb success: {splited_messages}")
