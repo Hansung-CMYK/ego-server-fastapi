@@ -60,7 +60,7 @@ async def save_graphdb(session_id:str, user_answer:str):
 
     # NOTE 3. 에고에 맞게 삼중항을 저장한다.
     # user_id로 my_ego 추출
-    url = f"{SPRING_URI}/api/v1/my_ego/{user_id}/list"
+    url = f"{SPRING_URI}/api/v1/ego/{user_id}/list"
     response = requests.get(url)
     my_ego = response.json()["data"][0]
 

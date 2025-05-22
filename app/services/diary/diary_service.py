@@ -44,7 +44,7 @@ async def async_save(user_id:str, all_chat:list[list[str]], target_date:date):
     stories = ["".join(chat_room) for chat_room in all_chat]
 
     # user_id로 my_ego 추출
-    url = f"{SPRING_URI}/api/v1/my_ego/{user_id}/list"
+    url = f"{SPRING_URI}/api/v1/ego/{user_id}/list"
     response = requests.get(url)
     my_ego = response.json()["data"][0]
 
@@ -77,7 +77,6 @@ def save_relation(user_id:str, chat_room:list[str], target_date:date):
     # relationship_id = relationship_id_mapper(relation)
     relationship_id = 1
 
-    # TODO: API 실행
     url = f"{SPRING_URI}/api/v1/ego-relationship"
     post_data = {"uid": user_id, "egoId": ego_id, "relationshipId": relationship_id, "createdAt": target_date.isoformat()}
     headers = {"Content-Type": "application/json"}
@@ -96,7 +95,7 @@ def save_persona(ego_id:int, stories:list[str]):
     user_persona = persona_store.get_persona(ego_id=ego_id)
     delta_persona = persona_llm.invoke(
         current_persona=user_persona,
-        input=stories
+        session_history=stories
     )
 
     persona_store.update(ego_id=ego_id, delta_persona=delta_persona)  # 변경사항 업데이트
