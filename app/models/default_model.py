@@ -11,7 +11,7 @@ PreferenceModel: 관계 분석
     - 파인 튜닝 예정
 """
 chat_model = ChatOllama( # MainLlm
-    model="gemma3:4b",
+    model="gemma3:12b",
     temperature=0.7
 )
 
@@ -33,7 +33,7 @@ TopicLlm: 일기의 주제를 추출하고, 그에 대한 이야기를 서술하
     - json으로 사용안하도록. 위험도가 있음
 """
 task_model = ChatOllama(
-    model="qwen3:4b",
+    model="qwen3:8b",
     temperature=0.0,
     format="json"
 )
