@@ -22,6 +22,8 @@ gpt_sovits_sub  = os.path.join(gpt_sovits_root, "GPT_SoVITS")
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 GPT_SOVITS_ROOT = os.path.join(BASE_DIR, "modules", "GPT-SoVITS", "GPT_SoVITS", "pretrained_models")
+GPT_ROOT = os.path.join(BASE_DIR, "modules", "GPT-SoVITS", "GPT_weights_v4")
+SOVITS_ROOT = os.path.join(BASE_DIR, "modules", "GPT-SoVITS", "SoVITS_weights_v4")
 
 for path in (gpt_sovits_root, gpt_sovits_sub):
     if path not in sys.path:
@@ -36,8 +38,11 @@ async def init_models():
     #NOTE 필요시 모델 추가 로드
     await ensure_init(
         "karina",
-        os.path.join(GPT_SOVITS_ROOT, "s1v3.ckpt"),
-        os.path.join(GPT_SOVITS_ROOT, "s2Gv3.pth"),
+        os.path.join(GPT_ROOT, "karina-v4-e20.ckpt"),
+        os.path.join(SOVITS_ROOT, "karina-v4_e8_s384_l32.pth"),
+        "/home/keem/refer/karina.wav",
+        "내 마음에 드는 거 있으면 낭독해줄게?",
+        "ko"
     )
 
 async def on_startup():
