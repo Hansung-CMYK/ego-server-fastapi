@@ -138,9 +138,9 @@ class MainLlm:
         ("human", dedent("""
         </CHAT_HISTORY>
         
-        ### 입력 ###
-        QUESTION:{input}
-        ANSWER:"""))
+        <RESULT>
+        Q. {input}
+        A. """))
     ]
 
     @staticmethod

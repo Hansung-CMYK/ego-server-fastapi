@@ -23,7 +23,7 @@ class SplitLlm:
         :return: 하나의 의미만을 가진 문장
         """
         # NOTE 1. 문장을 단일 의미로 분리한다.
-        split_messages_string = self.__split_chain.invoke({"input": input, "datetime": datetime.now().isoformat(), "example": self.__SPLIT_TEMPLATE_EXAMPLE}).content.strip()
+        split_messages_string = self.__split_chain.invoke({"input": input, "datetime": datetime.now().isoformat()}).content.strip()
 
         # NOTE 2. JSON 문자열을 list로 파싱한다.
         # 아주 드물게 LLM이 사용자 응답을 JSON으로 만들지 못하는 경우가 있는데,
@@ -75,12 +75,6 @@ class SplitLlm:
         </RETURN_TYPE>
 
         <RESULT>
-        {example}
-        Q. {input}
-        A. """)),
-    ]
-
-    __SPLIT_TEMPLATE_EXAMPLE = dedent("""
         Q. AI: 그때 이야기했던 세종대왕에 대해 이야기 해줘.\nHUMAN: 그 사람은 조선의 제4대 왕으로서, 훈민정음을 창제하여 백성들이 쉽게 글을 익히도록 하였다. 특히 일을 하는 것을 좋아했는데, 이것 때문에 지병을 갖게 되었다.
         A. {"result": ["세종대왕은 조선의 제4대 왕이다. at 0000-00-00T00:00:000","세종대왕은 훈민정음을 창제하였다. at 0000-00-00T00:00:000","세종대왕은 백성이 쉽게 글을 익히도록 하였다. at 0000-00-00T00:00:000","세종대왕은 일을 하는 것을 좋아했다. at 0000-00-00T00:00:000", "세종대왕은 일을 하는 것을 좋아해서 지병을 갖게 되었다. at 0000-00-00T00:00:000"]}
         Q. AI: 어떻게 혜화에서 이렇게 빨리 여기까지 도착할 수 있었어?\nHUMAN: 교통 체증으로 인해 출발이 지연되어 우회했습니다. 거기는 보통 차가 자주 막히는 곳인데, 창신역으로 우회하면 막히지 않고 도착할 수 있습니다.
@@ -93,6 +87,8 @@ class SplitLlm:
         A. {"result": ["나는 점심으로 김치찌개를 먹었다. at 0000-00-00T00:00:000","김치찌개가 매우 매웠다. at 0000-00-00T00:00:000","나는 매운 김치찌개 때문에 물을 많이 마셨다. at 0000-00-00T00:00:000","나는 매웠지만 김치찌개의 맛에 만족했다. at 0000-00-00T00:00:000"]}
         Q. AI: 오늘 날씨 어땠어?\nHUMAN: 아침에는 비가 왔지만 오후에는 해가 떠서 산책을 했어. 덕분에 기분이 좋아졌어.
         A. {"result": ["아침에는 비가 내렸다. at 0000-00-00T00:00:000","오후에는 해가 떴다. at 0000-00-00T00:00:000","나는 오후에 산책을 했다. at 0000-00-00T00:00:000","산책 덕분에 나는 기분이 좋아졌다. at 0000-00-00T00:00:000"]}
-    """).strip()
+        Q. {input}
+        A. """)),
+    ]
 
 split_llm = SplitLlm()

@@ -13,7 +13,7 @@ class DailyCommentLLM:
 
     def invoke(self, diaries:list[dict], feelings:list[str], keywords:list[str]):
         events = [diary["title"] for diary in diaries]
-        diary_string = self.__daily_chain.invoke({"events": events, "feelings": feelings, "keywords":keywords, "example":self.__DAILY_TEMPLATE_EXAMPLE}).content.strip()
+        diary_string = self.__daily_chain.invoke({"events": events, "feelings": feelings, "keywords":keywords}).content.strip()
 
         try:
             return json.loads(diary_string)["result"]
@@ -68,6 +68,7 @@ class DailyCommentLLM:
         - 만약 매개변수가 부족하여 문장을 완성할 수 없다면, 해당 요소를 생략하고 자연스럽게 문장을 연결합니다.
         </RETURN_FORM>
         
+        <RESULT>
         Q. <INPUT> events: ['군대 동기와의 만남', '수업 지각'], feelings: ['기쁨', '화남'], keywords: ['군대', '약속 시간', '달리기'] </INPUT>
         A. {"result": "'군대 동기와의 만남'과 '수업 지각'이 있었던 오늘, '기쁨'과 '화남' 속에서, '군대', '약속 시간', '달리기'가 기억에 남아요!"}
         Q. <INPUT> events: ['체육시간 족구공으로 축구하기'], feelings: ['슬픈'], keywords: ['체육시간', '족구공'] </INPUT>
