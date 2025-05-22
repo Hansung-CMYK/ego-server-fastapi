@@ -21,7 +21,7 @@ class TopicLlm:
         """
         일기를 생성하는 함수이다.
         """
-        answer = self.__prompt.invoke({"input": "\n".join(story), "example": self.__RETURN_FORM}).content
+        answer = self.__prompt.invoke({"input": "\n".join(story)}).content
         print(answer)
         try:
             diary = json.loads(answer)["result"]
@@ -32,18 +32,22 @@ class TopicLlm:
         return diary
 
     __DIARY_TEMPLATE = [
-        ("system", """/no_think"""),
+        ("system", "/no_think"),
         ("system", dedent("""
         <PRIMARY_RULE>
         무조건 JSON 형식을 유지해야 합니다.
         JSON 외에 자연어 해설은 없습니다.
-        AI, 챗봇, 대화방, 시스템, 프롬프트 등 메타 표현은 절대 금지합니다.
+        AI, 챗봇, 대화방, 시스템, 주석, 설명, 프롬프트 등 메타 표현은 절대 금지합니다.
         </PRIMARY_RULE>
         
         <ROLE>
-        당신의 임무는 `Q.` 문장들로 일기를 작성하는 것입니다.
+        당신의 임무는 `Q.`에 있는 문장들로 일기를 작성하는 것입니다.
         일기는 1인칭 일기체를 사용합니다. (예: 나는 ~했다. 오늘은 ~였다.)
         </ROLE>
+        
+        <KNOWLEDGE>
+        {input}
+        </KONWLEDGE>
         
         <RULE>
         다음은 주어진 입력에 **필수적**으로 지켜야 할 반환 규칙입니다.
@@ -56,14 +60,14 @@ class TopicLlm:
         만약 일기를 도출하지 못했다면, `empty list`(`[]`) 반환합니다.
         </EXCEPTION>
         
-        <WRITING INSTRUCTIONS>
+        <WRITING_INSTRUCTIONS>
         다음은 일기를 작성할 때, 지켜야 할 일기 작성 규칙입니다. 
         - 주제(`title`) 규칙
             - `title`은 **1문장 이내**로 핵심어를 이용해 작성해야 합니다.
         - 본문(`content`) 규칙
             - `content`는 3문장~10문장으로 완성해야 합니다.
             - 가능하면 감정이나 환경 묘사(시각/청각/후각)를 한 줄 이상 삽입해야 합니다.
-        </WRITING INSTRUCTIONS>
+        </WRITING_INSTRUCTIONS>
         
         <RETURN_TYPE>
         - 출력은 반드시 아래 예시와 동일한 JSON 구조로 반환합니다.
@@ -74,7 +78,19 @@ class TopicLlm:
         </RETURN_TYPE>
         
         <RETURN_FORM>
-        {example}
+        {
+            "result": [
+                {
+                    "title": "<주제 1>", 
+                    "content": "<본문 1>. <본문 2>..."
+                },
+                {
+                    "title": "<주제 2>",
+                    "content": "..."
+                },
+                ...
+            ]
+        }
         </RETURN_FORM>
         
         Q. 'U@Human: 안녕! 오늘 퇴근 후에 뭐 해? at 0000-00-00T00:00:00.000\nO@user_id_100: 별 계획 없는데? 영화나 볼까 생각 중이야. at 2025-05-20T18:01:25.901\nU@Human: 오! 그럼 ‘파묘’ 볼래? 다들 소름 돋는다고 하더라. at 2025-05-20T18:02:01.667\nO@user_id_100: 좋지! 7시 30분 홍대 CGV 예매해 둘게. at 2025-05-20T18:02:30.488\nU@Human: 끝나고 매운 라멘 먹자~ 요즘 날이 쌀쌀해서 딱일 듯. at 2025-05-20T18:03:04.210\nO@user_id_100: 콜! 영화관 앞에서 보자. at 2025-05-20T18:03:25.004\n'
@@ -88,20 +104,6 @@ class TopicLlm:
         Q. {input}
         A. """))
     ]
-
-    __RETURN_FORM = """
-    "result": [
-        {
-            "title": "<주제 1>", 
-            "content": "<본문 1>. <본문 2>..."
-        },
-        {
-            "title": "<주제 2>",
-            "content": "..."
-        },
-        ...
-    ]
-    """
 
 
 

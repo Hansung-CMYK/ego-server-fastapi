@@ -43,7 +43,7 @@ async def to_diary(body: DiaryRequest):
     feeling = extract_emotions(topics)
 
     # NOTE 5. 한줄 요약 문장 생성
-    daily_comment = daily_comment_llm.invoke(diaries=topics, feeling=feeling, keywords=keywords)
+    daily_comment = daily_comment_llm.invoke(diaries=topics, feelings=feeling, keywords=keywords)
 
     # NOTE 6. 에고 페르소나 수정
     asyncio.create_task(async_save(user_id=body.user_id, all_chat=all_chat, target_date=body.target_date))
