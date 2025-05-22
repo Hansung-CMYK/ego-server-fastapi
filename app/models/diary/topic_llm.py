@@ -6,7 +6,6 @@ from langchain_core.prompts import ChatPromptTemplate
 from app.exception.exceptions import ControlledException, ErrorCode
 from app.models.default_model import task_model
 
-
 class TopicLlm:
     """
     Ollama를 통해 LLM 모델을 가져오는 클래스

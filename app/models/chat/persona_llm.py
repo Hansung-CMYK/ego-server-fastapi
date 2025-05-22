@@ -6,7 +6,6 @@ import logging
 
 from app.models.default_model import task_model
 
-
 class PersonaLlm:
     """
     Ollama를 통해 LLM 모델을 가져오는 클래스

@@ -19,7 +19,7 @@ class ErrorCode(Enum):
     POSTGRES_ACCESS_DENIED = (-205, "PostgreSQL 접속(or 스키마 접속)에 실패하였습니다.")
     INVALID_SQL_ERROR = (-206, "잘못된 SQL로 에러가 발생했습니다.")
     # 관계 생성
-    INVALID_RELATIONSHIP = (-301, "잘못된 관계가 도출되었습니다. *LLM 문제")
+    INVALID_RELATIONSHIP = (-301, "잘못된 관계가 도출되었습니다. *모델 문제")
 
 
 class ControlledException(RuntimeError):
