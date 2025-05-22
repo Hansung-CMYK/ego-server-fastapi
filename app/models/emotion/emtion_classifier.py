@@ -42,4 +42,6 @@ class EmotionClassifier:
         )
 
     def predict(self, texts):
-        return self.pipeline(texts)
+        raw_result = self.pipeline(texts)
+        formatted_result = [(label, score) for item in raw_result for label, score in zip(item["labels"], item["scores"])]
+        return formatted_result
