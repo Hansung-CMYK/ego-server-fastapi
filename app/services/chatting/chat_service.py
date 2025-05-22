@@ -12,8 +12,7 @@ MAIN_LOOP = asyncio.new_event_loop()
 threading.Thread(target=MAIN_LOOP.run_forever, daemon=True).start()
 
 def worker(session_id:str, user_answer:str):
-    future = asyncio.run_coroutine_threadsafe(save_graphdb(session_id=session_id, user_answer=user_answer), MAIN_LOOP)
-    print("worker work:", future.result())
+    asyncio.run_coroutine_threadsafe(save_graphdb(session_id=session_id, user_answer=user_answer), MAIN_LOOP)
 
 # NOTE: GraphRAG O, Persona O
 def chat_stream(prompt: str, config: SessionConfig):

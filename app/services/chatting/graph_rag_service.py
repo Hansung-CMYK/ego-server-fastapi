@@ -57,9 +57,6 @@ def get_rag_prompt(ego_id:str, user_speak:str)->str:
         )
     else : triplets_with_similar_relations = []
 
-    print("관계 반환 값")
-    print("".join(f"\n{triplet["entity"]["relation"]}" for triplet in triplets_with_similar_relations))
-
     # NOTE 3. 검색된 Triplet 정보 중 서로 연결된 관계들을 계산한다.
     related_passages_ids = get_passages_id_from_triplets(
         similar_subjects=triplets_with_similar_subject,
@@ -75,6 +72,7 @@ def get_rag_prompt(ego_id:str, user_speak:str)->str:
 
     # 모든 결과 값을 하나의 문자열로 합친다.
     related_story = "\n".join([f"[{index}]: {text["passage"]}" for index, text in enumerate(related_passages)])
+    print(f"원문 반환 값\n{related_story}")
     return related_story
 
 def get_passages_id_from_triplets(similar_subjects: list[dict], similar_objects: list[dict], similar_relations: list[dict]) -> list[int]:
