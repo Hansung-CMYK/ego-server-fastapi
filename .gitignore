@@ -12,5 +12,4 @@ venv/
 **/*.log
 *.log
 
-loop.py
-test.py
+test/
