@@ -17,26 +17,26 @@ class SplitLlm:
         사용자 메세지에 담겨있는 의미들을 단일 문장으로 분리하는 모델이다.
 
     Attributes:
-        __prompt: llm을 활용하기 위한 lang_chain
+        __chain: llm을 활용하기 위한 lang_chain
     """
 
     def __init__(self):
         # 문장 분리 프롬프트 적용 + 랭체인 생성
         split_prompt = ChatPromptTemplate.from_messages(self.__SPLIT_TEMPLATE)
-        self.__prompt = split_prompt | task_model
+        self.__chain = split_prompt | task_model
 
-    def invoke(self, input:str)->list:
+    def split_invoke(self, complex_sentence:str)->list:
         """
         요약:
             전달 받은 문장들을 하나의 단일 의미나 사건으로 분리하는 함수
 
         Parameters:
-            input(str): 복합 의미를 가진 문장
+            complex_sentence(str): 복합 의미를 가진 문장
 
         Raises:
             JSONDecodeError: JSON Decoding 실패 시, 빈 리스트(`[]`) 반환
         """
-        split_messages_string = self.__prompt.invoke({"input": input, "datetime": datetime.now().isoformat(), "result_example":self.__RESULT_EXAMPLE}).content.strip()
+        split_messages_string = self.__chain.invoke({"input": complex_sentence, "datetime": datetime.now().isoformat(), "result_example":self.__RESULT_EXAMPLE}).content.strip()
 
         try:
             split_messages = json.loads(split_messages_string)["result"]

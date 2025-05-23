@@ -10,23 +10,23 @@ class KeywordModel:
         문장에서 키워드(핵심 단어)를 추출하는 모델
 
     Attributes:
-        __keyword_model: 실질적으로 키워드를 추출하는 모델이다.
+        __keyword_model(KeyBERT): 실질적으로 키워드를 추출하는 모델이다.
     """
     __keyword_model = KeyBERT(sentence_transformer)
 
-    def get_keywords(self, stories:list[str], count:int=5)->list[str]:
+    def get_keywords(self, chat_rooms:list[str], count:int=5)->list[str]:
         """
         요약:
             KeyBERT를 통해 벡터 임베딩을 통한 코사인 유사도로 키워드 추출
 
         Parameters:
-            stories(list[str]): 키워드를 추출할 문장들의 모음
+            chat_rooms(list[str]): 키워드를 추출할 문장들의 모음
             count(int): 추출할 문장 개수
         """
         nouns_list = [] # 추출된 키워드를 담아 둘 객체
 
         # NOTE 1. 문장 하나로 연결
-        sentences = "\n".join(story for story in stories)
+        sentences = "\n".join(story for story in chat_rooms)
 
         # NOTE 2. 문장에서 명사만 남겨둔다.
         for sentence in kiwi.analyze(sentences):

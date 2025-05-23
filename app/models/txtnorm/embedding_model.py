@@ -30,13 +30,16 @@ class EmbeddingModel:
         self.__device = torch.device('cuda' if torch.cuda.is_available() else 'cpu') # GPU 사용 가능 시 연산을 GPU에서 하도록 변경
         self.__model.to(self.__device)
 
-    def embeded_documents(self, texts: list[str]) -> list[np.ndarray]:
+    def embedding(self, texts: list[str]) -> list[np.ndarray]:
         """
         요약:
             텍스트 리스트를 임베딩하는 함수
 
         Parameters:
             texts: 임베딩할 텍스트 리스트
+
+        Returns:
+            [embedded_text1, embedded_text2, ...]
         """
         # 토크나이징
         tokens = self.__tokenizer(texts, padding=True, truncation=True, return_tensors='pt', max_length=8192)

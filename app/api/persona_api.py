@@ -46,7 +46,7 @@ async def create_persona(body: PersonaRequest)->CommonResponse:
     """
     # NOTE 1. 이미 존재하는 페르소나인지 조회한다.
     # PostgreSQL에 중복되는 ego_id가 있는지 조회합니다.
-    if postgres_database.already_persona(ego_id=body.ego_id):
+    if postgres_database.has_persona(ego_id=body.ego_id):
         raise ControlledException(ErrorCode.ALREADY_CREATED_EGO_ID)
 
     # Milvus에 중복되는 ego_id가 있는지 조회합니다.

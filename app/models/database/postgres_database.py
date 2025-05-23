@@ -46,17 +46,17 @@ class PostgresDatabase:
         self.__cursor.execute(sql, (ego_id, json.dumps(persona),))
         self.__database.commit()
 
-    def update_persona(self, ego_id: str, user_persona: dict):
+    def update_persona(self, ego_id: str, persona: dict):
         """
         요약:
             기존 페르소나를 변경하는 함수
 
         Parameters:
             ego_id(str): 변경할 에고의 아이디
-            user_persona(dict): 새로 저장할 사용자의 페르소나\
+            persona(dict): 새로 저장할 사용자의 페르소나\
         """
         sql = "UPDATE persona SET persona = %s WHERE ego_id = %s"
-        self.__cursor.execute(sql, (json.dumps(user_persona), ego_id,))
+        self.__cursor.execute(sql, (json.dumps(persona), ego_id,))
         self.__database.commit()
 
     def select_persona_to_ego_id(self, ego_id: str)->tuple:
@@ -77,7 +77,7 @@ class PostgresDatabase:
         if len(result) == 0: raise ControlledException(ErrorCode.PERSONA_NOT_FOUND)
         else: return result[0] # 페르소나 결과 반환
 
-    def already_persona(self, ego_id: str) -> bool:
+    def has_persona(self, ego_id: str) -> bool:
         """
         요약:
             persona 테이블에 이미 ego_id가 존재하는지 확인하는 함수

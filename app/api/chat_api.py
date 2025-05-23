@@ -44,17 +44,17 @@ async def create_ai_chat(body: ChatRequest)->CommonResponse:
             * message, user_id, ego_id를 Attributes로 갖는다.
     """
     # NOTE: 에고 채팅 생성
-    answer:str = ""
+    ai_message:str = ""
     for chunk in chat_stream( # main_llm의 답변이 chunk 단위로 전달됩니다.
-        prompt=body.message,
+        user_message=body.message,
         config=SessionConfig(body.user_id, body.ego_id)
     ):
-        answer += chunk # 모든 chunk를 answer에 연결합니다.
+        ai_message += chunk # 모든 chunk를 answer에 연결합니다.
 
     return CommonResponse( # 성공 시, Code 200을 반환합니다. 예외처리는 chat_stream을 참고해주세요.
         code=200,
         message="answer success!",
-        data=answer
+        data=ai_message
     )
 
 @router.post("/image")

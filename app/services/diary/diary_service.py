@@ -4,7 +4,7 @@ from datetime import date
 from app.exception.exceptions import ControlledException, ErrorCode
 from app.models.chat.persona_llm import persona_llm
 from app.models.emotion.emtion_classifier import EmotionClassifier
-from app.services.chatting.chat_service import get_my_ego, get_chat_history
+from app.services.chatting.chat_service import get_ego, get_chat_history
 from app.services.diary.tag_service import sentence_embedding, search_tags, patch_tags
 from app.services.chatting.persona_store import persona_store
 from app.models.database.postgres_database import postgres_database
@@ -29,7 +29,7 @@ def get_all_chat(user_id: str, target_date: date):
     chat_rooms = get_chat_history(user_id=user_id, target_date=target_date)
 
     # NOTE 2. 대화 내역 정제
-    user_all_chat_room_log: list[list[str]] = []  # 사용자의 모든 채팅방 대화 목록
+    all_chat: list[list[str]] = []  # 사용자의 모든 채팅방 대화 목록
     for chat_room in chat_rooms:
         chat_room_log = []
         for chat in chat_room:
@@ -38,10 +38,10 @@ def get_all_chat(user_id: str, target_date: date):
 
             chat_room_log.append(f"{chat["type"]}@{name}: {chat["content"]} at {chat["chat_at"]}")
 
-        user_all_chat_room_log.append(chat_room_log)
-    return user_all_chat_room_log
+        all_chat.append(chat_room_log)
+    return all_chat
 
-async def async_save(user_id:str, all_chat:list[str], target_date:date):
+async def async_save(user_id:str, chat_rooms:list[str], target_date:date):
     """
     요약:
         일기 작성에서 비동기 작업을 실행하는 함수
@@ -54,22 +54,22 @@ async def async_save(user_id:str, all_chat:list[str], target_date:date):
 
     Parameters:
         user_id(str): 저장할 사용자의 아이디
-        all_chat(list[list[str]]): 사용자의 채팅 내역
+        chat_rooms(list[list[str]]): 사용자의 채팅 내역
         target_date(date): 저장할 날짜
     """
     # NOTE 1. user_id로 my_ego 추출
-    my_ego = get_my_ego(user_id=user_id)
+    my_ego = get_ego(user_id=user_id)
 
     # NOTE 2. 페르소나 저장
-    save_persona(ego_id=my_ego["id"], stories=all_chat)
+    save_persona(ego_id=my_ego["id"], chat_rooms=chat_rooms)
 
     # NOTE 3. 태그 저장
-    save_tags(ego_id=my_ego["id"], stories=all_chat)
+    save_tags(ego_id=my_ego["id"], stories=chat_rooms)
 
     # NOTE 4. 관계 저장
-    for chat_room in all_chat: # 관계는 채팅방 별로 저장되어야 한다.
-        if chat_room[0][0] == "E": # 첫 채팅 타입이 E인 경우에만 작성(에고 채팅은 무조건 에고가 먼저)
-            save_relation(user_id=user_id ,chat_room=chat_room, target_date=target_date)
+    for chat_rooms in chat_rooms: # 관계는 채팅방 별로 저장되어야 한다.
+        if chat_rooms[0][0] == "E": # 첫 채팅 타입이 E인 경우에만 작성(에고 채팅은 무조건 에고가 먼저)
+            save_relation(user_id=user_id, chat_room=chat_rooms, target_date=target_date)
 
 def save_relation(user_id:str, chat_room:str, target_date:date):
     """
@@ -84,7 +84,7 @@ def save_relation(user_id:str, chat_room:str, target_date:date):
     ego_id = chat_room.split('@')[1].split(':')[0]
 
     relation = EmotionClassifier().predict(texts="\n".join(chat_room))
-    relationship_id = relationship_id_mapper(relation)
+    relationship_id = relationship_id_mapper(relation=relation)
 
     url = f"{SPRING_URI}/api/v1/ego-relationship"
     post_data = {"uid": user_id, "egoId": ego_id, "relationshipId": relationship_id, "createdAt": target_date.isoformat()}
@@ -92,22 +92,22 @@ def save_relation(user_id:str, chat_room:str, target_date:date):
 
     requests.post(url=url, data=json.dumps(post_data, default=str), headers=headers)
 
-def save_persona(ego_id:int, stories:list[str]):
+def save_persona(ego_id:int, chat_rooms:list[str]):
     """
     요약:
         BE에 페르소나 정보를 추출해 저장하는 함수
 
     Parameters:
         ego_id(int): 본인의 에고 ID
-        stories: 페르소나를 추출할 대화 내역
+        chat_rooms: 페르소나를 추출할 대화 내역
     """
     # NOTE 1. 사용자 본인 페르소나를 조회한다.
     user_persona = persona_store.get_persona(ego_id=ego_id)
 
     # NOTE 2. 대화내역을 바탕으로 변경사항을 추출한다.
-    delta_persona = persona_llm.invoke(
+    delta_persona = persona_llm.persona_invoke(
         user_persona=user_persona,
-        session_history=stories
+        session_history=chat_rooms
     )
 
     # NOTE 3. 변경사항을 저장한다.
@@ -116,7 +116,7 @@ def save_persona(ego_id:int, stories:list[str]):
     # NOTE 4. 변경사항을 DB에 저장한다.
     postgres_database.update_persona(
         ego_id=ego_id,
-        user_persona=persona_store.get_persona(ego_id=ego_id)
+        persona=persona_store.get_persona(ego_id=ego_id)
     )  # 데이터베이스에 업데이트 된 페르소나 저장
 
     # NOTE 5. 메모리에서 자신의 페르소나를 내린다.
@@ -132,13 +132,10 @@ def save_tags(ego_id:int, stories:list[str]):
         ego_id(int): 본인의 에고 ID
         stories(list[str]): 태그를 추출할 대화 내역
     """
-    # NOTE 1. 대화 내역을 임베딩한다.
-    embedded_sentence = sentence_embedding(stories=stories)
+    # NOTE 1. 대화 내역과 높은 유사도를 가진 태그를 조회한다.
+    tags = search_tags(stories=stories)
 
-    # NOTE 2. 대화 내역과 높은 유사도를 가진 태그를 조회한다.
-    tags = search_tags(embedded_user_chat_logs=embedded_sentence)
-
-    # NOTE 3. 추출된 태그를 BE로 전달한다.
+    # NOTE 2. 추출된 태그를 BE로 전달한다.
     patch_tags(ego_id=ego_id, tags=tags)
 
 def relationship_id_mapper(relation: str)->int:

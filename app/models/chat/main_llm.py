@@ -29,8 +29,8 @@ class MainLlm:
 
     def __init__(self):
         # 랭체인 생성
-        prompt = ChatPromptTemplate.from_messages(self.__MAIN_TEMPLATE)
-        main_chain = prompt | chat_model
+        template = ChatPromptTemplate.from_messages(self.__MAIN_TEMPLATE)
+        main_chain = template | chat_model
 
         # 동적으로 채팅 내역을 변경하기 위한 작업
         self.__prompt = RunnableWithMessageHistory(
@@ -54,7 +54,7 @@ class MainLlm:
             self.__store[session_id].add_ai_message("오늘은 어떤 일이 있었어?") # AI의 첫 대사를 미리 저장
         return self.__store[session_id]
 
-    def stream(self, user_message:str, persona:defaultdict, rag_prompt:str, session_id:str):
+    def main_stream(self, user_message:str, persona:defaultdict, rag_prompt:str, session_id:str):
         """
         요약:
             LLM이 AI의 답변을 청크 단위로 출력하는 함수

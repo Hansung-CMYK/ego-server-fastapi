@@ -15,21 +15,21 @@ class DailyCommentLLM:
         일기 내용을 바탕으로 오늘 하루 한줄평을 생성하는 모델이다.
 
     Attributes:
-        __daily_chain: llm을 활용하기 위한 lang_chain
+        __chain: llm을 활용하기 위한 lang_chain
     """
     def __init__(self):
         # 랭체인 생성
         prompt = ChatPromptTemplate.from_messages(self.__DAILY_TEMPLATE)
-        self.__daily_chain = prompt | task_model
+        self.__chain = prompt | task_model
 
-    def invoke(self, diaries:list[dict], feelings:list[str], keywords:list[str])->str:
+    def daily_comment_invoke(self, diaries:list[dict], feeling:list[str], keywords:list[str])->str:
         """
         요약:
             일기에서 생성한 값들을 조합해 하나의 문장을 만드는 함수
 
         Parameters:
             diaries(list[dict]): 각 주제 별로 분리된 일기 내용
-            feelings(list[str]): 일기로 도출된 감정
+            feeling(list[str]): 일기로 도출된 감정
             keywords(list[str]): 대화에서 많이 사용한 키워드
 
         Raises:
@@ -37,8 +37,8 @@ class DailyCommentLLM:
         """
         events = [diary["title"] for diary in diaries] # 일기에서 제목(주제)를 정제한다.
 
-        diary_string = self.__daily_chain.invoke({ # 한줄평 추출
-            "events": events, "feelings": feelings, "keywords":keywords,
+        diary_string = self.__chain.invoke({ # 한줄평 추출
+            "events": events, "feelings": feeling, "keywords":keywords,
             "return_form_example":self.__RETURN_FORM_EXAMPLE,
             "result_example":self.__RESULT_EXAMPLE
         }).content.strip()

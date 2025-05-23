@@ -96,7 +96,7 @@ class PersonaStore:
         self.__store[ego_id][1]["updated_at"] = datetime.now().isoformat()
 
         # NOTE 5. 데이터베이스에 저장
-        postgres_database.update_persona(ego_id=ego_id, user_persona=self.__store[ego_id][1])
+        postgres_database.update_persona(ego_id=ego_id, persona=self.__store[ego_id][1])
 
     @staticmethod
     def __unset(original_persona: dict, unset_persona: dict) -> None:

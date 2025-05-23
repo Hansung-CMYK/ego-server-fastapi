@@ -21,7 +21,7 @@ class MilvusDatabase:
     Attributes:
         __milvus_client(MilvusClient): milvus database에 접근 할 수 있도록 도와주는 객체
     """
-    def  __init__(self):
+    def __init__(self):
         self.__milvus_client = MilvusClient(
             uri=MILVUS_URI,
             token="root:Milvus"
@@ -33,7 +33,7 @@ class MilvusDatabase:
         """
         return self.__milvus_client
 
-    def search_triplets_to_milvus(self, ego_id: str, field_name: str, datas: list[ndarray]) -> list[dict]:
+    def search_triplets(self, ego_id: str, field_name: str, datas: list[ndarray]) -> list[dict]:
         """
         요약:
             triplets 컬렉션에서 연관된 삼중항을 조회하는 함수
@@ -90,7 +90,7 @@ class MilvusDatabase:
             logging.warning(f"MilvusException: {field_name}에서 해당 data로 entity 조회 실패. {field_name}로 조회를 생략합니다.")
             return []
 
-    def search_passages_to_milvus(self, ego_id: str, datas: list[int]) -> list[dict]:
+    def search_passages(self, ego_id: str, datas: list[int]) -> list[dict]:
         """
         요약:
             주어진 ID 리스트를 기준으로 passages 컬렉션에서 원문 데이터를 조회
@@ -131,7 +131,7 @@ class MilvusDatabase:
             """)
             raise ControlledException(ErrorCode.PASSAGE_NOT_FOUND)
 
-    def insert_messages_into_milvus(
+    def insert_messages(
             self,
             splited_messages: list[str],
             ego_id: str

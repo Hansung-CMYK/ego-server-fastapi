@@ -15,14 +15,14 @@ class PersonaLlm:
         대화 내역을 바탕으로 사용자의 페르소나를 재구성해주는 모델이다.
 
     Attributes:
-        __persona_chain: llm을 활용하기 위한 lang_chain
+        __chain: llm을 활용하기 위한 lang_chain
     """
     def __init__(self):
         # 랭체인 생성
         prompt = ChatPromptTemplate.from_messages(self.__PERSONA_TEMPLATE)
-        self.__persona_chain = prompt | task_model
+        self.__chain = prompt | task_model
 
-    def invoke(self, user_persona: dict, session_history: str) -> dict:
+    def persona_invoke(self, user_persona: dict, session_history: str) -> dict:
         """
         요약:
             사용자의 대화기록으로 페르소나를 수정하는 함수이다.
@@ -35,8 +35,8 @@ class PersonaLlm:
             JSONDecodeError: JSON Decoding 실패 시, 빈 딕셔너리 반환
         """
         # 페르소나 변경사항
-        answer:str = self.__persona_chain.invoke({"session_history": session_history, "current_persona": user_persona, "return_form": self.__RETURN_FORM_EXAMPLE, "result_example": self.__RESULT_EXAMPLE}).content
-        clean_answer:str = self.__clean_json_string(answer) # 필요없는 문자열 제거
+        answer:str = self.__chain.invoke({"session_history": session_history, "current_persona": user_persona, "return_form": self.__RETURN_FORM_EXAMPLE, "result_example": self.__RESULT_EXAMPLE}).content
+        clean_answer:str = self.__clean_json_string(text=answer) # 필요없는 문자열 제거
 
         # dict로 자료형 변경
         try:

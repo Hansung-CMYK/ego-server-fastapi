@@ -47,24 +47,24 @@ async def create_diary(body: DiaryRequest)->CommonResponse:
     """
     # NOTE 1. 대화 기록 조회 후, 데이터 가공
     # taget_date 기준 24시간 이내 채팅을 불러온다.
-    # all_chat_of_chat_rooms: 모든 채팅방의 채팅이 list[list[str]]로 저장된 변수이다.
-    all_chat_of_chat_rooms:list[list[str]] = get_all_chat(user_id=body.user_id, target_date=body.target_date)
+    # all_chat: 모든 채팅방의 채팅이 list[list[str]]로 저장된 변수이다.
+    all_chat:list[list[str]] = get_all_chat(user_id=body.user_id, target_date=body.target_date)
 
     # chat_rooms: 채팅방 별 채팅이 str로 묶어서 list[str]로 저장된 변수이다.
-    chat_rooms:list[str] = ["\n".join(chat_room) for chat_room in all_chat_of_chat_rooms] # 채팅방 별로 대화 내역을 통합한다.
+    chat_rooms:list[str] = ["\n".join(chat_room) for chat_room in all_chat] # 채팅방 별로 대화 내역을 통합한다.
 
     # NOTE 2. 키워드 추출
-    keywords:list[str] = keyword_model.get_keywords(stories=chat_rooms, count=5) # 최대 5개의 키워드를 추출한다.
+    keywords:list[str] = keyword_model.get_keywords(chat_rooms=chat_rooms) # 최대 5개의 키워드를 추출한다.
 
     # NOTE 3. 일기 생성
     # TODO 1. 서비스 시연을 위해 일기 생성 문장 수를 5개로 감축하였다.
     # 예외처리 1. 일기 생성 전, 일기를 생성하기 위한 문장 수가 충분한지 확인한다.
-    if sum(len(all_chat_of_chat_room) for all_chat_of_chat_room in all_chat_of_chat_rooms) < 5: # 24시간 내에 대화한 채팅이 5개 이상이어야 한다.
+    if sum(len(all_chat_of_chat_room) for all_chat_of_chat_room in all_chat) < 5: # 24시간 내에 대화한 채팅이 5개 이상이어야 한다.
         raise ControlledException(ErrorCode.CHAT_COUNT_NOT_ENOUGH)
 
     # 일기 생성
     # 각 주제가 list[{"title": str, "content": str}]로 저장된다.
-    topics:list[dict] = topic_llm.invoke(story=chat_rooms)
+    topics:list[dict] = topic_llm.topic_invoke(chat_rooms=chat_rooms)
 
     # 예외처리 2. 일기로 아무 내용이 반환되지 않았는지 확인한다.
     if len(topics) < 1:
@@ -76,11 +76,11 @@ async def create_diary(body: DiaryRequest)->CommonResponse:
 
     # NOTE 5. 한줄 요약 문장 생성
     # 키워드, 일기, 감정을 기반으로 한줄평을 생성한다.
-    daily_comment:str = daily_comment_llm.invoke(diaries=topics, feelings=feeling, keywords=keywords)
+    daily_comment:str = daily_comment_llm.daily_comment_invoke(diaries=topics, feeling=feeling, keywords=keywords)
 
     # NOTE 6. 에고 페르소나 수정
     # 일기 생성과 동시에 이루어져야 할 작업을 수행한다.
-    asyncio.create_task(async_save(user_id=body.user_id, all_chat=chat_rooms, target_date=body.target_date))
+    asyncio.create_task(async_save(user_id=body.user_id, chat_rooms=chat_rooms, target_date=body.target_date))
 
     # NOTE 7. FE 반환 diary 객체 생성
     diary:dict = {
