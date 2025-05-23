@@ -12,6 +12,7 @@ from app.models.database.postgres_database import postgres_database
 import requests
 from dotenv import load_dotenv
 import json
+import logging
 
 load_dotenv()
 SPRING_URI = os.getenv('SPRING_URI')
@@ -86,6 +87,13 @@ def save_relation(user_id:str, chat_room:str, target_date:date):
     relation = EmotionClassifier().predict(texts="\n".join(chat_room))
     relationship_id = relationship_id_mapper(relation=relation)
 
+    # LOG. 시연용
+    logging.info(msg=f"""\n
+    POST: api/v1/diary [에고 관계]
+    {relation}
+    \n""")
+
+    # TODO: API 함수로 분리하기
     url = f"{SPRING_URI}/api/v1/ego-relationship"
     post_data = {"uid": user_id, "egoId": ego_id, "relationshipId": relationship_id, "createdAt": target_date.isoformat()}
     headers = {"Content-Type": "application/json"}
@@ -134,6 +142,12 @@ def save_tags(ego_id:int, stories:list[str]):
     """
     # NOTE 1. 대화 내역과 높은 유사도를 가진 태그를 조회한다.
     tags = search_tags(stories=stories)
+
+    # LOG. 시연용
+    logging.info(msg=f"""\n
+    POST: api/v1/diary [에고 태그]
+    {tags}
+    \n""")
 
     # NOTE 2. 추출된 태그를 BE로 전달한다.
     patch_tags(ego_id=ego_id, tags=tags)

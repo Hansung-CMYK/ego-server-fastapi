@@ -10,6 +10,7 @@ from app.models.txtnorm.split_llm import split_llm
 from app.services.session_config import SessionConfig
 import asyncio
 import requests
+import logging
 
 MAIN_LOOP = asyncio.new_event_loop()
 threading.Thread(target=MAIN_LOOP.run_forever, daemon=True).start()
@@ -41,11 +42,11 @@ def chat_stream(user_message: str, config: SessionConfig):
     # NOTE 0. 비동기로 사용자의 답변을 지식 그래프에 추가한다.
     worker(session_id=session_id, user_message=user_message)
 
-    # NOTE 1. 에고가 가진 지식 그래프에서 정보를 조회한다.
-    rag_prompt = get_rag_prompt(ego_id=ego_id, user_message=user_message)
-
-    # NOTE 2. 에고의 페르소나를 적용한다.
+    # NOTE 1. 에고의 페르소나를 적용한다.
     persona = persona_store.get_persona(ego_id=ego_id)
+
+    # NOTE 2. 에고가 가진 지식 그래프에서 정보를 조회한다.
+    rag_prompt = get_rag_prompt(ego_id=ego_id, user_message=user_message)
 
     # NOTE 3. 에고의 답변을 청크 단위로 출력한다.
     for chunk in main_llm.main_stream(
@@ -72,15 +73,22 @@ async def save_graphdb(session_id:str, user_message:str):
     # 이전 에고의 말을 가져오는 이유는, 사용자가 에고의 답변에 관한 내용을 말했을 수 있기 때문이다.
     # ex) 에고의 질문 or 사용자의 대명사 활용
     memory = main_llm.get_session_history(session_id=session_id)
-    message = memory.messages[-1] # 가장 마지막 말인 에고 질문 추출
 
-    ai_message = f"AI: {message.content}"
-    human_message = f"HUMAN: {user_message}" # 사용자가 말한 답변 저장
-
-    input = "\n".join([ai_message, human_message])
+    input:str = f"HUMAN: {user_message}"
+    for message in reversed(memory.messages):
+        if message.type == "ai":
+            input.join(f"\nAI: {message.content}")
+            break
+        input.join(f"\nHUMAN: {message.content}")
 
     # NOTE 2. 문장을 분리한다.
     splited_messages = split_llm.split_invoke(complex_sentence=input)
+
+    # LOG. 시연용 로그
+    logging.info(msg=f"""\n
+    POST: api/v1/chat [저장할 단일 문장들]
+    {input}
+    \n""")
 
     # NOTE 3. 에고에 맞게 삼중항을 저장한다.
     my_ego = get_ego(user_id=user_id)

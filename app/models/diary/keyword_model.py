@@ -2,7 +2,7 @@ from keybert import KeyBERT
 from langchain.embeddings import sentence_transformer
 
 from app.models.default_model import kiwi
-
+import logging
 
 class KeywordModel:
     """
@@ -38,6 +38,12 @@ class KeywordModel:
         # 상위 count개만큼 추출한다.
         original_value_keywords = self.__keyword_model.extract_keywords(result_text, keyphrase_ngram_range=(1, 1), top_n=count)
         keywords = [keyword[0] for keyword in original_value_keywords]
+
+        # LOG. 시연용 로그
+        logging.info(msg=f"""\n
+        POST: api/v1/diary [키워드]
+        {keywords}
+        \n""")
         return keywords
 
 keyword_model = KeywordModel()

@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import APIRouter
 from pydantic import BaseModel
 import asyncio
@@ -11,6 +13,7 @@ from datetime import date
 from app.services.diary.diary_service import async_save, get_all_chat
 
 from app.services.diary.kobert_handler import extract_emotions
+
 router = APIRouter(prefix="/diary")
 
 class DiaryRequest(BaseModel):
@@ -53,6 +56,12 @@ async def create_diary(body: DiaryRequest)->CommonResponse:
     # chat_rooms: 채팅방 별 채팅이 str로 묶어서 list[str]로 저장된 변수이다.
     chat_rooms:list[str] = ["\n".join(chat_room) for chat_room in all_chat] # 채팅방 별로 대화 내역을 통합한다.
 
+    # LOG. 시연용 로그
+    logging.info(msg=f"""\n
+    POST: api/v1/diary [채팅방 대화기록]
+    {chat_rooms}
+    \n""")
+
     # NOTE 2. 키워드 추출
     keywords:list[str] = keyword_model.get_keywords(chat_rooms=chat_rooms) # 최대 5개의 키워드를 추출한다.
 
@@ -73,6 +82,10 @@ async def create_diary(body: DiaryRequest)->CommonResponse:
     # NOTE 4. 감정 분석
     # 일기 내용을 바탕으로 감정을 추출한다.
     feeling:list[str] = extract_emotions(topics)
+    logging.info(msg=f"""\n
+    POST: api/v1/diary [감정 분석]
+    {keywords}
+    \n""")
 
     # NOTE 5. 한줄 요약 문장 생성
     # 키워드, 일기, 감정을 기반으로 한줄평을 생성한다.

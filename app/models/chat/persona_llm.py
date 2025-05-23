@@ -38,6 +38,12 @@ class PersonaLlm:
         answer:str = self.__chain.invoke({"session_history": session_history, "current_persona": user_persona, "return_form": self.__RETURN_FORM_EXAMPLE, "result_example": self.__RESULT_EXAMPLE}).content
         clean_answer:str = self.__clean_json_string(text=answer) # 필요없는 문자열 제거
 
+        # LOG. 시연용
+        logging.info(msg=f"""\n
+        POST: api/v1/diary [페르소나 변경사항]
+        {clean_answer}
+        \n""")
+
         # dict로 자료형 변경
         try:
             return json.loads(clean_answer)

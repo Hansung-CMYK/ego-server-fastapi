@@ -42,9 +42,13 @@ class PostgresDatabase:
             ego_id(str): 추가할 에고의 아이디 * BE ego 테이블과 1대1 매핑되어야 한다.
             persona(dict): 추가할 페르소나 정보
         """
-        sql = "INSERT INTO persona (ego_id, persona) VALUES (%s, %s)"
-        self.__cursor.execute(sql, (ego_id, json.dumps(persona),))
-        self.__database.commit()
+        try:
+            sql = "INSERT INTO persona (ego_id, persona) VALUES (%s, %s)"
+            self.__cursor.execute(sql, (ego_id, json.dumps(persona),))
+            self.__database.commit()
+        except Exception:
+            self.__database.rollback()
+            raise ControlledException(ErrorCode.FAILURE_TRANSACTION)
 
     def update_persona(self, ego_id: str, persona: dict):
         """
@@ -55,9 +59,13 @@ class PostgresDatabase:
             ego_id(str): 변경할 에고의 아이디
             persona(dict): 새로 저장할 사용자의 페르소나\
         """
-        sql = "UPDATE persona SET persona = %s WHERE ego_id = %s"
-        self.__cursor.execute(sql, (json.dumps(persona), ego_id,))
-        self.__database.commit()
+        try:
+            sql = "UPDATE persona SET persona = %s WHERE ego_id = %s"
+            self.__cursor.execute(sql, (json.dumps(persona), ego_id,))
+            self.__database.commit()
+        except Exception:
+            self.__database.rollback()
+            raise ControlledException(ErrorCode.FAILURE_TRANSACTION)
 
     def select_persona_to_ego_id(self, ego_id: str)->tuple:
         """
@@ -70,9 +78,13 @@ class PostgresDatabase:
         Raises:
             PERSONA_NOT_FOUND: ego_id로 페르소나 조회 실패
         """
-        sql = "SELECT * FROM persona WHERE ego_id = %s"
-        self.__cursor.execute(sql, (ego_id,))
-        result = self.__cursor.fetchall()
+        try:
+            sql = "SELECT * FROM persona WHERE ego_id = %s"
+            self.__cursor.execute(sql, (ego_id,))
+            result = self.__cursor.fetchall()
+        except Exception:
+            self.__database.rollback()
+            raise ControlledException(ErrorCode.FAILURE_TRANSACTION)
 
         if len(result) == 0: raise ControlledException(ErrorCode.PERSONA_NOT_FOUND)
         else: return result[0] # 페르소나 결과 반환
@@ -85,9 +97,14 @@ class PostgresDatabase:
         Parameters:
             ego_id(str): 존재하는지 확인힐 ego 아이디
         """
-        sql = "SELECT * FROM persona WHERE ego_id = %s"
-        self.__cursor.execute(sql, (ego_id,))
-        result = self.__cursor.fetchall()
+        try:
+            sql = "SELECT * FROM persona WHERE ego_id = %s"
+            self.__cursor.execute(sql, (ego_id,))
+            result = self.__cursor.fetchall()
+        except Exception:
+            self.__database.rollback()
+            raise ControlledException(ErrorCode.FAILURE_TRANSACTION)
+
         if len(result) == 0: return False
         else: return True
 
@@ -95,16 +112,24 @@ class PostgresDatabase:
         """
         persona 테이블을 생성하는 함수
         """
-        sql = "CREATE TABLE persona (ego_id INT PRIMARY KEY, persona JSON NOT NULL)"
-        self.__cursor.execute(sql)
-        self.__database.commit()
+        try:
+            sql = "CREATE TABLE persona (ego_id INT PRIMARY KEY, persona JSON NOT NULL)"
+            self.__cursor.execute(sql)
+            self.__database.commit()
+        except Exception:
+            self.__database.rollback()
+            raise ControlledException(ErrorCode.FAILURE_TRANSACTION)
 
     def delete_persona(self, ego_id: str):
         """
         모든 데이터를 제거하는 함수
         """
-        sql = "DELETE FROM persona WHERE ego_id = %s"
-        self.__cursor.execute(sql, (ego_id,) )
-        self.__database.commit()
+        try:
+            sql = "DELETE FROM persona WHERE ego_id = %s"
+            self.__cursor.execute(sql, (ego_id,) )
+            self.__database.commit()
+        except Exception:
+            self.__database.rollback()
+            raise ControlledException(ErrorCode.FAILURE_TRANSACTION)
 
 postgres_database = PostgresDatabase()
