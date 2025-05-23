@@ -57,7 +57,7 @@ class MainLlm:
     def delete_session_history(self, session_id:str):
         self.__store.pop(session_id, None)
 
-    def main_stream(self, user_message:str, persona:defaultdict, rag_prompt:str, session_id:str):
+    def main_stream(self, user_message:str, persona:dict, rag_prompt:str, session_id:str):
         """
         요약:
             LLM이 AI의 답변을 청크 단위로 출력하는 함수
@@ -70,14 +70,14 @@ class MainLlm:
         """
         for chunk in self.__prompt.stream(
             input={
-                "name": persona["name"],
-                "age": persona["age"],
-                "gender": persona["gender"],
-                "likes": persona["likes"],
-                "dislikes": persona["dislikes"],
-                "personality": persona["personality"],
-                "mbti": persona["mbti"],
-                "mbti_description": self.get_mbti_description(mbti=persona["mbti"]),
+                "name": persona.get("name", ""),
+                "age": persona.get("age", ""),
+                "gender": persona.get("gender", ""),
+                "likes": persona.get("likes", []),
+                "dislikes": persona.get("dislikes", ""),
+                "personality": persona.get("personality", []),
+                "mbti": persona.get("mbti", ""),
+                "mbti_description": self.get_mbti_description(mbti=persona.get("mbti", "")),
                 "history": rag_prompt,
                 "tone": "", # TODO: 말투 프롬프트 추가하기
                 "user_message": user_message,
