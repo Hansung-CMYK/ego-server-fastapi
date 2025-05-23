@@ -61,7 +61,7 @@ class PersonaStore:
         """
         if self.__store.get(ego_id) is None: # 기존 store에 persona_id가 저장되어 있지않다면,
             new_persona = postgres_database.select_persona_to_ego_id(ego_id=ego_id) # postgres에서 정보를 가져와서,
-            self.__store[ego_id] = new_persona # store에 저장한다.
+            self.__store[ego_id] = new_persona[1] # store에 저장한다.
 
         return self.__store[ego_id]
 
