@@ -4,6 +4,7 @@ from langchain_core.prompts import ChatPromptTemplate
 import json
 import logging
 
+from app.exception.exceptions import ControlledException, ErrorCode
 from app.models.default_model import task_model
 
 class PersonaLlm:
@@ -48,8 +49,7 @@ class PersonaLlm:
         try:
             return json.loads(clean_answer)
         except JSONDecodeError:
-            logging.warning(f"::Error Exception(JSONDecodeError):: 변경할 persona가 없습니다. 변경사항을 반영하지 않습니다.")
-            return {}
+            raise ControlledException(ErrorCode.FAILURE_JSON_PARSING)
 
     @staticmethod
     def __clean_json_string(text: str) -> str:

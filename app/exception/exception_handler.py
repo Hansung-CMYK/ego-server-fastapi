@@ -21,12 +21,16 @@ def register_exception_handlers(app: FastAPI):
             exception(ControlledException): 발생한 예외에 대한 정보를 가진 객체
         """
         # logging.exception은 자동으로 traceback을 포함해 로그를 찍어준다.
-        logging.exception(f"[{request.method}] {request.url} 에서 에러 발생: {exception}")
+        logging.exception(msg=f"""\n
+        [ControlledException 예외 발생]
+        [{request.method}] {request.url} 에서 에러 발생: {exception}
+        \n""")
 
         body = CommonResponse(
             code= exception.error_code.code,
             message= exception.error_code.message,
         )
+
         return JSONResponse(
             status_code=400,
             content=jsonable_encoder(body)

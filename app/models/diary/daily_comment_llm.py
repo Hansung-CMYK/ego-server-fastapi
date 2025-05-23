@@ -53,8 +53,7 @@ class DailyCommentLLM:
         try:
             return json.loads(diary_string)["result"]
         except json.JSONDecodeError:
-            logging.warning(f"LLM이 일기 한줄 요약을 실패했습니다.")
-            logging.warning(f"원본 문장: {diary_string}")
+            logging.exception(f"LLM이 일기 한줄 요약을 실패했습니다.")
             return ""
 
     __DAILY_TEMPLATE = [

@@ -9,11 +9,14 @@ import torch.nn.functional as F
 from dotenv import load_dotenv
 
 import requests
+
+from app.exception.exceptions import ControlledException, ErrorCode
 from app.models.default_model import kiwi
 from typing import List
 
 from app.models.txtnorm.embedding_model import embedding_model
 from app.services.diary.tag_embedding_service import load_index
+import logging
 
 load_dotenv()
 SPRING_URI = os.getenv('SPRING_URI')
@@ -83,4 +86,11 @@ def patch_tags(ego_id:int, tags:list[str]):
     url = f"{SPRING_URI}/api/v1/ego"
     update_data = {"id": ego_id, "personalityList": tags}
     headers = {"Content-Type": "application/json"}
-    return requests.patch(url=url, data=json.dumps(update_data), headers=headers)
+    response = requests.patch(url=url, data=json.dumps(update_data), headers=headers)
+
+    if response.status_code != 200:
+        # LOG. 시연용
+        logging.exception(msg=f"""\n
+        POST: api/v1/diary [태그 저장 실패]
+        {response}
+        \n""")

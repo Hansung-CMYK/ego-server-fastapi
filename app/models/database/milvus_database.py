@@ -87,7 +87,7 @@ class MilvusDatabase:
                 ],
             )[0]
         except MilvusException:
-            logging.warning(f"MilvusException: {field_name}에서 해당 data로 entity 조회 실패. {field_name}로 조회를 생략합니다.")
+            logging.warning(f"\nMilvusException: {field_name}에서 해당 data로 entity 조회 실패. {field_name}로 조회를 생략합니다.\n")
             return []
 
     def search_passages(self, ego_id: str, datas: list[int]) -> list[dict]:
@@ -123,12 +123,10 @@ class MilvusDatabase:
                     "passage"
                 ],
             )
-        except MilvusException as e:
-            logging.error(f"""
-                MilvusException: passages에서 해당 ids로 entity 조회 실패
-                에러 발생 데이터: {datas}
-                예외 내용: {e}
-            """)
+        except MilvusException:
+            logging.exception(f"""\n
+            MilvusException: passages에서 해당 ids로 entity 조회 실패
+            \n""")
             raise ControlledException(ErrorCode.PASSAGE_NOT_FOUND)
 
     def insert_messages(

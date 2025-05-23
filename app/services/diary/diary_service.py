@@ -93,12 +93,7 @@ def save_relation(user_id:str, chat_room:str, target_date:date):
     {relation}
     \n""")
 
-    # TODO: API 함수로 분리하기
-    url = f"{SPRING_URI}/api/v1/ego-relationship"
-    post_data = {"uid": user_id, "egoId": ego_id, "relationshipId": relationship_id, "createdAt": target_date.isoformat()}
-    headers = {"Content-Type": "application/json"}
-
-    requests.post(url=url, data=json.dumps(post_data, default=str), headers=headers)
+    post_relationship(user_id=user_id, ego_id=ego_id, relationship_id=relationship_id, target_date=target_date)
 
 def save_persona(ego_id:int, chat_rooms:list[str]):
     """
@@ -151,6 +146,30 @@ def save_tags(ego_id:int, stories:list[str]):
 
     # NOTE 2. 추출된 태그를 BE로 전달한다.
     patch_tags(ego_id=ego_id, tags=tags)
+
+def post_relationship(user_id:str, ego_id:str, relationship_id:int, target_date:date):
+    """
+    요약:
+        당일 사용자-에고 관계를 추가하는 함수
+
+    Parameters:
+        user_id: 관계를 갖는 사용자 아이디
+        ego_id: 관계를 갖는 에고 아이디
+        relationship_id: 관계 아이디
+        target_date: 관계가 이루어진 날짜
+    """
+    url = f"{SPRING_URI}/api/v1/ego-relationship"
+    post_data = {"uid": user_id, "egoId": ego_id, "relationshipId": relationship_id,
+                 "createdAt": target_date.isoformat()}
+    headers = {"Content-Type": "application/json"}
+
+    response = requests.post(url=url, data=json.dumps(post_data, default=str), headers=headers)
+    if response.status_code != 200:
+        # LOG. 시연용
+        logging.exception(msg=f"""\n
+        POST: api/v1/diary [관계 저장 실패]
+        {response}
+        \n""")
 
 def relationship_id_mapper(relation: str)->int:
     """

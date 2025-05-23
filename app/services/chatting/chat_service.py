@@ -1,6 +1,8 @@
 import threading
 from datetime import date
+from json import JSONDecodeError
 
+from app.exception.exceptions import ControlledException, ErrorCode
 from app.models.chat.main_llm import main_llm
 from app.models.database.milvus_database import milvus_database
 from app.services.chatting.graph_rag_service import get_rag_prompt
@@ -105,7 +107,12 @@ def get_ego(user_id:str):
     """
     url = f"{SPRING_URI}/api/v1/ego/user/{user_id}"
     response = requests.get(url)
-    return response.json()["data"]
+    try:
+        return response.json()["data"]
+    except JSONDecodeError:
+        raise ControlledException(ErrorCode.FAILURE_JSON_PARSING)
+    except KeyError:
+        raise ControlledException(ErrorCode.INVALID_DATA_TYPE)
 
 def get_chat_history(user_id:str, target_date:date):
     """
@@ -118,4 +125,9 @@ def get_chat_history(user_id:str, target_date:date):
     """
     url = f"{SPRING_URI}/api/v1/chat-history/{user_id}/{target_date}"
     response = requests.get(url)
-    return response.json()["data"]
+    try:
+        return response.json()["data"]
+    except JSONDecodeError:
+        raise ControlledException(ErrorCode.FAILURE_JSON_PARSING)
+    except KeyError:
+        raise ControlledException(ErrorCode.INVALID_DATA_TYPE)

@@ -41,12 +41,11 @@ class SplitLlm:
         try:
             split_messages = json.loads(split_messages_string)["result"]
         except json.JSONDecodeError:
-            logging.warning(f"LLM이 대화내역을 단일문장으로 분리하지 못했습니다.")
-            logging.warning(f"원본 문장: {split_messages_string}")
             raise ControlledException(ErrorCode.FAILURE_SPLIT_MESSAGE)
 
         # 문장 분리 실패 시, 데이터는 저장하지 않는다.
-        if len(split_messages) == 0: raise ControlledException(ErrorCode.FAILURE_SPLIT_MESSAGE)
+        if len(split_messages) == 0:
+            raise ControlledException(ErrorCode.FAILURE_SPLIT_MESSAGE)
 
         return split_messages
 
