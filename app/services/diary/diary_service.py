@@ -4,15 +4,14 @@ from datetime import date
 from app.exception.exceptions import ControlledException, ErrorCode
 from app.models.chat.persona_llm import persona_llm
 from app.models.emotion.emtion_classifier import EmotionClassifier
-from app.services.chatting.chat_service import get_ego, get_chat_history
-from app.services.diary.tag_service import sentence_embedding, search_tags, patch_tags
+from app.services.api_service import get_chat_history, get_ego, post_relationship, patch_tags
 from app.services.chatting.persona_store import persona_store
 from app.models.database.postgres_database import postgres_database
 
-import requests
 from dotenv import load_dotenv
-import json
 import logging
+
+from app.services.diary.tag_service import search_tags
 
 load_dotenv()
 SPRING_URI = os.getenv('SPRING_URI')
@@ -146,30 +145,6 @@ def save_tags(ego_id:int, stories:list[str]):
 
     # NOTE 2. 추출된 태그를 BE로 전달한다.
     patch_tags(ego_id=ego_id, tags=tags)
-
-def post_relationship(user_id:str, ego_id:str, relationship_id:int, target_date:date):
-    """
-    요약:
-        당일 사용자-에고 관계를 추가하는 함수
-
-    Parameters:
-        user_id: 관계를 갖는 사용자 아이디
-        ego_id: 관계를 갖는 에고 아이디
-        relationship_id: 관계 아이디
-        target_date: 관계가 이루어진 날짜
-    """
-    url = f"{SPRING_URI}/api/v1/ego-relationship"
-    post_data = {"uid": user_id, "egoId": ego_id, "relationshipId": relationship_id,
-                 "createdAt": target_date.isoformat()}
-    headers = {"Content-Type": "application/json"}
-
-    response = requests.post(url=url, data=json.dumps(post_data, default=str), headers=headers)
-    if response.status_code != 200:
-        # LOG. 시연용
-        logging.exception(msg=f"""\n
-        POST: api/v1/diary [관계 저장 실패]
-        {response}
-        \n""")
 
 def relationship_id_mapper(relation: str)->int:
     """

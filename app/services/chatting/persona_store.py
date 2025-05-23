@@ -1,7 +1,6 @@
 from datetime import datetime
 
 from app.models.database.postgres_database import postgres_database
-from collections import defaultdict
 
 class PersonaStore:
     """

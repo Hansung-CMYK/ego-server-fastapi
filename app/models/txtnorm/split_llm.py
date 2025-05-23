@@ -3,7 +3,6 @@ from textwrap import dedent
 from langchain_core.prompts import ChatPromptTemplate
 from datetime import datetime
 import json
-import logging
 
 from app.exception.exceptions import ControlledException, ErrorCode
 from app.models.default_model import task_model

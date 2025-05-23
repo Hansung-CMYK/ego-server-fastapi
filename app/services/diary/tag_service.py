@@ -1,25 +1,13 @@
 from __future__ import annotations
 
-import os
-
-import json
 import numpy as np
 import torch
 import torch.nn.functional as F
-from dotenv import load_dotenv
-
-import requests
-
-from app.exception.exceptions import ControlledException, ErrorCode
 from app.models.default_model import kiwi
 from typing import List
 
 from app.models.txtnorm.embedding_model import embedding_model
 from app.services.diary.tag_embedding_service import load_index
-import logging
-
-load_dotenv()
-SPRING_URI = os.getenv('SPRING_URI')
 
 __KEYS, __EMBEDS = load_index()
 
@@ -73,24 +61,3 @@ def search_tags(
         for j, i in enumerate(idx) # enumerate로 (순번, index) 튜플 획득
         if top_scores[j] >= min_sim # 임계값 이상만
     ]
-
-def patch_tags(ego_id:int, tags:list[str]):
-    """
-    요약:
-        사용자의 태그 정보를 업데이트 하기 위한 함수이다.
-
-    Parameters:
-        ego_id(int): 태그를 추가할 에고의 아이디
-        tags(list[str]): 추가할 태그 목록
-    """
-    url = f"{SPRING_URI}/api/v1/ego"
-    update_data = {"id": ego_id, "personalityList": tags}
-    headers = {"Content-Type": "application/json"}
-    response = requests.patch(url=url, data=json.dumps(update_data), headers=headers)
-
-    if response.status_code != 200:
-        # LOG. 시연용
-        logging.exception(msg=f"""\n
-        POST: api/v1/diary [태그 저장 실패]
-        {response}
-        \n""")
