@@ -7,8 +7,6 @@ from json import JSONDecodeError
 import json
 import logging
 
-from app.exception.exceptions import ControlledException, ErrorCode
-
 load_dotenv()
 SPRING_URI = os.getenv('SPRING_URI')
 
@@ -22,12 +20,8 @@ def get_ego(user_id:str):
     """
     url = f"{SPRING_URI}/api/v1/ego/user/{user_id}"
     response = requests.get(url)
-    try:
-        return response.json()["data"]
-    except JSONDecodeError:
-        raise ControlledException(ErrorCode.FAILURE_JSON_PARSING)
-    except KeyError:
-        raise ControlledException(ErrorCode.INVALID_DATA_TYPE)
+
+    return check_error(response, title="에고 조회 실패")
 
 def get_chat_history(user_id:str, target_date:date):
     """
@@ -40,12 +34,8 @@ def get_chat_history(user_id:str, target_date:date):
     """
     url = f"{SPRING_URI}/api/v1/chat-history/{user_id}/{target_date}"
     response = requests.get(url)
-    try:
-        return response.json()["data"]
-    except JSONDecodeError:
-        raise ControlledException(ErrorCode.FAILURE_JSON_PARSING)
-    except KeyError:
-        raise ControlledException(ErrorCode.INVALID_DATA_TYPE)
+
+    return check_error(response, title="채팅 기록 조회 실패")
 
 def patch_tags(ego_id:int, tags:list[str]):
     """
@@ -61,12 +51,7 @@ def patch_tags(ego_id:int, tags:list[str]):
     headers = {"Content-Type": "application/json"}
     response = requests.patch(url=url, data=json.dumps(update_data), headers=headers)
 
-    if response.status_code != 200:
-        # LOG. 시연용
-        logging.exception(msg=f"""\n
-        POST: api/v1/diary [태그 저장 실패]
-        {response}
-        \n""")
+    return check_error(response, title="태그 저장 실패")
 
 def post_relationship(user_id:str, ego_id:str, relationship_id:int, target_date:date):
     """
@@ -85,9 +70,28 @@ def post_relationship(user_id:str, ego_id:str, relationship_id:int, target_date:
     headers = {"Content-Type": "application/json"}
 
     response = requests.post(url=url, data=json.dumps(post_data, default=str), headers=headers)
-    if response.status_code != 200:
+
+    return check_error(response, title="관계 저장 실패")
+
+def check_error(response, title:str):
+    try:
+        result = response.json()
+        if result["code"] != 200:
+            # LOG. 시연용
+            logging.exception(msg=f"""\n
+            POST: api/v1/diary [{title}]
+            {result["message"]}
+            \n""")
+        return result["data"]
+    except JSONDecodeError:
         # LOG. 시연용
         logging.exception(msg=f"""\n
-        POST: api/v1/diary [관계 저장 실패]
+        POST: api/v1/diary [{title}]
+        {response}
+        \n""")
+    except KeyError:
+        # LOG. 시연용
+        logging.exception(msg=f"""\n
+        POST: api/v1/diary [{title}]
         {response}
         \n""")

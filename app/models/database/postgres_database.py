@@ -9,7 +9,6 @@ from app.exception.exceptions import ControlledException, ErrorCode
 load_dotenv()
 
 class PostgresDatabase:
-    # TODO: RollBack 쿼리 추가하기
     """
     요약:
         PostgreSQL을 이용하기 위한 Client

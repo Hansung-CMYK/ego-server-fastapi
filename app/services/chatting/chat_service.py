@@ -90,4 +90,4 @@ async def save_graphdb(session_id:str, user_message:str):
     # NOTE 3. 에고에 맞게 삼중항을 저장한다.
     my_ego = get_ego(user_id=user_id)
 
-    milvus_database.insert_messages(splited_messages=splited_messages, ego_id=my_ego["id"])
+    milvus_database.insert_messages(splited_messages=splited_messages, ego_id=str(my_ego["id"]))
