@@ -5,6 +5,7 @@ from fastapi import APIRouter, UploadFile, File, Form
 from pydantic import BaseModel
 
 from app.api.common_response import CommonResponse
+from app.exception.exceptions import ControlledException, ErrorCode
 from app.services.chatting.chat_service import chat_stream
 from app.services.session_config import SessionConfig
 
@@ -15,25 +16,42 @@ logger = logging.getLogger("chat_api")
 router = APIRouter(prefix="/chat")
 
 class ChatRequest(BaseModel):
+    """
+    요약:
+        /chat/text Post API를 이용하기 위해서 사용하는 Request Class
+
+    Attributes:
+        message(str): 사용자가 질문한 메세지
+        user_id(str): 질문한 사용자 ID
+        ego_id(str): 답변할 Ego ID
+    """
     message: str
     user_id: str
     ego_id: str
 
 @router.post("/text")
-async def ollama_chat(body: ChatRequest):
+async def create_ai_chat(body: ChatRequest)->CommonResponse:
     """
-    채팅을 통한 페르소나 대화
+    요약:
+        페르소나와 대화하는 API
 
-    user_id와 ego_id를 통해 채팅방에 접근할 수 있다.
+    설명:
+        Kafka와 웹소켓을 이용하지 않고 직접적으로 채팅합니다.
+        main_llm에서 전체 채팅이 반환되면 response가 반환됩니다.
+
+    Parameters:
+        body(ChatRequest): 사용자의 답변에 필요한 인자의 모음
+            * message, user_id, ego_id를 Attributes로 갖는다.
     """
+    # NOTE: 에고 채팅 생성
     answer:str = ""
-    for chunk in chat_stream(
+    for chunk in chat_stream( # main_llm의 답변이 chunk 단위로 전달됩니다.
         prompt=body.message,
         config=SessionConfig(body.user_id, body.ego_id)
     ):
-        answer += chunk
+        answer += chunk # 모든 chunk를 answer에 연결합니다.
 
-    return CommonResponse(
+    return CommonResponse( # 성공 시, Code 200을 반환합니다. 예외처리는 chat_stream을 참고해주세요.
         code=200,
         message="answer success!",
         data=answer
@@ -59,14 +77,21 @@ async def ollama_image(
             message="answer success!",
             data=image_description
         )
-    
     except Exception:
-        logger.error(f"이미지 처리 에러 {traceback.format_exc()}")
-        return None
+        raise ControlledException(ErrorCode.IMAGE_DESCRIPTION_ERROR)
     
 class AdminRequest(BaseModel):
+    """
+    요약:
+        /admin POST API를 사용하기 위해서 사용하는 Request Class
+
+    Attributes:
+        admin_id(str): 관리자 계정의 ID
+        admin_password(str): 관리자 계정의 Password
+    """
     admin_id: str
     admin_password: str
 
+# 따로 관리자 계정의 ID가 정해지지 않아서, PostgreSQL Root 계정의 정보를 활용한다.
 ADMIN_ID = os.environ.get("POSTGRES_USER")
 ADMIN_PASSWORD = os.environ.get("POSTGRES_PASSWORD")

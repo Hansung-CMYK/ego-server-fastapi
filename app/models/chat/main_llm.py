@@ -15,17 +15,24 @@ warnings.filterwarnings("ignore", category=LangChainDeprecationWarning)
 
 class MainLlm:
     """
-    Ollama를 통해 LLM 모델을 가져오는 클래스
-    """
+    요약:
+        LLM 채팅을 생성하는 Ollama 클래스
 
+    Attributes:
+        __store(dict): 세션 정보를 저장해두는 매핑 객체
+            * session_id를 key로 user와 ai의 채팅 내역이 저장되어 있다.
+        __prompt: llm이 수행할 명령어가 저장된 시스템 프롬프트
+            * 실제 정보는 __MAIN_TEMPLATE 참고
+    """
     # 세션 정보를 저장해두는 매핑 테이블
     __store : dict[str, ChatMessageHistory] = {}
 
     def __init__(self):
-        # 메인 모델 프롬프트 적용 + 랭체인 생성
+        # 랭체인 생성
         prompt = ChatPromptTemplate.from_messages(self.__MAIN_TEMPLATE)
         main_chain = prompt | chat_model
 
+        # 동적으로 채팅 내역을 변경하기 위한 작업
         self.__prompt = RunnableWithMessageHistory(
             main_chain,
             self.get_session_history,
@@ -33,23 +40,31 @@ class MainLlm:
             history_messages_key="history",
         )
 
-    def get_store_keys(self):
-        return self.__store.keys()
-
     def get_session_history(self, session_id:str) -> BaseChatMessageHistory:
         """
-        세션 아이디로 기존 대화 내역을 불러오는 함수
+        요약:
+            세션 아이디로 기존 대화 내역을 불러오는 함수
 
-        :param session_id: 사용자의 세션 아이디
-        :return: 최신 대화 내역이 기록된 객체
+        Parameters:
+            session_id: 사용자 대화 기록이 담긴 세션 ID(채팅방)
         """
-        if session_id not in self.__store:
-            self.__store[session_id] = ChatMessageHistory()
+        if session_id not in self.__store: # 새로운 session_id가 등장했다면,
+            self.__store[session_id] = ChatMessageHistory() # 새로운 session을 추가한다.
             # TODO: 에고의 첫 대사가 정해지면 수정할 것
-            self.__store[session_id].add_ai_message("오늘은 어떤 일이 있었어?")
+            self.__store[session_id].add_ai_message("오늘은 어떤 일이 있었어?") # AI의 첫 대사를 미리 저장
         return self.__store[session_id]
 
-    def stream(self, input:str, persona:defaultdict, rag_prompt:str, session_id:str):
+    def stream(self, user_message:str, persona:defaultdict, rag_prompt:str, session_id:str):
+        """
+        요약:
+            LLM이 AI의 답변을 청크 단위로 출력하는 함수
+
+        Parameters:
+            user_message(str): 사용자의 채팅
+            persona(defaultdict): 에고의 페르소나
+            rag_prompt(str): 사용자 채팅에서 추출한 관계 정보
+            session_id(str): 사용자가 ego와 채팅한 대화 기록
+        """
         for chunk in self.__prompt.stream(
             input={
                 "name": persona["name"],
@@ -59,34 +74,31 @@ class MainLlm:
                 "dislikes": persona["dislikes"],
                 "personality": persona["personality"],
                 "mbti": persona["mbti"],
-                "mbti_description": self.get_mbti(mbti=persona["mbti"]),
+                "mbti_description": self.get_mbti_description(mbti=persona["mbti"]),
                 "history": rag_prompt,
                 "tone": "", # TODO: 말투 프롬프트 추가하기
-                "input": input,
+                "user_message": user_message,
             },
             config={"configurable": {"session_id": f"{session_id}"}}
         ):
             yield chunk.content
 
-    def get_human_messages_in_memory(self, session_id:str) -> list[str]:
+    def add_message_in_session_history(self, session_id:str, human_message:str, ai_message:str=""):
         """
-        langchain ConversationBufferMemory의 chat_memory로부터
-        모든 메시지를 사람이 읽을 수 있는 문자열로 반환합니다.
+        요약:
+            session_id에 사용자의 메세지를 저장하는 함수
 
-        :return: list[str] 형태의 대화 내역 (예: ["나: ...", "친구: ..."])
+        Parameters:
+            session_id(str): 대화를 추가할 세션 ID
+            human_message(str): human_message로 추가할 메세지
+            ai_message(str): ai_message로 추가할 메세지
         """
-        memory = self.get_session_history(session_id=session_id)
-
-        message_list = [f"{'human' if msg.type == 'human' else 'ai' }: {msg.content}" for msg in memory.messages]
-
-        return message_list
-
-    def add_message_in_session_history(self, session_id:str, message:str):
-        self.__store[session_id].add_user_message(message)
+        self.__store[session_id].add_user_message(human_message)
+        # save_graphdb()의 구현 로직으로 인한 ai 메세지 공백 추가
+        self.__store[session_id].add_ai_message(ai_message)
 
     __MAIN_TEMPLATE = [
         ("system", """/no_think
-        
         You are ALWAYS in-character.
         """),
         ("system", dedent("""
@@ -102,7 +114,8 @@ class MainLlm:
         - {name}은 {likes}들을 좋아합니다.
         - {name}은 {dislikes}들을 싫어합니다.
         - {name}은 {personality} 주제들에 관심있습니다.
-        - {name}은 {likes}, {personality}로 이야기하면, 같은 주제로 대화하려 합니다.
+        - {name}은 `Q.`에 {likes}, {personality}에 관한 메세지가 있다면, 같은 주제로 대화하려 합니다.
+        - {name}은 `A.`에 좋아하는 것, 관심사, {likes}, {personality}를 **먼저** 이야기하지 않습니다. 
         - {name}은 {dislikes}로 이야기하면, 싫어하는 이유를 주제로 대화합니다.
         - {name}의 mbti는 {mbti}이다. {mbti}는 주로 `{mbti_description}`한 **성향**을 가진다.
         </ROLE>
@@ -139,12 +152,19 @@ class MainLlm:
         </CHAT_HISTORY>
         
         <RESULT>
-        Q. {input}
+        Q. {user_message}
         A. """))
     ]
 
     @staticmethod
-    def get_mbti(mbti:str):
+    def get_mbti_description(mbti:str):
+        """
+        요약:
+            각 mbti에 맞는 설명을 반환하는 함수이다.
+
+        Parameters:
+            mbti(str): 설명 반환받을 mbti 종류
+        """
         if mbti == "ISTJ": return "실제 사실에 대하여 정확하고 체계적으로 기억하며, 일 처리에 있어서도 신중하고 책임감이 있다. 강한 집중력과 현실 감각을 지녔으며, 조직적이고 침착하다. 이들은 보수적인 경향이 있으며, 문제를 해결하는 데 과거의 경험을 잘 적용한다. 또한 반복되는 일상적인 일에 대한 인내력이 강하다."
         elif mbti == "ISTP": return "낙관적이고 실용적이며, 즉흥적이면서도 합리적, 위기 대처 능력 뛰어나다, 우선순위를 잘 정한다. 사회적으로 지나치게 개인주의적이며 내성적이다. 이들은 위험한 행동을 잘하며, 감정에 무감각하다. 하는 일에 쉽게 지루해한다."
         elif mbti == "ISFJ": return "타인을 향한 연민과 동정심이 있으면서도 가족이나 친구를 보호할 때는 단호하고 가차 없는 모습을 보인다. 이 외에도 한마디로 정의 내리기 힘든 다양한 성향을 내포하고 있다. 하지만 대체로 차분하고 따뜻하며, 내면에 강한 책임감과 인내심을 갖고 있다. 겉으로는 조용해 보여도 마음속에는 단단한 의지를 품고 살아간다."

@@ -10,11 +10,12 @@ Graph RAG를 활용하기 위한 서비스
 """
 def get_rag_prompt(ego_id:str, user_speak:str)->str:
     """
-    Milvus Database에 접속하여, ego가 가지고 있는 지식 그래프 정보를 검색하는 함수
+    요약:
+        Milvus Database에 접속하여, ego가 가지고 있는 지식 그래프 정보를 검색하는 함수
 
     Parameters:
-        ego_id (int): Milvus에 조회할 ego 기본키 값. Milvus에서는 Partition를 ego_id로 기록하고 있다.
-        user_speak (str): 사용자가 말한 음성 정보이다. 해당 정보를 활용해 관계를 조회한다.
+        ego_id(int): Milvus에 조회할 ego 기본키 값. Milvus에서는 Partition를 ego_id로 기록하고 있다.
+        user_speak(str): 사용자가 말한 음성 정보이다. 해당 정보를 활용해 관계를 조회한다.
     """
     # NOTE 1. 답변 받은 문장을 Graph RAG에 맞는 형식으로 변환한다.
     speak = ParsedSentence(user_speak)
@@ -77,21 +78,23 @@ def get_rag_prompt(ego_id:str, user_speak:str)->str:
 
 def get_passages_id_from_triplets(similar_subjects: list[dict], similar_objects: list[dict], similar_relations: list[dict]) -> list[int]:
     """
-        연관성 있는 주어, 서술어 문장 중 서로 연결된 정보들을 반환하는 함수이다.
+    요약:
+        연관성 있는 주어, 서술어 문장 중 서로 연결된 정보들을 반환하는 함수
 
-        feat 명준: 코드 대부분이 지식 그래프 및 행렬에 대한 지식이 필요하여, 설명이 부족할 수 있다.
+    feat 명준 코드 대부분이 지식 그래프 및 행렬에 대한 지식이 필요하여, 설명이 부족할 수 있다.
 
+    설명:
         주어진 주어, 목적어, 관계 정보를 바탕으로 그래프 상에서 연관된 관계들을 확장하고,
         이와 연결된 원문(passage)의 ID들을 반환한다. 주어-관계-목적어로 이루어진 인접 행렬을 생성하여
         2차 이웃까지 확장하며 관련 있는 관계를 탐색한다.
 
-        Parameters:
-            similar_subjects (list[dict]): Milvus에서 검색된 주어 관련 entity 정보 리스트.
-            similar_objects (list[dict]): Milvus에서 검색된 목적어 관련 entity 정보 리스트.
-            similar_relations (list[dict]): Milvus에서 검색된 관계(ner) 정보 리스트.
+    Parameters:
+        similar_subjects(list[dict]): Milvus에서 검색된 주어 관련 entity 정보 리스트.
+        similar_objects(list[dict]): Milvus에서 검색된 목적어 관련 entity 정보 리스트.
+        similar_relations(list[dict]): Milvus에서 검색된 관계(ner) 정보 리스트.
 
-        Returns:
-            list[int]: 연관된 관계로부터 도출된 원문 passage ID 목록.
+    Returns:
+        list[int]: 연관된 관계로부터 도출된 원문 passage ID 목록.
     """
     # NOTE 1. 주어진 주어 및 목적어 리스트를 결합하여 하나의 개체 리스트로 구성
     triplets_with_similar_entities: list[dict] = []

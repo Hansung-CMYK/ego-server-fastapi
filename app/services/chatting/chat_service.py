@@ -1,4 +1,5 @@
 import threading
+from datetime import date
 
 from app.models.chat.main_llm import main_llm
 from app.models.database.milvus_database import milvus_database
@@ -14,22 +15,40 @@ MAIN_LOOP = asyncio.new_event_loop()
 threading.Thread(target=MAIN_LOOP.run_forever, daemon=True).start()
 
 def worker(session_id:str, user_answer:str):
+    """
+    요약:
+        save_graphdb를 수행하는 코루틴을 생성하는 함수
+
+    Parameters:
+        session_id(str): 저장하고 싶은 대화 내역이 들어있는 세션 아이디
+    """
     asyncio.run_coroutine_threadsafe(save_graphdb(session_id=session_id, user_answer=user_answer), MAIN_LOOP)
 
-# NOTE: GraphRAG O, Persona O
 def chat_stream(prompt: str, config: SessionConfig):
+    """
+    요약:
+        AI가 지식 그래프와 페르소나 정보를 활용해 답변할 수 있게하는 함수이다.
+
+    Parameters:
+        prompt(str): 사용자 메세지
+        config(SessionConfig): 세션(웹 소켓) 정보
+    """
     ego_id:str = config.ego_id
     user_id:str = config.user_id
     session_id:str = f"{ego_id}@{user_id}"
 
-    # NOTE. 비동기로 이전 에고 질문과 현재 사용자의 답변으로 문장을 추출한다.
+    # NOTE 0. 비동기로 사용자의 답변을 지식 그래프에 추가한다.
     worker(session_id=session_id, user_answer=prompt)
 
+    # NOTE 1. 에고가 가진 지식 그래프에서 정보를 조회한다.
     rag_prompt = get_rag_prompt(ego_id=ego_id, user_speak=prompt)
+
+    # NOTE 2. 에고의 페르소나를 적용한다.
     persona = persona_store.get_persona(ego_id=ego_id)
 
+    # NOTE 3. 에고의 답변을 청크 단위로 출력한다.
     for chunk in main_llm.stream(
-        input = prompt,
+        user_message= prompt,
         persona = persona,
         rag_prompt = rag_prompt,
         session_id = session_id
@@ -38,9 +57,14 @@ def chat_stream(prompt: str, config: SessionConfig):
 
 async def save_graphdb(session_id:str, user_answer:str):
     """
-    사용자의 답변이 들어올 시, 비동기로 사용자의 말을 GraphDatabase에 저장한다.
-    """
+    요약:
+        사용자의 답변이 들어올 시, 비동기로 사용자의 말을 GraphDatabase에 저장한다.
 
+    Parameters:
+        session_id(str): 대화 내역이 저장된 세션의 아이디
+        user_answer(str): 사용자 메세지
+    """
+    # 세션의 정보를 분리한다.
     ego_id, user_id = session_id.split("@")
 
     # NOTE 1. 세션의 가장 마지막 대화 기록을 가져온다.
@@ -56,13 +80,33 @@ async def save_graphdb(session_id:str, user_answer:str):
 
     # NOTE 2. 문장을 분리한다.
     splited_messages = split_llm.invoke(input=input)
-    if len(splited_messages) == 0: return # 문장 분리 실패 시, 데이터는 저장하지 않는다.
 
     # NOTE 3. 에고에 맞게 삼중항을 저장한다.
-    # user_id로 my_ego 추출
-    url = f"{SPRING_URI}/api/v1/ego/user/{user_id}"
-    response = requests.get(url)
-    my_ego = response.json()["data"]
+    my_ego = get_my_ego(user_id=user_id)
 
     milvus_database.insert_messages_into_milvus(splited_messages=splited_messages, ego_id=my_ego["id"])
-    print(f"save_graphdb success: {splited_messages}")
+
+def get_my_ego(user_id:str):
+    """
+    요약:
+        user_id로 본인의 ego_id를 조회하는 함수
+
+    Parameters:
+        user_id(str): 조회할 사용자의 아이디
+    """
+    url = f"{SPRING_URI}/api/v1/ego/user/{user_id}"
+    response = requests.get(url)
+    return response.json()["data"]
+
+def get_chat_history(user_id:str, target_date:date):
+    """
+    요약:
+        사용자가 하루동안 한 채팅 내역을 불러오는 함수
+
+    Parameters:
+        user_id(str): 조회할 사용자 아이디
+        target_date(date): 검색할 날짜
+    """
+    url = f"{SPRING_URI}/api/v1/chat-history/{user_id}/{target_date}"
+    response = requests.get(url)
+    return response.json()["data"]

@@ -8,28 +8,35 @@ from app.models.default_model import task_model
 
 class PersonaLlm:
     """
-    Ollama를 통해 LLM 모델을 가져오는 클래스
+    요약:
+        Persona 수정 사항을 생성하는 Ollama 클래스
 
-    대화 내역을 바탕으로 사용자의 페르소나를 재구성해주는 모델이다.
+    설명:
+        대화 내역을 바탕으로 사용자의 페르소나를 재구성해주는 모델이다.
+
+    Attributes:
+        __persona_chain: llm을 활용하기 위한 lang_chain
     """
     def __init__(self):
-        """
-        Ollama와 LangChain을 이용하여 LLM 모델을 생성
-        """
-        # 메인 모델 프롬프트 적용 + 랭체인 생성
+        # 랭체인 생성
         prompt = ChatPromptTemplate.from_messages(self.__PERSONA_TEMPLATE)
         self.__persona_chain = prompt | task_model
 
-    def invoke(self, current_persona: str, session_history: str) -> dict:
+    def invoke(self, user_persona: dict, session_history: str) -> dict:
         """
-        사용자의 대화기록을 바탕으로 페르소나를 수정한다.
+        요약:
+            사용자의 대화기록으로 페르소나를 수정하는 함수이다.
 
-        :param current_persona: 현재 페르소나 json 정보
-        :param session_history: 최근 대화 내역
-        :return: json 정보를 가진 dict
+        Parameters:
+            user_persona(dict): (변경될) 사용자 페르소나 dict 정보
+            session_history(str): 사용자의 최근 대화 내역
+
+        Raises:
+            JSONDecodeError: JSON Decoding 실패 시, 빈 딕셔너리 반환
         """
-        answer = self.__persona_chain.invoke({"session_history": session_history, "current_persona": current_persona, "return_form": self.__RETURN_FORM_EXAMPLE, "result_example": self.__RESULT_EXAMPLE}).content
-        clean_answer = self.__clean_json_string(answer)
+        # 페르소나 변경사항
+        answer:str = self.__persona_chain.invoke({"session_history": session_history, "current_persona": user_persona, "return_form": self.__RETURN_FORM_EXAMPLE, "result_example": self.__RESULT_EXAMPLE}).content
+        clean_answer:str = self.__clean_json_string(answer) # 필요없는 문자열 제거
 
         # dict로 자료형 변경
         try:
@@ -41,7 +48,11 @@ class PersonaLlm:
     @staticmethod
     def __clean_json_string(text: str) -> str:
         """
-        LLM이 출력한 문자열에서 ```json 및 ``` 마커를 제거하고 공백을 정리한다.
+        요약:
+            LLM이 출력한 문자열에서 \```json 및 \``` 마커를 제거하고 공백을 정리한다.
+
+        Parameters:
+            text(str): 정제할 텍스트
         """
         text = text.strip()
         if text.startswith("```json"):

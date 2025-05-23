@@ -8,8 +8,21 @@ from app.exception.exceptions import ControlledException
 
 def register_exception_handlers(app: FastAPI):
     @app.exception_handler(ControlledException)
-    async def controlled_exception_handler(request: Request, exception: ControlledException):
-        logging.error(f"[{request.method}] {request.url} 에서 에러 발생: {exception}")
+    async def controlled_exception_handler(request: Request, exception: ControlledException)->JSONResponse:
+        """
+        요약:
+            ControlledException이 raise될 때, 처리되는 예외처리 로직
+
+        설명:
+            예외로그를 Console에 출력합니다.
+            HTTP Code는 400이며, 내부에 CommonResponse가 함께 전달됩니다.
+
+        Parameters:
+            exception(ControlledException): 발생한 예외에 대한 정보를 가진 객체
+        """
+        # logging.exception은 자동으로 traceback을 포함해 로그를 찍어준다.
+        logging.exception(f"[{request.method}] {request.url} 에서 에러 발생: {exception}")
+
         body = CommonResponse(
             code= exception.error_code.code,
             message= exception.error_code.message,
@@ -20,10 +33,21 @@ def register_exception_handlers(app: FastAPI):
         )
 
     @app.exception_handler(Exception)
-    async def generic_exception_handler(request: Request, exception: Exception):
-        logging.error(f"[{request.method}] {request.url} 에서 에러 발생: {exception}")
+    async def generic_exception_handler(request: Request, exception: Exception)->JSONResponse:
+        """
+        요약:
+            알 수 없는 Exception이 raise될 때, 처리되는 예외처리 로직
+
+        설명:
+            예외로그를 Console에 출력합니다.
+            HTTP Code는 500이며, 내부에 CommonResponse가 함께 전달됩니다.
+
+        Parameters:
+            exception(ControlledException): 발생한 예외에 대한 정보를 가진 객체
+        """
+        logging.exception(f"[{request.method}] {request.url} 에서 에러 발생: {exception}")
         body = CommonResponse(
-            code=-500,
+            code=500,
             message="알 수 없는 에러",
         )
         return JSONResponse(

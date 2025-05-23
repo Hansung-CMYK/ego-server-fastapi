@@ -8,20 +8,34 @@ from app.models.default_model import task_model
 
 class TopicLlm:
     """
-    Ollama를 통해 LLM 모델을 가져오는 클래스
+    요약:
+        채팅 내역을 바탕으로 일기를 생성하는 Ollama 클래스
 
-    채팅내역을 바탕으로 일기를 생성하는 LLM 모델이다.
+    설명:
+        채팅 내역에서 주제를 추출하여 일기를 작성하는 모델이다.
+
+    Attributes:
+        __prompt: llm을 활용하기 위한 lang_chain
     """
     def __init__(self):
+        # 랭체인 생성
         prompt = ChatPromptTemplate.from_messages(self.__DIARY_TEMPLATE)
         self.__prompt = prompt | task_model
 
     def invoke(self, story: list[str]) -> list[dict]:
         """
-        일기를 생성하는 함수이다.
+        요약:
+            대화 내역에서 주제를 추출하여 일기를 생성하는 함수
+
+        Parameters:
+            story(list[str]): 사용자의 대화 내역
+
+        Raises:
+            JSONDecodeError: JSON Decoding 실패 시, 작업 중단
+            KeyError: 키 값에  "result"가 존재하지 않는 경우, 작업 중단
         """
         answer = self.__prompt.invoke({"input": "\n".join(story), "return_form_example":self.__RETURN_FORM_EXAMPLE, "result_example":self.__RESULT_EXAMPLE}).content
-        print(answer)
+
         try:
             diary = json.loads(answer)["result"]
         except json.JSONDecodeError:

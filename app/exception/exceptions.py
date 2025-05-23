@@ -2,7 +2,16 @@ from enum import Enum
 
 class ErrorCode(Enum):
     """
-    예측 가능한 에러를 상수로 명시해둔 ErrorCode 클래스
+    요약:
+        예측 가능한 에러를 상수로 명시해둔 ErrorCode 클래스
+
+    설명:
+        각 반환 코드는 음수로 표시된다.
+        첫번째 값은 에러들의 항목을 의미한다.
+
+    Attributes:
+        code(int): 에러코드
+        message(str): 에러 메세지
     """
     def __init__(self, code: int, message: str):
         self.code = code
@@ -20,6 +29,14 @@ class ErrorCode(Enum):
     INVALID_SQL_ERROR = (-206, "잘못된 SQL로 에러가 발생했습니다.")
     # 관계 생성
     INVALID_RELATIONSHIP = (-301, "잘못된 관계가 도출되었습니다. *모델 문제")
+    # 에고 생성
+    ALREADY_CREATED_EGO_ID = (-401, "Ego 정보가 이미 Postgres Database에 존재합니다.")
+    ALREADY_CREATED_PARTITION = (-402, "Ego 정보가 이미 Milvus Database에 존재합니다.")
+    PARTITION_NOT_FOUND = (-403, "존재하지 않는 Milvus Partition입니다.")
+    # 이미지 생성 에러
+    IMAGE_DESCRIPTION_ERROR = (-501, "이미지를 분석하는 과정에서 오류가 발생했습니다.")
+    # 메세지 분리 에러
+    FAILURE_SPLIT_MESSAGE = (-601, "메세지 분리에 실패하였습니다.")
 
 
 class ControlledException(RuntimeError):
