@@ -2,8 +2,8 @@ import os
 from datetime import date, datetime
 
 from app.exception.exceptions import ControlledException, ErrorCode
-from app.models.diary.preference_llm import preference_llm
 from app.models.chat.persona_llm import persona_llm
+from app.models.emotion.emtion_classifier import EmotionClassifier
 from app.services.diary.tag_service import sentence_embedding, search_tags
 from app.services.chatting.persona_store import persona_store
 from app.models.database.postgres_database import postgres_database
@@ -43,16 +43,16 @@ async def async_save(user_id:str, all_chat:list[list[str]], target_date:date):
     """
     stories = ["".join(chat_room) for chat_room in all_chat]
 
-    # user_id로 ego 추출
-    url = f"{SPRING_URI}/api/v1/ego/{user_id}/list"
+    # user_id로 my_ego 추출
+    url = f"{SPRING_URI}/api/v1/ego/user/{user_id}"
     response = requests.get(url)
-    ego = response.json()["data"][0]
+    my_ego = response.json()["data"]
 
     # 페르소나 저장
-    save_persona(ego_id=ego["id"], stories=stories)
+    save_persona(ego_id=my_ego["id"], stories=stories)
 
     # 태그 저장
-    save_tags(ego_id=ego["id"], stories=stories)
+    save_tags(ego_id=my_ego["id"], stories=stories)
 
     # 관계 저장
     for chat_room in all_chat:
@@ -73,11 +73,9 @@ def save_relation(user_id:str, chat_room:list[str], target_date:date):
     """
     ego_id = chat_room[0].split('@')[1].split(':')[0]
 
-    relation = preference_llm.invoke(input=chat_room)
-    # relationship_id = relationship_id_mapper(relation)
-    relationship_id = 1
+    relation = EmotionClassifier().predict(texts="\n".join(chat_room))
+    relationship_id = relationship_id_mapper(relation)
 
-    # TODO: API 실행
     url = f"{SPRING_URI}/api/v1/ego-relationship"
     post_data = {"uid": user_id, "egoId": ego_id, "relationshipId": relationship_id, "createdAt": target_date.isoformat()}
     headers = {"Content-Type": "application/json"}
@@ -125,15 +123,36 @@ def save_tags(ego_id:int, stories:list[str]):
     response=requests.patch(url=url, data=json.dumps(update_data), headers=headers)
     print(f"tags success: {response}")
 
-def relationship_id_mapper(relation:str):
+def relationship_id_mapper(relation: str):
     """
-    매력적, 즐거운, 만족한, 원만한, 지루한, 불안한, 부정적의 ID를 매핑해서 반환해줍니다.
+    각 감적의 BE.relationship ID를 매핑해서 반환해줍니다.
     """
-    if relation == "매력적": return 1
-    elif relation == "즐거운": return 2
-    elif relation == "만족한": return 3
-    elif relation == "원만한": return 4
-    elif relation == "지루한": return 5
-    elif relation == "불안한": return 6
-    elif relation == "부정적": return 7
+    if relation == "admiration": return 1      # 감탄, 존경
+    elif relation == "amusement": return 2     # 즐거움, 재미
+    elif relation == "anger": return 3         # 분노
+    elif relation == "annoyance": return 4     # 짜증
+    elif relation == "approval": return 5      # 승인, 호의
+    elif relation == "caring": return 6        # 보살핌
+    elif relation == "confusion": return 7     # 혼란
+    elif relation == "curiosity": return 8     # 호기심
+    elif relation == "desire": return 9        # 욕망, 바람
+    elif relation == "disappointment": return 10  # 실망
+    elif relation == "disapproval": return 11  # 반감, 비판
+    elif relation == "disgust": return 12      # 혐오
+    elif relation == "embarrassment": return 13  # 당황, 민망
+    elif relation == "excitement": return 14   # 흥분, 들뜸
+    elif relation == "fear": return 15         # 두려움
+    elif relation == "gratitude": return 16    # 감사
+    elif relation == "grief": return 17        # 슬픔, 비탄
+    elif relation == "joy": return 18          # 기쁨
+    elif relation == "love": return 19         # 사랑
+    elif relation == "nervousness": return 20  # 긴장
+    elif relation == "optimism": return 21     # 낙관
+    elif relation == "pride": return 22        # 자부심
+    elif relation == "realization": return 23  # 깨달음
+    elif relation == "relief": return 24       # 안도
+    elif relation == "remorse": return 25      # 후회
+    elif relation == "sadness": return 26      # 슬픔
+    elif relation == "surprise": return 27     # 놀람
+    elif relation == "neutral": return 28      # 중립
     else: raise ControlledException(ErrorCode.INVALID_RELATIONSHIP)

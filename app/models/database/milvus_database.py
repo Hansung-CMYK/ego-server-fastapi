@@ -183,4 +183,17 @@ class MilvusDatabase:
                 data=triplet_datas
             )
 
+    # 작업내역 준비
+    def reset_collection(self):
+        passages_result = self.__milvus_client.delete(
+            collection_name="passages",
+            filter="passages_id > 0"
+        )
+        triplets_result = self.__milvus_client.delete(
+            collection_name="triplets",
+            filter="triplets_id > 0"
+        )
+        print("passages reset complete: ", passages_result)
+        print("triplets reset complete: ", triplets_result)
+
 milvus_database = MilvusDatabase()

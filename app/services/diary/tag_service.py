@@ -5,7 +5,7 @@ import torch.nn.functional as F
 from app.models.default_model import kiwi
 from typing import List
 
-from app.models.normalization.embedding_model import embedding_model
+from app.models.txtnorm.embedding_model import embedding_model
 from app.services.diary.tag_embedding_service import load_index
 
 __KEYS, __EMBEDS = load_index()
