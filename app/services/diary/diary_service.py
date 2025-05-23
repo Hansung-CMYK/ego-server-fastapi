@@ -59,7 +59,7 @@ async def async_save(user_id:str, chat_rooms:list[str], target_date:date):
     """
     # NOTE 1. user_id로 my_ego 추출
     my_ego = get_ego(user_id=user_id)
-    ego_id:str = my_ego["ego_id"] # ego_id 문자열 변환
+    ego_id:str = my_ego["id"] # ego_id 문자열 변환
 
     # NOTE 2. 페르소나 저장
     save_persona(ego_id=ego_id, chat_rooms=chat_rooms)
