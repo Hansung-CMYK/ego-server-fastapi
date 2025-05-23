@@ -150,14 +150,11 @@ class VoiceChatHandler:
                 pcm = bytearray()
 
                 gen = importlib.import_module("gpt_sovits_api").get_tts_wav(
-                    ref_wav_path="/home/keem/sample.wav",
-                    prompt_text="오늘 우리 집에서 치킨 먹고 갈래?",
-                    prompt_language="ko",
                     text=clean,
                     text_language="ko",
-                    sample_steps=8,
-                    speed=1.2,
-                    spk="karina"
+                    sample_steps=32,
+                    speed=1.0,
+                    spk=self.config.spk
                 )
                 for chunk in gen:
                     if cancel_event.is_set():

@@ -22,6 +22,8 @@ gpt_sovits_sub  = os.path.join(gpt_sovits_root, "GPT_SoVITS")
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 GPT_SOVITS_ROOT = os.path.join(BASE_DIR, "modules", "GPT-SoVITS", "GPT_SoVITS", "pretrained_models")
+GPT_ROOT = os.path.join(BASE_DIR, "modules", "GPT-SoVITS", "GPT_weights_v2")
+SOVITS_ROOT = os.path.join(BASE_DIR, "modules", "GPT-SoVITS", "SoVITS_weights_v2")
 
 for path in (gpt_sovits_root, gpt_sovits_sub):
     if path not in sys.path:
@@ -32,12 +34,17 @@ gpt_sovits_api = importlib.util.module_from_spec(spec)
 sys.modules["gpt_sovits_api"] = gpt_sovits_api
 spec.loader.exec_module(gpt_sovits_api)
 
+user_home = os.path.expanduser("~")
+REFER_DIRECTORY = os.path.join(user_home, "refer")
+
 async def init_models():
-    #NOTE 필요시 모델 추가 로드
     await ensure_init(
         "karina",
-        os.path.join(GPT_SOVITS_ROOT, "s1v3.ckpt"),
-        os.path.join(GPT_SOVITS_ROOT, "s2Gv3.pth"),
+        os.path.join(GPT_ROOT, "karina-version2-e20.ckpt"),
+        os.path.join(SOVITS_ROOT, "karina-version2_e8_s112.pth"),
+        os.path.join(REFER_DIRECTORY, "karina.wav"),
+        "내 마음에 드는 거 있으면 낭독해줄게?",
+        "ko"
     )
 
 async def on_startup():

@@ -9,8 +9,15 @@ is_half = True
 async def ensure_init(
     model_id: str,
     gpt_path: str,
-    sovits_path: str
+    sovits_path: str,
+    refer_path: str,
+    refer_text: str,
+    refer_language: str
 ) -> None:
+    
+    if refer_path == None or refer_text == None or refer_language == None:
+        raise Exception
+
     if has_model(model_id):
         return
 
@@ -31,5 +38,6 @@ async def ensure_init(
     register_model(model_id, gpt, sovits)
 
     Speaker = getattr(gsv, "Speaker")
-    speaker = Speaker(name=model_id, gpt=gpt, sovits=sovits)
+    DefaultRefer = getattr(gsv, "DefaultRefer")
+    speaker = Speaker(name=model_id, gpt=gpt, sovits=sovits, default_refer = DefaultRefer(refer_path, refer_text, refer_language))
     gsv.speaker_list[model_id] = speaker
