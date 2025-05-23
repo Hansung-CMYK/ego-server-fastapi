@@ -9,7 +9,13 @@ async def websocket_voice_chat(ws: WebSocket):
     await ws.accept()
     user_id = ws.query_params.get("user_id", "anonymous")
     ego_id = ws.query_params.get("ego_id", "anonymous")
+    spk = ws.query_params.get("spk", "anonymous")
     config = SessionConfig(user_id, ego_id)
+    config.spk = spk
+
+    if config is None:
+        raise Exception("spk was None")
+    
     session = session_manager.create_session(ws, config)
 
     try:

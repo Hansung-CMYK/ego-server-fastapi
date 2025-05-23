@@ -39,5 +39,5 @@ async def ensure_init(
 
     Speaker = getattr(gsv, "Speaker")
     DefaultRefer = getattr(gsv, "DefaultRefer")
-    speaker = Speaker(name=model_id, gpt=gpt, sovits=sovits, default_refer = DefaultRefer(refer_path,refer_text , refer_language))
+    speaker = Speaker(name=model_id, gpt=gpt, sovits=sovits, default_refer = DefaultRefer(refer_path, refer_text, refer_language))
     gsv.speaker_list[model_id] = speaker
