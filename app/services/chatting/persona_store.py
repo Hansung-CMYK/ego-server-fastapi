@@ -21,7 +21,7 @@ class PersonaStore:
         ...
     }
     """
-    __store: dict[str, list] = {}
+    __store: dict[str, dict] = {}
 
     """
     키값으로 사용될 수 있는 정보들 (화이트리스트)
@@ -43,7 +43,7 @@ class PersonaStore:
         Parameters:
             ego_id(str): 메모리에서 제거할 에고의 아이디
         """
-        self.__store[ego_id].pop()
+        self.__store.pop(ego_id, None)
 
     def remove_all_persona(self):
         """
@@ -63,7 +63,7 @@ class PersonaStore:
             new_persona = postgres_database.select_persona_to_ego_id(ego_id=ego_id) # postgres에서 정보를 가져와서,
             self.__store[ego_id] = new_persona # store에 저장한다.
 
-        return self.__store[ego_id][1]
+        return self.__store[ego_id]
 
     def update(self, ego_id:str, delta_persona: dict):
         """
@@ -80,22 +80,22 @@ class PersonaStore:
         # NOTE 2. $unset(삭제될 데이터) 처리
         if "$unset" in delta_dict:
             self.__unset(
-                original_persona=self.__store[ego_id][1],
+                original_persona=self.__store[ego_id],
                 unset_persona=delta_dict.pop("$unset")
             )
 
         # NOTE 3. $set(새로운 데이터) 처리.
         if "$set" in delta_dict:
             self.__set(
-                original_persona=self.__store[ego_id][1],
+                original_persona=self.__store[ego_id],
                 set_persona=delta_dict.pop("$set")
             )
 
         # NOTE 4. 업데이트 된 시간 변경
-        self.__store[ego_id][1]["updated_at"] = datetime.now().isoformat()
+        self.__store[ego_id]["updated_at"] = datetime.now().isoformat()
 
         # NOTE 5. 데이터베이스에 저장
-        postgres_database.update_persona(ego_id=ego_id, persona=self.__store[ego_id][1])
+        postgres_database.update_persona(ego_id=ego_id, persona=self.__store[ego_id])
 
     @staticmethod
     def __unset(original_persona: dict, unset_persona: dict) -> None:
