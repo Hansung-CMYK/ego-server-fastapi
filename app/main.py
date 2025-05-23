@@ -5,7 +5,7 @@ import importlib.util
 from fastapi import FastAPI, APIRouter
 from app.api import chat_api, voice_chat_api, fal_api, diary_api, persona_api
 from app.exception.exception_handler import register_exception_handlers
-from app.services.voice.tts_infer import ensure_init
+from app.services.voice.tts_infer import ensure_init, ensure_init_v2
 
 from contextlib import asynccontextmanager
 
@@ -16,7 +16,7 @@ import logging
 logging.basicConfig(level=logging.ERROR)
 
 here = os.path.dirname(__file__)
-api_file_path = os.path.abspath(os.path.join(here, "../modules/GPT-SoVITS/api.py"))
+api_file_path = os.path.abspath(os.path.join(here, "../modules/GPT-SoVITS/api_v2.py"))
 gpt_sovits_root = os.path.dirname(api_file_path)
 gpt_sovits_sub  = os.path.join(gpt_sovits_root, "GPT_SoVITS")
 
@@ -38,7 +38,7 @@ user_home = os.path.expanduser("~")
 REFER_DIRECTORY = os.path.join(user_home, "refer")
 
 async def init_models():
-    await ensure_init(
+    await ensure_init_v2(
         "karina",
         os.path.join(GPT_ROOT, "karina-version2-e20.ckpt"),
         os.path.join(SOVITS_ROOT, "karina-version2_e8_s112.pth"),
@@ -69,7 +69,7 @@ app = FastAPI(lifespan=lifespan)
 
 tts_router = APIRouter(prefix="/tts", tags=["tts"])
 
-for route in gpt_sovits_api.app.routes:
+for route in gpt_sovits_api.APP.routes:
     if route.path == "/":
         continue
     tts_router.routes.append(route)
