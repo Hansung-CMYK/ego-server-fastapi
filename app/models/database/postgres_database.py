@@ -106,18 +106,6 @@ class PostgresDatabase:
         if len(result) == 0: return False
         else: return True
 
-    def create_persona(self):
-        """
-        persona 테이블을 생성하는 함수
-        """
-        try:
-            sql = "CREATE TABLE persona (ego_id INT PRIMARY KEY, persona JSON NOT NULL)"
-            self.__cursor.execute(sql)
-            self.__database.commit()
-        except Exception:
-            self.__database.rollback()
-            raise ControlledException(ErrorCode.FAILURE_TRANSACTION)
-
     def delete_persona(self, ego_id: str):
         """
         모든 데이터를 제거하는 함수
@@ -125,6 +113,30 @@ class PostgresDatabase:
         try:
             sql = "DELETE FROM persona WHERE ego_id = %s"
             self.__cursor.execute(sql, (ego_id,) )
+            self.__database.commit()
+        except Exception:
+            self.__database.rollback()
+            raise ControlledException(ErrorCode.FAILURE_TRANSACTION)
+
+    def create_persona(self):
+        """
+        persona 테이블을 생성하는 함수
+        """
+        try:
+            sql = "CREATE TABLE persona (ego_id VARCHAR PRIMARY KEY, persona JSON NOT NULL)"
+            self.__cursor.execute(sql)
+            self.__database.commit()
+        except Exception:
+            self.__database.rollback()
+            raise ControlledException(ErrorCode.FAILURE_TRANSACTION)
+
+    def drop_persona(self):
+        """
+        persona 테이블을 제거하는 함수
+        """
+        try:
+            sql = "DROP TABLE persona"
+            self.__cursor.execute(sql)
             self.__database.commit()
         except Exception:
             self.__database.rollback()
