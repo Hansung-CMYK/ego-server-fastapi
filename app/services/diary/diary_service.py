@@ -59,12 +59,13 @@ async def async_save(user_id:str, chat_rooms:list[str], target_date:date):
     """
     # NOTE 1. user_id로 my_ego 추출
     my_ego = get_ego(user_id=user_id)
+    ego_id:str = my_ego["ego_id"] # ego_id 문자열 변환
 
     # NOTE 2. 페르소나 저장
-    save_persona(ego_id=my_ego["id"], chat_rooms=chat_rooms)
+    save_persona(ego_id=ego_id, chat_rooms=chat_rooms)
 
     # NOTE 3. 태그 저장
-    save_tags(ego_id=my_ego["id"], stories=chat_rooms)
+    save_tags(ego_id=ego_id, stories=chat_rooms)
 
     # NOTE 4. 관계 저장
     for chat_rooms in chat_rooms: # 관계는 채팅방 별로 저장되어야 한다.
@@ -94,13 +95,13 @@ def save_relation(user_id:str, chat_room:str, target_date:date):
 
     post_relationship(user_id=user_id, ego_id=ego_id, relationship_id=relationship_id, target_date=target_date)
 
-def save_persona(ego_id:int, chat_rooms:list[str]):
+def save_persona(ego_id:str, chat_rooms:list[str]):
     """
     요약:
         BE에 페르소나 정보를 추출해 저장하는 함수
 
     Parameters:
-        ego_id(int): 본인의 에고 ID
+        ego_id(str): 본인의 에고 ID
         chat_rooms: 페르소나를 추출할 대화 내역
     """
     # NOTE 1. 사용자 본인 페르소나를 조회한다.
@@ -125,13 +126,13 @@ def save_persona(ego_id:int, chat_rooms:list[str]):
     # 메모리 과사용 방지를 위한 작업
     persona_store.remove_persona(ego_id=ego_id)
 
-def save_tags(ego_id:int, stories:list[str]):
+def save_tags(ego_id:str, stories:list[str]):
     """
     요약:
         BE에 에고 태그를 생성해 저장하는 함수
 
     Parameters:
-        ego_id(int): 본인의 에고 ID
+        ego_id(str): 본인의 에고 ID
         stories(list[str]): 태그를 추출할 대화 내역
     """
     # NOTE 1. 대화 내역과 높은 유사도를 가진 태그를 조회한다.

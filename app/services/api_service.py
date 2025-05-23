@@ -37,13 +37,13 @@ def get_chat_history(user_id:str, target_date:date):
 
     return check_error(response, title="채팅 기록 조회 실패")
 
-def patch_tags(ego_id:int, tags:list[str]):
+def patch_tags(ego_id:str, tags:list[str]):
     """
     요약:
         사용자의 태그 정보를 업데이트 하기 위한 함수이다.
 
     Parameters:
-        ego_id(int): 태그를 추가할 에고의 아이디
+        ego_id(str): 태그를 추가할 에고의 아이디
         tags(list[str]): 추가할 태그 목록
     """
     url = f"{SPRING_URI}/api/v1/ego"
