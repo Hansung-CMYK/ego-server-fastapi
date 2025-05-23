@@ -54,6 +54,9 @@ class MainLlm:
             self.__store[session_id].add_ai_message("오늘은 어떤 일이 있었어?") # AI의 첫 대사를 미리 저장
         return self.__store[session_id]
 
+    def delete_session_history(self, session_id:str):
+        self.__store.pop(session_id, None)
+
     def main_stream(self, user_message:str, persona:defaultdict, rag_prompt:str, session_id:str):
         """
         요약:

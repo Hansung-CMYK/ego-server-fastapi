@@ -37,6 +37,8 @@ class ErrorCode(Enum):
     IMAGE_DESCRIPTION_ERROR = (-501, "이미지를 분석하는 과정에서 오류가 발생했습니다.")
     # 메세지 분리 에러
     FAILURE_SPLIT_MESSAGE = (-601, "메세지 분리에 실패하였습니다.")
+    # 관리자 에러
+    INVALID_ADMIN_ID = (-701, "관리자 인증에 실패했습니다.")
 
 
 class ControlledException(RuntimeError):

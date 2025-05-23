@@ -99,4 +99,12 @@ class PostgresDatabase:
         self.__cursor.execute(sql)
         self.__database.commit()
 
+    def delete_persona(self, ego_id: str):
+        """
+        모든 데이터를 제거하는 함수
+        """
+        sql = "DELETE FROM persona WHERE ego_id = %s"
+        self.__cursor.execute(sql, (ego_id,) )
+        self.__database.commit()
+
 postgres_database = PostgresDatabase()

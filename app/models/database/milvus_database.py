@@ -219,20 +219,20 @@ class MilvusDatabase:
             partition_name=partition_name
         )
 
-    def reset_collection(self):
+    def reset_collection(self, ego_id: str):
         """
         collection에 있는 모든 삼중항 정보를 초기화하는 함수 캡스톤 시연에 활용하기 위함이다.
         """
         # id 값이 있는 모든 entity를 제거하는 함수이다.
-        passages_result = self.__milvus_client.delete(
+        self.__milvus_client.delete(
             collection_name="passages",
+            partition_name=ego_id,
             filter="passages_id > 0"
         )
-        triplets_result = self.__milvus_client.delete(
+        self.__milvus_client.delete(
             collection_name="triplets",
+            partition_name=ego_id,
             filter="triplets_id > 0"
         )
-        print("passages reset complete: ", passages_result)
-        print("triplets reset complete: ", triplets_result)
 
 milvus_database = MilvusDatabase()
