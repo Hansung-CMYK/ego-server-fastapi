@@ -13,7 +13,7 @@ from sentence_transformers import SentenceTransformer
         - 파인 튜닝 예정
 """
 chat_model = ChatOllama( # MainLlm
-    model="gemma3:4b",
+    model="gemma3:12b",
     temperature=0.7
 )
 
@@ -29,7 +29,7 @@ chat_model = ChatOllama( # MainLlm
         - json으로 사용안하도록. 위험도가 있음
 """
 task_model = ChatOllama(
-    model="qwen3:4b",
+    model="qwen3:8b",
     temperature=0.0,
     format="json"
 )
