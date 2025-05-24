@@ -3,7 +3,27 @@ import importlib
 
 from app.services.voice.tts_model_registry import has_model, register_model
 from deprecated import deprecated
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+
+import GPUtil
+
+def pick_least_used_gpu() -> int | None:
+    if not torch.cuda.is_available():
+        return None
+    gpus = GPUtil.getGPUs()
+    count = torch.cuda.device_count()
+    valid = [g.id for g in gpus if g.id < count]
+    if not valid:
+        return None
+    return min(valid, key=lambda i: next(g.memoryUtil for g in gpus if g.id == i))
+
+_best_gpu = pick_least_used_gpu()
+if _best_gpu is not None:
+    device = torch.device(f"cuda:{_best_gpu}")
+else:
+    device = torch.device("cpu")
+
+
 is_half = True
 
 @deprecated
