@@ -19,9 +19,9 @@ class EmotionClassifier:
         return cls._instance
 
     def _initialize(self):
-        self.tokenizer = ElectraTokenizer.from_pretrained("monologg/koelectra-base-v3-goemotions")
+        self.tokenizer = ElectraTokenizer.from_pretrained("monologg/koelectra-small-v3-goemotions")
 
-        config = ElectraConfig.from_pretrained("monologg/koelectra-base-v3-goemotions")
+        config = ElectraConfig.from_pretrained("monologg/koelectra-small-v3-goemotions")
         config.id2label = {
             0:"존경스러운", 1:"즐거운", 2:"격앙된", 3:"까칠한", 4:"수용적인",
             5:"배려 깊은", 6:  "혼란스러운", 7:  "호기심 많은", 8:  "매혹적인", 9:  "실망스러운",
@@ -31,8 +31,10 @@ class EmotionClassifier:
             25: "우울한", 26: "놀란", 27: "무난한"
         }
 
+
+
         self.model = ElectraForMultiLabelClassification.from_pretrained(
-            "monologg/koelectra-base-v3-goemotions", config=config
+            "monologg/koelectra-small-v3-goemotions", config=config
         )
 
         self.pipeline = MultiLabelPipeline(
@@ -42,6 +44,11 @@ class EmotionClassifier:
         )
 
     def predict(self, texts):
-        raw_result = self.pipeline(texts)
-        formatted_result = [(label, score) for item in raw_result for label, score in zip(item["labels"], item["scores"])]
-        return formatted_result
+        raw = self.pipeline(texts)
+
+        return [
+            (label, score)
+            for doc in raw
+            for item in doc
+            for label, score in zip(item["labels"], item["scores"])
+        ]

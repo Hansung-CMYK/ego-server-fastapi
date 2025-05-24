@@ -76,3 +76,15 @@ async def ollama_image(
         )
     except Exception:
         raise ControlledException(ErrorCode.IMAGE_DESCRIPTION_ERROR)
+    
+@router.post("/emotion")
+async def get_emotion(text : list[str]):
+    from app.services.diary.kobert_handler import extract_emotions
+    result = extract_emotions(text)
+    return result
+    
+@router.post("/emotion2")
+async def get_emotion(text : list[str]):
+    from app.models.emotion.emtion_classifier import EmotionClassifier
+    result = EmotionClassifier().predict(text)
+    return result
