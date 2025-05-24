@@ -1,17 +1,12 @@
-import warnings
 from collections import defaultdict
 from textwrap import dedent
 
-from langchain_core._api import LangChainDeprecationWarning
 from langchain_core.chat_history import BaseChatMessageHistory
 from langchain_community.chat_message_histories import ChatMessageHistory
 from langchain_core.runnables import RunnableWithMessageHistory
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 
 from app.models.default_model import chat_model
-
-# 로깅 에러 문구 제거
-warnings.filterwarnings("ignore", category=LangChainDeprecationWarning)
 
 class MainLlm:
     """
