@@ -124,9 +124,7 @@ class MilvusDatabase:
                 ],
             )
         except MilvusException:
-            logger.exception(f"""\n
-            MilvusException: passages에서 해당 ids로 entity 조회 실패
-            \n""")
+            logger.exception(f"\n\nMilvusException: passages에서 해당 ids로 entity 조회 실패\n""")
             raise ControlledException(ErrorCode.PASSAGE_NOT_FOUND)
 
     def insert_messages(

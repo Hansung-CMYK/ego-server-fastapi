@@ -56,8 +56,8 @@ async def create_diary(body: DiaryRequest)->CommonResponse:
     # chat_rooms: 채팅방 별 채팅이 str로 묶어서 list[str]로 저장된 변수이다.
     chat_rooms:list[str] = ["\n".join(chat_room) for chat_room in all_chat] # 채팅방 별로 대화 내역을 통합한다.
 
-    # LOG. 시연용 로그2
-    logging.info(msg=f"\nPOST: api/v1/diary [채팅방 대화기록]\n{chat_rooms[0]}\n")
+    # LOG. 시연용 로그
+    logging.info(msg=f"\n\nPOST: api/v1/diary [채팅방 대화기록]\n{chat_rooms[0]}\n")
 
     # NOTE 2. 키워드 추출
     keywords:list[str] = keyword_model.get_keywords(chat_rooms=chat_rooms) # 최대 5개의 키워드를 추출한다.

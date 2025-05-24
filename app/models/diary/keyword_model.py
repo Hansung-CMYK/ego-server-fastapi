@@ -39,8 +39,8 @@ class KeywordModel:
         original_value_keywords = self.__keyword_model.extract_keywords(result_text, keyphrase_ngram_range=(1, 1), top_n=count)
         keywords = [keyword[0] for keyword in original_value_keywords]
 
-        # LOG. 시연용 로그2
-        logger.info(msg=f"\nPOST: api/v1/diary [키워드]\n{keywords}\n")
+        # LOG. 시연용 로그
+        logger.info(msg=f"\n\nPOST: api/v1/diary [키워드]\n{keywords}\n")
         return keywords
 
 keyword_model = KeywordModel()

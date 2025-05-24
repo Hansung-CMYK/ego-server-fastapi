@@ -37,8 +37,8 @@ class TopicLlm:
         """
         answer = self.__chain.invoke({"input": "\n".join(chat_rooms), "return_form_example":self.__RETURN_FORM_EXAMPLE, "result_example":self.__RESULT_EXAMPLE}).content
 
-        # LOG. 시연용 로그2
-        logger.info(msg=f"\nPOST: api/v1/diary [일기 생성 LLM]\n{answer}\n")
+        # LOG. 시연용 로그
+        logger.info(msg=f"\n\nPOST: api/v1/diary [일기 생성 LLM]\n{answer}\n")
 
         try:
             diary = json.loads(answer)["result"]

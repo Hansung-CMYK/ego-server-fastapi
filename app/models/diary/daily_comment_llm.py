@@ -43,14 +43,14 @@ class DailyCommentLLM:
             "result_example":self.__RESULT_EXAMPLE
         }).content.strip()
 
-        # LOG. 시연용 로그2
-        logger.info(msg=f"\nPOST: api/v1/diary [한줄 요약 문장 생성]\n{keywords}\n")
+        # LOG. 시연용 로그
+        logger.info(msg=f"\n\nPOST: api/v1/diary [한줄 요약 문장 생성]\n{keywords}\n")
 
         # 반환된 문자열 dict로 변환
         try:
             return json.loads(diary_string)["result"]
         except json.JSONDecodeError:
-            logger.exception(f"LLM이 일기 한줄 요약을 실패했습니다.")
+            logger.exception(f"\n\nLLM이 일기 한줄 요약을 실패했습니다.\n")
             return ""
 
     __DAILY_TEMPLATE = [
