@@ -5,7 +5,7 @@ import json
 
 from app.exception.exceptions import ControlledException, ErrorCode
 from app.models.default_model import task_model
-from app.models.chat.chat_logger import logger
+from app.logger.logger import logger
 
 class PersonaLlm:
     """
