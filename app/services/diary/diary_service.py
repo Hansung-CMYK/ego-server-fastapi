@@ -3,7 +3,7 @@ from datetime import date
 
 from app.exception.exceptions import ControlledException, ErrorCode
 from app.models.chat.persona_llm import persona_llm
-from app.models.emotion.emtion_classifier import EmotionClassifier
+from app.models.emotion.emotion_classifier import EmotionClassifier
 from app.services.api_service import get_chat_history, get_ego, post_relationship, patch_tags
 from app.services.chat.persona_store import persona_store
 from app.models.database.postgres_database import postgres_database
