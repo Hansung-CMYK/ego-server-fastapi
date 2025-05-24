@@ -3,37 +3,50 @@ from textwrap import dedent
 from langchain_core.prompts import ChatPromptTemplate
 from datetime import datetime
 import json
-import logging
+
+from app.exception.exceptions import ControlledException, ErrorCode
 from app.models.default_model import task_model
 
 class SplitLlm:
     """
-    Ollama를 통해 LLM 모델을 가져오는 클래스
+    요약:
+        복합 문장을 단일 문장으로 분리하는 Ollama 클래스
+
+    설명:
+        사용자 메세지에 담겨있는 의미들을 단일 문장으로 분리하는 모델이다.
+
+    Attributes:
+        __chain: llm을 활용하기 위한 lang_chain
     """
 
     def __init__(self):
         # 문장 분리 프롬프트 적용 + 랭체인 생성
         split_prompt = ChatPromptTemplate.from_messages(self.__SPLIT_TEMPLATE)
-        self.__split_chain = split_prompt | task_model
+        self.__chain = split_prompt | task_model
 
-    def invoke(self, input:str)->list:
+    def split_invoke(self, complex_sentence:str)->list:
         """
-        전달 받은 문장들을 하나의 단일 의미나 사건으로 분리한다.
-        :param input: 복합 의미를 가진 문장
-        :return: 하나의 의미만을 가진 문장
-        """
-        # NOTE 1. 문장을 단일 의미로 분리한다.
-        split_messages_string = self.__split_chain.invoke({"input": input, "datetime": datetime.now().isoformat(), "result_example":self.__RESULT_EXAMPLE}).content.strip()
+        요약:
+            전달 받은 문장들을 하나의 단일 의미나 사건으로 분리하는 함수
 
-        # NOTE 2. JSON 문자열을 list로 파싱한다.
-        # 아주 드물게 LLM이 사용자 응답을 JSON으로 만들지 못하는 경우가 있는데,
-        # 이 때 예외를 처리하기 위한 try catch이다.
+        Parameters:
+            complex_sentence(str): 복합 의미를 가진 문장
+
+        Raises:
+            JSONDecodeError: JSON Decoding 실패 시, 빈 리스트(`[]`) 반환
+        """
+        split_messages_string = self.__chain.invoke({"input": complex_sentence, "datetime": datetime.now().isoformat(), "result_example":self.__RESULT_EXAMPLE}).content.strip()
+
         try:
-            return json.loads(split_messages_string)["result"]
+            split_messages = json.loads(split_messages_string)["result"]
         except json.JSONDecodeError:
-            logging.warning(f"LLM이 대화내역을 단일문장으로 분리하지 못했습니다.")
-            logging.warning(f"원본 문장: {split_messages_string}")
-            return []
+            raise ControlledException(ErrorCode.FAILURE_SPLIT_MESSAGE)
+
+        # 문장 분리 실패 시, 데이터는 저장하지 않는다.
+        if len(split_messages) == 0:
+            raise ControlledException(ErrorCode.FAILURE_SPLIT_MESSAGE)
+
+        return split_messages
 
     __SPLIT_TEMPLATE = [
         ("system", """

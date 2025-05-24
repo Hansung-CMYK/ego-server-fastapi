@@ -4,56 +4,58 @@ from scipy.sparse import csr_matrix
 
 from app.models.parsed_sentence import ParsedSentence
 from app.models.database.milvus_database import milvus_database
+import logging
 
 """
 Graph RAG를 활용하기 위한 서비스
 """
-def get_rag_prompt(ego_id:str, user_speak:str)->str:
+def get_rag_prompt(ego_id:str, user_message:str)->str:
     """
-    Milvus Database에 접속하여, ego가 가지고 있는 지식 그래프 정보를 검색하는 함수
+    요약:
+        Milvus Database에 접속하여, ego가 가지고 있는 지식 그래프 정보를 검색하는 함수
 
     Parameters:
-        ego_id (int): Milvus에 조회할 ego 기본키 값. Milvus에서는 Partition를 ego_id로 기록하고 있다.
-        user_speak (str): 사용자가 말한 음성 정보이다. 해당 정보를 활용해 관계를 조회한다.
+        ego_id(int): Milvus에 조회할 ego 기본키 값. Milvus에서는 Partition를 ego_id로 기록하고 있다.
+        user_message(str): 사용자가 말한 음성 정보이다. 해당 정보를 활용해 관계를 조회한다.
     """
     # NOTE 1. 답변 받은 문장을 Graph RAG에 맞는 형식으로 변환한다.
-    speak = ParsedSentence(user_speak)
-    speak_embedding = speak.embedding()
+    parsed_user_speak = ParsedSentence(user_message)
+    embedded_user_speak = parsed_user_speak.embedding()
 
     # NOTE 2. Milvus Database에서 사용자 답변과 유사한 Triplet 정보 검색
     # TODO 1. 주어로도 목적어를 조회하고, 목적어로도 주어를 조회할 수 있어야 하는 것 아님?
     # 주어, 목적어, 관계와 유사한 삼중항 조회
-    if speak.triplets[0][0] != "":
-        triplets_with_similar_subject = milvus_database.search_triplets_to_milvus(
+    if parsed_user_speak.triplets[0][0] != "":
+        triplets_with_similar_subject = milvus_database.search_triplets(
             ego_id=ego_id,
             field_name="embedded_subject",
-            datas=[embedded_triplets[0] for embedded_triplets in speak_embedding["embedded_triplets"]]
+            datas=[embedded_triplets[0] for embedded_triplets in embedded_user_speak["embedded_triplets"]]
         )
-        triplets_with_similar_subject.extend(milvus_database.search_triplets_to_milvus(
+        triplets_with_similar_subject.extend(milvus_database.search_triplets(
             ego_id=ego_id,
             field_name="embedded_object",
-            datas=[embedded_triplets[0] for embedded_triplets in speak_embedding["embedded_triplets"]]
+            datas=[embedded_triplets[0] for embedded_triplets in embedded_user_speak["embedded_triplets"]]
         ))
     else: triplets_with_similar_subject = []
 
-    if speak.triplets[0][1] != "":
-        triplets_with_similar_object = milvus_database.search_triplets_to_milvus(
+    if parsed_user_speak.triplets[0][1] != "":
+        triplets_with_similar_object = milvus_database.search_triplets(
             ego_id=ego_id,
             field_name="embedded_object",
-            datas=[embedded_triplets[1] for embedded_triplets in speak_embedding["embedded_triplets"]]
+            datas=[embedded_triplets[1] for embedded_triplets in embedded_user_speak["embedded_triplets"]]
         )
-        triplets_with_similar_object.extend(milvus_database.search_triplets_to_milvus(
+        triplets_with_similar_object.extend(milvus_database.search_triplets(
             ego_id=ego_id,
             field_name="embedded_subject",
-            datas=[embedded_triplets[1] for embedded_triplets in speak_embedding["embedded_triplets"]]
+            datas=[embedded_triplets[1] for embedded_triplets in embedded_user_speak["embedded_triplets"]]
         ))
     else : triplets_with_similar_object = []
 
-    if speak.relations != "":
-        triplets_with_similar_relations = milvus_database.search_triplets_to_milvus(
+    if parsed_user_speak.relations != "":
+        triplets_with_similar_relations = milvus_database.search_triplets(
             ego_id=ego_id,
             field_name="embedded_relation",
-            datas=speak_embedding["embedded_relations"]
+            datas=embedded_user_speak["embedded_relations"]
         )
     else : triplets_with_similar_relations = []
 
@@ -65,33 +67,41 @@ def get_rag_prompt(ego_id:str, user_speak:str)->str:
     )
 
     # NOTE 4. 연결된 관계들의 원문을 조회한다.
-    related_passages = milvus_database.search_passages_to_milvus(
+    related_passages = milvus_database.search_passages(
         ego_id=ego_id,
         datas=related_passages_ids
     )
 
     # 모든 결과 값을 하나의 문자열로 합친다.
     related_story = "\n".join([f"[{index}]: {text["passage"]}" for index, text in enumerate(related_passages)])
-    print(f"원문 반환 값\n{related_story}")
+
+    # LOG. 시연용 로그
+    logging.info(msg=f"""\n
+    POST: api/v1/chat [GraphRAG 조회]
+    {related_story}
+    \n""")
+
     return related_story
 
 def get_passages_id_from_triplets(similar_subjects: list[dict], similar_objects: list[dict], similar_relations: list[dict]) -> list[int]:
     """
-        연관성 있는 주어, 서술어 문장 중 서로 연결된 정보들을 반환하는 함수이다.
+    요약:
+        연관성 있는 주어, 서술어 문장 중 서로 연결된 정보들을 반환하는 함수
 
-        feat 명준: 코드 대부분이 지식 그래프 및 행렬에 대한 지식이 필요하여, 설명이 부족할 수 있다.
+    feat 명준 코드 대부분이 지식 그래프 및 행렬에 대한 지식이 필요하여, 설명이 부족할 수 있다.
 
+    설명:
         주어진 주어, 목적어, 관계 정보를 바탕으로 그래프 상에서 연관된 관계들을 확장하고,
         이와 연결된 원문(passage)의 ID들을 반환한다. 주어-관계-목적어로 이루어진 인접 행렬을 생성하여
         2차 이웃까지 확장하며 관련 있는 관계를 탐색한다.
 
-        Parameters:
-            similar_subjects (list[dict]): Milvus에서 검색된 주어 관련 entity 정보 리스트.
-            similar_objects (list[dict]): Milvus에서 검색된 목적어 관련 entity 정보 리스트.
-            similar_relations (list[dict]): Milvus에서 검색된 관계(ner) 정보 리스트.
+    Parameters:
+        similar_subjects(list[dict]): Milvus에서 검색된 주어 관련 entity 정보 리스트.
+        similar_objects(list[dict]): Milvus에서 검색된 목적어 관련 entity 정보 리스트.
+        similar_relations(list[dict]): Milvus에서 검색된 관계(ner) 정보 리스트.
 
-        Returns:
-            list[int]: 연관된 관계로부터 도출된 원문 passage ID 목록.
+    Returns:
+        list[int]: 연관된 관계로부터 도출된 원문 passage ID 목록.
     """
     # NOTE 1. 주어진 주어 및 목적어 리스트를 결합하여 하나의 개체 리스트로 구성
     triplets_with_similar_entities: list[dict] = []

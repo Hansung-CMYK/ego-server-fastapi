@@ -1,4 +1,3 @@
-import re
 from collections import Counter, defaultdict
 import torch
 import torch.nn.functional as F

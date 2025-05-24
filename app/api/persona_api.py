@@ -4,13 +4,26 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 
 from app.api.common_response import CommonResponse
+from app.exception.exceptions import ControlledException, ErrorCode
+from app.models.database.milvus_database import milvus_database
 from app.models.database.postgres_database import postgres_database
 
-router = APIRouter()
+router = APIRouter(prefix="/persona")
 
 class PersonaRequest(BaseModel):
     """
-    에고 페르소나 JSON을 만드는데 필요한 정보들이다.
+    요약:
+        /persona POST API를 이용하기 위해서 사용하는 Request Class
+
+    설명:
+        각 Attributes는 null를 전달하면 추가되지 않는다. (ego_id 제외)
+
+    Attributes:
+        ego_id(str): 페르소나가 생성 될 ego_id
+        name(str|None): 에고의 이름
+        age(int|None): 에고(사용자)의 나이
+        gender(str|None): 에고(사용자)의 성별
+        mbti(str|None): 에고(사용자)의 mbti
     """
     ego_id: str
     name: Optional[str] = None
@@ -18,20 +31,37 @@ class PersonaRequest(BaseModel):
     gender: Optional[str] = None
     mbti: Optional[str] = None
 
-@router.post("/persona")
-async def create_persona(body: PersonaRequest):
+@router.post("")
+async def create_persona(body: PersonaRequest)->CommonResponse:
+    """
+    요약:
+        페르소나를 생성하는 API
+
+    설명:
+        페르소나 생성과 함께 Milvus에 지식그래프가 생성된다.
+
+    Parameters:
+        body(PersonaRequest): 페르소나 생성에 필요한 인자의 모음
+            * ego_id, name, age, gender, mbti를 Attribute로 갖는다.
+    """
     # NOTE 1. 이미 존재하는 페르소나인지 조회한다.
-    if postgres_database.already_persona(ego_id=body.ego_id):
-        return CommonResponse(
-            code=-1,
-            message="이미 페르소나가 존재하는 에고입니다."
-        )
+    # PostgreSQL에 중복되는 ego_id가 있는지 조회합니다.
+    if postgres_database.has_persona(ego_id=body.ego_id):
+        raise ControlledException(ErrorCode.ALREADY_CREATED_EGO_ID)
+
+    # Milvus에 중복되는 ego_id가 있는지 조회합니다.
+    if milvus_database.has_partition(partition_name=body.ego_id):
+        raise ControlledException(ErrorCode.ALREADY_CREATED_PARTITION)
 
     # NOTE 2. None이 아닌 값만 필터링해서 저장
-    persona = {k: v for k, v in body.model_dump().items() if k != "ego_id" and v is not None}
+    persona = {key: value for key, value in body.model_dump().items() if key != "ego_id" and value is not None}
 
     # NOTE 3. 에고 정보를 JSON으로 만들어 저장한다.
     postgres_database.insert_persona(ego_id= body.ego_id, persona=persona)
+
+    # NOTE 4. Milvus Partition 생성
+    # Milvus Database의 partition_name은 ego_id로 생성됩니다.
+    milvus_database.create_partition(partition_name=body.ego_id)
 
     return CommonResponse(
         code=200,

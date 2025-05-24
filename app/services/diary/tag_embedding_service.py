@@ -47,7 +47,7 @@ def __build_tag(path: str = __SAVING_TAG_PATH) -> tuple[list[str], np.ndarray]:
     """
     keys, embeds = [], []
     for k, phrase in __TAGS.items():
-        vec = embedding_model.embeded_documents(phrase)[0]  # (dim,)
+        vec = embedding_model.embedding(texts=phrase)[0]  # (dim,)
         keys.append(k)
         embeds.append(vec.astype(np.float32))
 
@@ -65,7 +65,7 @@ def load_index() -> tuple[list[str], np.ndarray]:
         embeds: np.ndarray[float32] (k, dim)
     """
     if not os.path.exists(__SAVING_TAG_PATH):
-        return __build_tag(__SAVING_TAG_PATH)
+        return __build_tag(path=__SAVING_TAG_PATH)
 
     data = np.load(__SAVING_TAG_PATH, allow_pickle=True)
     keys   = data["keys"].tolist()        # ndarray → list

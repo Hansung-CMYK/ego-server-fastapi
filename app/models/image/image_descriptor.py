@@ -18,4 +18,4 @@ class ImageDescriptor:
 
     @staticmethod
     def store(image_description : str, session_config : SessionConfig):
-        main_llm.add_message_in_session_history(session_id=session_config.session_id, message=image_description)
+        main_llm.add_message_in_session_history(session_id=session_config.session_id, human_message=image_description)
