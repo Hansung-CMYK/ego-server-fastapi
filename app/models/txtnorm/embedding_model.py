@@ -3,6 +3,11 @@ from transformers import AutoTokenizer, AutoModel
 
 import torch
 
+from transformers.utils import logging as hf_logging
+
+# 허깅페이스 로깅 레벨을 ERROR 이상으로 설정
+hf_logging.set_verbosity_error()
+
 class EmbeddingModel:
     """
     요약:
