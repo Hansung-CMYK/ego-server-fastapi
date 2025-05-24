@@ -88,8 +88,8 @@ def save_relation(user_id:str, chat_room:str, target_date:date):
     relation = EmotionClassifier().predict(texts="\n".join(chat_room))
     relationship_id = relationship_id_mapper(relation=relation)
 
-    # LOG. 시연용 로그2
-    logger.info(msg=f"\nPOST: api/v1/diary [에고 관계]\n{relation}\n""")
+    # LOG. 시연용 로그
+    logger.info(msg=f"\n\nPOST: api/v1/diary [에고 관계]\n{relation}\n""")
 
     post_relationship(user_id=user_id, ego_id=ego_id, relationship_id=relationship_id, target_date=target_date)
     logger.info("save_relation success!")
@@ -138,8 +138,8 @@ def save_tags(ego_id:str, stories:list[str]):
     # NOTE 1. 대화 내역과 높은 유사도를 가진 태그를 조회한다.
     tags = search_tags(stories=stories)
 
-    # LOG. 시연용 로그2
-    logger.info(msg=f"\nPOST: api/v1/diary [에고 태그]\n{tags}\n")
+    # LOG. 시연용 로그
+    logger.info(msg=f"\n\nPOST: api/v1/diary [에고 태그]\n{tags}\n")
 
     # NOTE 2. 추출된 태그를 BE로 전달한다.
     patch_tags(ego_id=ego_id, tags=tags)

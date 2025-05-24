@@ -81,8 +81,8 @@ async def save_graphdb(session_id:str, user_message:str):
     # NOTE 2. 문장을 분리한다.
     splited_messages = split_llm.split_invoke(complex_sentence=input)
 
-    # LOG. 시연용 로그2
-    logger.info(f"\nPOST: api/v1/chat [저장할 단일 문장들]\n{input}\n")
+    # LOG. 시연용 로그
+    logger.info(f"\n\nPOST: api/v1/chat [저장할 단일 문장들]\n{input}\n")
 
     # NOTE 3. 에고에 맞게 삼중항을 저장한다.
     my_ego = get_ego(user_id=user_id)
