@@ -1,13 +1,13 @@
-from typing import Dict, Tuple
-
-_TTS_REGISTRY: Dict[str, Tuple[object, object]] = {}
-
-def register_model(model_id: str, gpt_obj: object, sovits_obj: object) -> None:
-    _TTS_REGISTRY[model_id] = (gpt_obj, sovits_obj)
+models: dict[str, dict] = {}
 
 def has_model(model_id: str) -> bool:
-    return model_id in _TTS_REGISTRY
+    return model_id in models
 
-def get_model(model_id: str) -> Tuple[object, object]:
-    return _TTS_REGISTRY[model_id]
+def register_model(model_id: str, tts_pipeline) -> None:
+    models[model_id] = { "tts": tts_pipeline }
 
+def get_tts_pipeline(model_id: str):
+    entry = models.get(model_id)
+    if not entry:
+        raise KeyError(f"모델 '{model_id}' 이(가) 등록되지 않았습니다.")
+    return entry["tts"]
