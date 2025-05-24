@@ -34,7 +34,7 @@ from app.services.chatting.chat_service import chat_stream
 from app.services.session_config import SessionConfig
 
 CHAR_TO_SEC = 0.05
-TIMEOUT_MARGIN = 2.5
+TIMEOUT_MARGIN = 5
 
 def speech_ratio(pcm: bytes, sample_rate: int = 24000) -> float:
     samples = np.frombuffer(pcm, dtype=np.int16).astype(np.float32) / 32768.0
@@ -79,7 +79,7 @@ class VoiceChatHandler:
             'use_microphone': False,
             'model': 'large-v3',
             'language': 'ko',
-            'silero_sensitivity': 0.5,
+            'silero_sensitivity': 0.6,
             'webrtc_sensitivity': 1,
             'post_speech_silence_duration': 0.7,
             'min_length_of_recording': 0,
@@ -87,7 +87,7 @@ class VoiceChatHandler:
             'enable_realtime_transcription': True,
             'realtime_processing_pause': 0,
             'use_main_model_for_realtime': True,
-            'compute_type': 'int8'
+            'compute_type': 'float16'
         }
 
     def handle_audio(self, msg: bytes):
@@ -142,21 +142,33 @@ class VoiceChatHandler:
             timeout = expected_time * TIMEOUT_MARGIN
 
             retries = 0
-            final_pcm = bytearray()
+            final_pcm = None
+            sr_of_final = None
 
             logger.warning(clean)
             while retries <= self.max_retries:
                 start_time = time.monotonic()
                 pcm = bytearray()
 
-                gen = importlib.import_module("gpt_sovits_api").get_tts_wav(
-                    text=clean,
-                    text_language="ko",
-                    sample_steps=32,
-                    speed=1.0,
-                    spk=self.config.spk
-                )
-                for chunk in gen:
+                from app.services.voice.tts_model_registry import get_tts_pipeline
+                import gpt_sovits_api
+
+                speaker = gpt_sovits_api.speaker_list.get(self.config.spk)
+                tts_pipe = get_tts_pipeline(self.config.spk)
+                tts_pipe.set_ref_audio(speaker.default_refer.path)
+
+                gen = tts_pipe.run({
+                    "text": clean,
+                    "text_lang": "ko",
+                    "ref_audio_path": speaker.default_refer.path,
+                    "prompt_text": speaker.default_refer.text,
+                    "prompt_lang": speaker.default_refer.lang,
+                    "sample_steps": 16,
+                    "speed_factor": 1.0,
+                })
+
+                for sr, chunk in gen:
+                    sr_of_final = sr
                     if cancel_event.is_set():
                         return
                     pcm.extend(chunk)
@@ -177,19 +189,29 @@ class VoiceChatHandler:
                         "Retry idx %d: elapsed=%.2fsec, voiced_ratio=%.2f",
                         tts_index, elapsed, ratio
                     )
+                break
                 retries += 1
 
-            if not final_pcm:
+            if final_pcm is None:
                 logger.error(
                     "Failed to generate valid TTS for idx %d after %d retries",
                     tts_index, self.max_retries
                 )
                 final_pcm = pcm
 
+            from io import BytesIO
+            import numpy as np
+
+            pcm_np = np.frombuffer(bytes(final_pcm), dtype=np.int16)
+
+            wav_buf = BytesIO()
+            wav_buf = gpt_sovits_api.pack_wav(wav_buf, pcm_np, sr_of_final or self.sample_rate)
+            wav_bytes = wav_buf.getvalue()
+
             payload = {
-                'type': 'audio_chunk',
-                'index': tts_index,
-                'audio_base64': base64.b64encode(final_pcm).decode('ascii')
+                "type": "audio_chunk",
+                "index": tts_index,
+                "audio_base64": base64.b64encode(wav_bytes).decode("ascii")
             }
             self._send_payload(payload)
             tts_index += 1
