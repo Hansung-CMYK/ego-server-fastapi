@@ -1,16 +1,14 @@
-import logging, base64
+import base64
 
 from fastapi import APIRouter, UploadFile, File, Form
 from pydantic import BaseModel
 
 from app.api.common_response import CommonResponse
 from app.exception.exceptions import ControlledException, ErrorCode
-from app.services.chatting.chat_service import chat_stream
+from app.services.chat.chat_service import chat_stream
 from app.services.session_config import SessionConfig
 
 from app.models.image.image_descriptor import ImageDescriptor
-
-logger = logging.getLogger("chat_api")
 
 router = APIRouter(prefix="/chat")
 

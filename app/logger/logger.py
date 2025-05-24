@@ -1,6 +1,6 @@
 import logging
 
-logger = logging.getLogger("tts")
+logger = logging.getLogger("default")
 logger.setLevel(logging.INFO)
 
 # Console handler

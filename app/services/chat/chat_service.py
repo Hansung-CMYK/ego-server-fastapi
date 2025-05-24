@@ -2,12 +2,12 @@ import threading
 from app.models.chat.main_llm import main_llm
 from app.models.database.milvus_database import milvus_database
 from app.services.api_service import get_ego
-from app.services.chatting.graph_rag_service import get_rag_prompt
-from app.services.chatting.persona_store import persona_store
+from app.services.chat.graph_rag_service import get_rag_prompt
+from app.services.chat.persona_store import persona_store
 from app.models.txtnorm.split_llm import split_llm
 from app.services.session_config import SessionConfig
 import asyncio
-import logging
+from app.logger.logger import logger
 
 MAIN_LOOP = asyncio.new_event_loop()
 threading.Thread(target=MAIN_LOOP.run_forever, daemon=True).start()
@@ -81,14 +81,11 @@ async def save_graphdb(session_id:str, user_message:str):
     # NOTE 2. 문장을 분리한다.
     splited_messages = split_llm.split_invoke(complex_sentence=input)
 
-    # LOG. 시연용 로그
-    logging.info(f"""\n
-    POST: api/v1/chat [저장할 단일 문장들]
-    {input}
-    \n""")
+    # LOG. 시연용 로그2
+    logger.info(f"\nPOST: api/v1/chat [저장할 단일 문장들]\n{input}\n")
 
     # NOTE 3. 에고에 맞게 삼중항을 저장한다.
     my_ego = get_ego(user_id=user_id)
 
     milvus_database.insert_messages(splited_messages=splited_messages, ego_id=str(my_ego["id"]))
-    logging.info("save_graphdb success!")
+    logger.info("save_graphdb success!")

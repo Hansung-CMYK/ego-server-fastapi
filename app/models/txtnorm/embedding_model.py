@@ -1,12 +1,12 @@
-import logging
-
 import numpy as np
 from transformers import AutoTokenizer, AutoModel
 
 import torch
 
-# 로깅 에러 문구 제거
-logging.getLogger("transformers.modeling_utils").setLevel(logging.ERROR)
+from transformers.utils import logging as hf_logging
+
+# 허깅페이스 로깅 레벨을 ERROR 이상으로 설정
+hf_logging.set_verbosity_error()
 
 class EmbeddingModel:
     """

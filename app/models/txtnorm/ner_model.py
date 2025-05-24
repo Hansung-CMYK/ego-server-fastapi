@@ -1,5 +1,3 @@
-import logging
-
 import stanza
 
 class NerModel:
@@ -32,9 +30,6 @@ class NerModel:
             verbose=False
         )
         self.__nlp("")
-
-        # ㆍStanza 내부 디버그 로그(INFO) 노이즈를 막기 위해 WARNING 이상만 출력
-        logging.getLogger("stanza").setLevel(logging.WARNING)
 
     def __expand_phrase(self, tok, sent):
         """

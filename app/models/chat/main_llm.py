@@ -1,17 +1,12 @@
-import warnings
 from collections import defaultdict
 from textwrap import dedent
 
-from langchain_core._api import LangChainDeprecationWarning
 from langchain_core.chat_history import BaseChatMessageHistory
 from langchain_community.chat_message_histories import ChatMessageHistory
 from langchain_core.runnables import RunnableWithMessageHistory
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 
 from app.models.default_model import chat_model
-
-# 로깅 에러 문구 제거
-warnings.filterwarnings("ignore", category=LangChainDeprecationWarning)
 
 class MainLlm:
     """
@@ -36,7 +31,7 @@ class MainLlm:
         self.__prompt = RunnableWithMessageHistory(
             main_chain,
             self.get_session_history,
-            input_messages_key="input",
+            input_messages_key="user_message",
             history_messages_key="history",
         )
 
