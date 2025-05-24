@@ -1,5 +1,5 @@
 from collections import Counter, defaultdict
-from app.models.emotion.emtion_classifier import EmotionClassifier
+from app.models.emotion.emotion_classifier import EmotionClassifier
 
 _labels = ['화남', '불안', '행복', '평범', '슬픔']
 
