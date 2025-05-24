@@ -7,9 +7,9 @@ from app.models.emotion.emtion_classifier import EmotionClassifier
 from app.services.api_service import get_chat_history, get_ego, post_relationship, patch_tags
 from app.services.chat.persona_store import persona_store
 from app.models.database.postgres_database import postgres_database
+from app.logger.logger import logger
 
 from dotenv import load_dotenv
-from app.services.diary.diary_logger import logger
 
 from app.services.diary.tag_service import search_tags
 

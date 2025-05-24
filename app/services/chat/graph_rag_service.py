@@ -4,7 +4,7 @@ from scipy.sparse import csr_matrix
 
 from app.models.parsed_sentence import ParsedSentence
 from app.models.database.milvus_database import milvus_database
-from app.services.chat.chat_logger import logger
+from app.logger.logger import logger
 
 """
 Graph RAG를 활용하기 위한 서비스

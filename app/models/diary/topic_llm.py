@@ -5,7 +5,7 @@ from langchain_core.prompts import ChatPromptTemplate
 
 from app.exception.exceptions import ControlledException, ErrorCode
 from app.models.default_model import task_model
-from app.models.diary.diary_logger import logger
+from app.logger.logger import logger
 
 class TopicLlm:
     """

@@ -1,5 +1,3 @@
-from app.models.txtnorm.txt_norm_logger import logger
-
 import stanza
 
 class NerModel:

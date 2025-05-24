@@ -7,7 +7,7 @@ from pymilvus import MilvusClient, MilvusException
 from app.exception.exception_handler import ControlledException
 from app.exception.exceptions import ErrorCode
 from app.models.parsed_sentence import ParsedSentence
-from app.models.database.database_logger import logger
+from app.logger.logger import logger
 
 # .env 환경 변수 추출
 load_dotenv()

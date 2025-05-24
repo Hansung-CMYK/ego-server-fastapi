@@ -1,4 +1,3 @@
-import logging
 import os
 
 from fastapi import APIRouter
@@ -8,8 +7,6 @@ from app.api.common_response import CommonResponse
 from app.exception.exceptions import ControlledException, ErrorCode
 from app.models.database.milvus_database import milvus_database
 from app.models.database.postgres_database import postgres_database
-
-logger = logging.getLogger("admin_api")
 
 router = APIRouter(prefix="/admin")
 

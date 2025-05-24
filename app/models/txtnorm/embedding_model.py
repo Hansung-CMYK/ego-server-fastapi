@@ -1,11 +1,7 @@
-import logging
-
 import numpy as np
 from transformers import AutoTokenizer, AutoModel
 
 import torch
-
-from app.models.txtnorm.txt_norm_logger import logger
 
 class EmbeddingModel:
     """

@@ -2,7 +2,7 @@ from keybert import KeyBERT
 from langchain.embeddings import sentence_transformer
 
 from app.models.default_model import kiwi
-from app.models.diary.diary_logger import logger
+from app.logger.logger import logger
 
 class KeywordModel:
     """
