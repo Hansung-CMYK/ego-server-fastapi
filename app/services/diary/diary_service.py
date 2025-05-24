@@ -5,11 +5,11 @@ from app.exception.exceptions import ControlledException, ErrorCode
 from app.models.chat.persona_llm import persona_llm
 from app.models.emotion.emtion_classifier import EmotionClassifier
 from app.services.api_service import get_chat_history, get_ego, post_relationship, patch_tags
-from app.services.chatting.persona_store import persona_store
+from app.services.chat.persona_store import persona_store
 from app.models.database.postgres_database import postgres_database
 
 from dotenv import load_dotenv
-import logging
+from app.services.diary.diary_logger import logger
 
 from app.services.diary.tag_service import search_tags
 
@@ -71,7 +71,7 @@ async def async_save(user_id:str, chat_rooms:list[str], target_date:date):
     for chat_rooms in chat_rooms: # 관계는 채팅방 별로 저장되어야 한다.
         if chat_rooms[0][0] == "E": # 첫 채팅 타입이 E인 경우에만 작성(에고 채팅은 무조건 에고가 먼저)
             save_relation(user_id=user_id, chat_room=chat_rooms, target_date=target_date)
-    logging.info("async_save success!")
+    logger.info("async_save success!")
 
 def save_relation(user_id:str, chat_room:str, target_date:date):
     """
@@ -88,14 +88,11 @@ def save_relation(user_id:str, chat_room:str, target_date:date):
     relation = EmotionClassifier().predict(texts="\n".join(chat_room))
     relationship_id = relationship_id_mapper(relation=relation)
 
-    # LOG. 시연용
-    logging.info(msg=f"""\n
-    POST: api/v1/diary [에고 관계]
-    {relation}
-    \n""")
+    # LOG. 시연용 로그2
+    logger.info(msg=f"\nPOST: api/v1/diary [에고 관계]\n{relation}\n""")
 
     post_relationship(user_id=user_id, ego_id=ego_id, relationship_id=relationship_id, target_date=target_date)
-    logging.info("save_relation success!")
+    logger.info("save_relation success!")
 
 def save_persona(ego_id:str, chat_rooms:list[str]):
     """
@@ -127,7 +124,7 @@ def save_persona(ego_id:str, chat_rooms:list[str]):
     # NOTE 5. 메모리에서 자신의 페르소나를 내린다.
     # 메모리 과사용 방지를 위한 작업
     persona_store.remove_persona(ego_id=ego_id)
-    logging.info("save_persona success!")
+    logger.info("save_persona success!")
 
 def save_tags(ego_id:str, stories:list[str]):
     """
@@ -141,15 +138,12 @@ def save_tags(ego_id:str, stories:list[str]):
     # NOTE 1. 대화 내역과 높은 유사도를 가진 태그를 조회한다.
     tags = search_tags(stories=stories)
 
-    # LOG. 시연용
-    logging.info(msg=f"""\n
-    POST: api/v1/diary [에고 태그]
-    {tags}
-    \n""")
+    # LOG. 시연용 로그2
+    logger.info(msg=f"\nPOST: api/v1/diary [에고 태그]\n{tags}\n")
 
     # NOTE 2. 추출된 태그를 BE로 전달한다.
     patch_tags(ego_id=ego_id, tags=tags)
-    logging.info("save_tags success!")
+    logger.info("save_tags success!")
 
 def relationship_id_mapper(relation: str)->int:
     """

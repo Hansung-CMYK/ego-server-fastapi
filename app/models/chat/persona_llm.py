@@ -2,10 +2,10 @@ from json import JSONDecodeError
 from textwrap import dedent
 from langchain_core.prompts import ChatPromptTemplate
 import json
-import logging
 
 from app.exception.exceptions import ControlledException, ErrorCode
 from app.models.default_model import task_model
+from app.models.chat.chat_logger import logger
 
 class PersonaLlm:
     """
@@ -39,11 +39,8 @@ class PersonaLlm:
         answer:str = self.__chain.invoke({"session_history": session_history, "current_persona": user_persona, "return_form": self.__RETURN_FORM_EXAMPLE, "result_example": self.__RESULT_EXAMPLE}).content
         clean_answer:str = self.__clean_json_string(text=answer) # 필요없는 문자열 제거
 
-        # LOG. 시연용
-        logging.info(msg=f"""\n
-        POST: api/v1/diary [페르소나 변경사항]
-        {clean_answer}
-        \n""")
+        # LOG. 시연용 로그2
+        logger.info(msg=f"\nPOST: api/v1/diary [페르소나 변경사항]\n{clean_answer}\n")
 
         # dict로 자료형 변경
         try:

@@ -31,7 +31,7 @@ class MainLlm:
         self.__prompt = RunnableWithMessageHistory(
             main_chain,
             self.get_session_history,
-            input_messages_key="input",
+            input_messages_key="user_message",
             history_messages_key="history",
         )
 

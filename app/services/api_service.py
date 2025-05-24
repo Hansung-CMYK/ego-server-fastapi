@@ -77,21 +77,12 @@ def check_error(response, title:str):
     try:
         result = response.json()
         if result["code"] != 200:
-            # LOG. 시연용
-            logging.exception(msg=f"""\n
-            POST: api/v1/diary [{title}]
-            {result["message"]}
-            \n""")
+            # LOG. 시연용 로그2
+            logging.exception(msg=f"\nPOST: api/v1/diary [{title}]\n{result["message"]}\n")
         return result["data"]
     except JSONDecodeError:
-        # LOG. 시연용
-        logging.exception(msg=f"""\n
-        POST: api/v1/diary [{title}]
-        {response}
-        \n""")
+        # LOG. 시연용 로그2
+        logging.exception(msg=f"\nPOST: api/v1/diary [{title}]\n{response}\n")
     except KeyError:
-        # LOG. 시연용
-        logging.exception(msg=f"""\n
-        POST: api/v1/diary [{title}]
-        {response}
-        \n""")
+        # LOG. 시연용 로그2
+        logging.exception(msg=f"\nPOST: api/v1/diary [{title}]\n{response}\n")

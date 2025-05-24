@@ -5,8 +5,7 @@ from transformers import AutoTokenizer, AutoModel
 
 import torch
 
-# 로깅 에러 문구 제거
-logging.getLogger("transformers.modeling_utils").setLevel(logging.ERROR)
+from app.models.txtnorm.txt_norm_logger import logger
 
 class EmbeddingModel:
     """

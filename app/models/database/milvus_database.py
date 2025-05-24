@@ -3,11 +3,11 @@ import os
 from dotenv import load_dotenv
 from numpy import ndarray
 from pymilvus import MilvusClient, MilvusException
-import logging
 
 from app.exception.exception_handler import ControlledException
 from app.exception.exceptions import ErrorCode
 from app.models.parsed_sentence import ParsedSentence
+from app.models.database.database_logger import logger
 
 # .env 환경 변수 추출
 load_dotenv()
@@ -87,7 +87,7 @@ class MilvusDatabase:
                 ],
             )[0]
         except MilvusException:
-            logging.warning(f"\nMilvusException: {field_name}에서 해당 data로 entity 조회 실패. {field_name}로 조회를 생략합니다.\n")
+            logger.warning(f"\nMilvusException: {field_name}에서 해당 data로 entity 조회 실패. {field_name}로 조회를 생략합니다.\n")
             return []
 
     def search_passages(self, ego_id: str, datas: list[int]) -> list[dict]:
@@ -124,7 +124,7 @@ class MilvusDatabase:
                 ],
             )
         except MilvusException:
-            logging.exception(f"""\n
+            logger.exception(f"""\n
             MilvusException: passages에서 해당 ids로 entity 조회 실패
             \n""")
             raise ControlledException(ErrorCode.PASSAGE_NOT_FOUND)

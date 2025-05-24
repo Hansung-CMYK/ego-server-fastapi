@@ -4,7 +4,7 @@ from langchain_core.prompts import ChatPromptTemplate
 
 from app.models.default_model import task_model
 import json
-import logging
+from app.models.diary.diary_logger import logger
 
 class DailyCommentLLM:
     """
@@ -43,17 +43,14 @@ class DailyCommentLLM:
             "result_example":self.__RESULT_EXAMPLE
         }).content.strip()
 
-        # LOG. 시연용 로그
-        logging.info(msg=f"""\n
-        POST: api/v1/diary [한줄 요약 문장 생성]
-        {keywords}
-        \n""")
+        # LOG. 시연용 로그2
+        logger.info(msg=f"\nPOST: api/v1/diary [한줄 요약 문장 생성]\n{keywords}\n")
 
         # 반환된 문자열 dict로 변환
         try:
             return json.loads(diary_string)["result"]
         except json.JSONDecodeError:
-            logging.exception(f"LLM이 일기 한줄 요약을 실패했습니다.")
+            logger.exception(f"LLM이 일기 한줄 요약을 실패했습니다.")
             return ""
 
     __DAILY_TEMPLATE = [

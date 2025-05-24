@@ -4,7 +4,7 @@ from scipy.sparse import csr_matrix
 
 from app.models.parsed_sentence import ParsedSentence
 from app.models.database.milvus_database import milvus_database
-import logging
+from app.services.chat.chat_logger import logger
 
 """
 Graph RAG를 활용하기 위한 서비스
@@ -75,11 +75,8 @@ def get_rag_prompt(ego_id:str, user_message:str)->str:
     # 모든 결과 값을 하나의 문자열로 합친다.
     related_story = "\n".join([f"[{index}]: {text["passage"]}" for index, text in enumerate(related_passages)])
 
-    # LOG. 시연용 로그
-    logging.info(msg=f"""\n
-    POST: api/v1/chat [GraphRAG 조회]
-    {related_story}
-    \n""")
+    # LOG. 시연용 로그2
+    logger.info(msg=f"\nPOST: api/v1/chat [GraphRAG 조회]\n{related_story}\n")
 
     return related_story
 
