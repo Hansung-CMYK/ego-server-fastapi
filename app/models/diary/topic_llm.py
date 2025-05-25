@@ -4,7 +4,7 @@ from textwrap import dedent
 from langchain_core.prompts import ChatPromptTemplate
 
 from app.exception.exceptions import ControlledException, ErrorCode
-from app.models.default_model import task_model
+from app.models.default_model import task_model, DEFAULT_TASK_LLM_TEMPLATE
 from app.logger.logger import logger
 
 class TopicLlm:
@@ -35,7 +35,12 @@ class TopicLlm:
             JSONDecodeError: JSON Decoding 실패 시, 작업 중단
             KeyError: 키 값에  "result"가 존재하지 않는 경우, 작업 중단
         """
-        answer = self.__chain.invoke({"input": "\n".join(chat_rooms), "return_form_example":self.__RETURN_FORM_EXAMPLE, "result_example":self.__RESULT_EXAMPLE}).content
+        answer = self.__chain.invoke({
+            "input": "\n".join(chat_rooms),
+            "return_form_example":self.__RETURN_FORM_EXAMPLE,
+            "result_example":self.__RESULT_EXAMPLE,
+            "default_task_llm_template":DEFAULT_TASK_LLM_TEMPLATE
+        }).content
 
         # LOG. 시연용 로그
         logger.info(msg=f"\n\nPOST: api/v1/diary [일기 생성 LLM]\n{answer}\n")
@@ -49,13 +54,7 @@ class TopicLlm:
         return diary
 
     __DIARY_TEMPLATE = [
-        ("system", dedent("""/no_think
-        You have access to functions. If you decide to invoke any of the function(s),
-        you MUST put it in the format of
-        {"name": function name, "parameters": dictionary of argument name and its value}
-
-        You SHOULD NOT include any other text in the response if you call a function
-        """)),
+        ("system", "/no_think {default_task_llm_template}"),
         ("system", dedent("""
         <PRIMARY_RULE>
         무조건 JSON 형식을 유지해야 합니다.

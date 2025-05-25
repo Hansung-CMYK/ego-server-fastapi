@@ -2,7 +2,7 @@ from textwrap import dedent
 
 from langchain_core.prompts import ChatPromptTemplate
 
-from app.models.default_model import task_model
+from app.models.default_model import task_model, DEFAULT_TASK_LLM_TEMPLATE
 import json
 from app.logger.logger import logger
 
@@ -40,7 +40,8 @@ class DailyCommentLLM:
         diary_string = self.__chain.invoke({ # 한줄평 추출
             "events": events, "feelings": feeling, "keywords":keywords,
             "return_form_example":self.__RETURN_FORM_EXAMPLE,
-            "result_example":self.__RESULT_EXAMPLE
+            "result_example":self.__RESULT_EXAMPLE,
+            "default_task_llm_template":DEFAULT_TASK_LLM_TEMPLATE
         }).content.strip()
 
         # LOG. 시연용 로그
@@ -54,14 +55,7 @@ class DailyCommentLLM:
             return ""
 
     __DAILY_TEMPLATE = [
-        ("system", dedent("""/no_think
-        
-        You have access to functions. If you decide to invoke any of the function(s),
-        you MUST put it in the format of
-        {"name": function name, "parameters": dictionary of argument name and its value}
-
-        You SHOULD NOT include any other text in the response if you call a function
-        """)),
+        ("system", "/no_think {default_task_llm_template}"),
         ("system", dedent("""
         <PRIMARY_RULE>
         무조건 JSON 형식을 유지해야 합니다.

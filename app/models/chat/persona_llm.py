@@ -4,7 +4,7 @@ from langchain_core.prompts import ChatPromptTemplate
 import json
 
 from app.exception.exceptions import ControlledException, ErrorCode
-from app.models.default_model import task_model
+from app.models.default_model import task_model, DEFAULT_TASK_LLM_TEMPLATE
 from app.logger.logger import logger
 
 class PersonaLlm:
@@ -36,7 +36,13 @@ class PersonaLlm:
             JSONDecodeError: JSON Decoding 실패 시, 빈 딕셔너리 반환
         """
         # 페르소나 변경사항
-        answer:str = self.__chain.invoke({"session_history": session_history, "current_persona": user_persona, "return_form": self.__RETURN_FORM_EXAMPLE, "result_example": self.__RESULT_EXAMPLE}).content
+        answer:str = self.__chain.invoke({
+            "session_history": session_history,
+            "current_persona": user_persona,
+            "return_form": self.__RETURN_FORM_EXAMPLE,
+            "result_example": self.__RESULT_EXAMPLE,
+            "default_task_llm_template": DEFAULT_TASK_LLM_TEMPLATE
+        }).content
         clean_answer:str = self.__clean_json_string(text=answer) # 필요없는 문자열 제거
 
         # LOG. 시연용 로그
@@ -65,13 +71,7 @@ class PersonaLlm:
         return text
 
     __PERSONA_TEMPLATE = [
-        ("system", dedent("""/no_think
-        You have access to functions. If you decide to invoke any of the function(s),
-        you MUST put it in the format of
-        {"name": function name, "parameters": dictionary of argument name and its value}
-        
-        You SHOULD NOT include any other text in the response if you call a function
-        """)),
+        ("system", "/no_think {default_task_llm_template}"),
         ("system", dedent("""
         <PRIMARY_RULE>
         무조건 JSON 형식을 유지해야 합니다.

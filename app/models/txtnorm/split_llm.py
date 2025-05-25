@@ -5,7 +5,8 @@ from datetime import datetime
 import json
 
 from app.exception.exceptions import ControlledException, ErrorCode
-from app.models.default_model import task_model
+from app.models.default_model import task_model, DEFAULT_TASK_LLM_TEMPLATE
+
 
 class SplitLlm:
     """
@@ -35,7 +36,12 @@ class SplitLlm:
         Raises:
             JSONDecodeError: JSON Decoding 실패 시, 빈 리스트(`[]`) 반환
         """
-        split_messages_string = self.__chain.invoke({"input": complex_sentence, "datetime": datetime.now().isoformat(), "result_example":self.__RESULT_EXAMPLE}).content.strip()
+        split_messages_string = self.__chain.invoke({
+            "input": complex_sentence,
+            "datetime": datetime.now().isoformat(),
+            "result_example":self.__RESULT_EXAMPLE,
+            "default_task_llm_template": DEFAULT_TASK_LLM_TEMPLATE
+        }).content.strip()
 
         try:
             split_messages = json.loads(split_messages_string)["result"]
@@ -49,13 +55,7 @@ class SplitLlm:
         return split_messages
 
     __SPLIT_TEMPLATE = [
-        ("system", dedent("""/no_think
-        You have access to functions. If you decide to invoke any of the function(s),
-        you MUST put it in the format of
-        {"name": function name, "parameters": dictionary of argument name and its value}
-
-        You SHOULD NOT include any other text in the response if you call a function
-        """)),
+        ("system", "/no_think {default_task_llm_template}"),
         ("system", dedent("""
         <PRIMARY_RULE>
         무조건 JSON 형식을 유지해야 합니다.
