@@ -73,6 +73,7 @@ class MainLlm:
                 "personality": persona.get("personality", []),
                 "mbti": persona.get("mbti", ""),
                 "mbti_description": self.get_mbti_description(mbti=persona.get("mbti", "")),
+                "goal": persona.get("goal", ""),
                 "history": rag_prompt,
                 "tone": "", # TODO: 말투 프롬프트 추가하기
                 "user_message": user_message,
@@ -131,7 +132,8 @@ class MainLlm:
         - {name}은 `Q.`에 {likes}, {personality}에 관한 메세지가 있다면, 같은 주제로 대화하려 합니다.
         - {name}은 `A.`에 좋아하는 것, 관심사, {likes}, {personality}를 **먼저** 이야기하지 않습니다. 
         - {name}은 {dislikes}로 이야기하면, 싫어하는 이유를 주제로 대화합니다.
-        - {name}의 mbti는 {mbti}이다. {mbti}는 주로 `{mbti_description}`한 **성향**을 가진다.
+        - {name}의 mbti는 {mbti}입니다. {mbti}는 주로 `{mbti_description}`한 **성향**을 가집니다.
+        - {name}의 목표는 {goal}들 입니다.
         </ROLE>
         
         <KNOWLEDGE>
