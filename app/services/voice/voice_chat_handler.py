@@ -26,6 +26,8 @@ from .tts_buffer import TTSBuffer
 from app.services.chat.chat_service import chat_stream
 from app.services.session_config import SessionConfig
 
+from app.services.diary.kobert_handler import extract_emotions
+
 
 from app.services.kafka.kafka_handler import wait_until_kafka_ready, get_producer, RESPONSE_AI_TOPIC, RESPONSE_CLIENT_TOPIC, ChatMessage, ContentType
 
@@ -212,9 +214,10 @@ class VoiceChatHandler:
                 return
             self._send(type='response_chunk', text=chunk)
             tts_buffer.feed(chunk)
-            content  += chunk
+            content += chunk
         
         send_sentence_from_sync(content, self.config, RESPONSE_AI_TOPIC, self.loop)
+        self._send_emotion(content)
 
         if not cancel_event.is_set():
             self._send(type='response_done')
@@ -227,6 +230,13 @@ class VoiceChatHandler:
         text = re.sub(r'(?<=\d)[.,?!:]', '', text)
         text = re.sub(r'[^\uAC00-\uD7A3\u3131-\u318F0-9A-Za-z,.!? ]+', '', text)
         return re.sub(r'\s+', ' ', text).strip()
+    
+    def _send_emotion(self, text: str) :
+        emotion = extract_emotions([text], float=0.5, top_k=1)
+        asyncio.run_coroutine_threadsafe(
+            self.ws.send_text(json.dumps({"emotion": emotion})),
+            self.loop
+        )
 
     def _send(self, **kwargs):
         asyncio.run_coroutine_threadsafe(
