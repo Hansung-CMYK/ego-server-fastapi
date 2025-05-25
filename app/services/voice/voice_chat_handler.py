@@ -27,9 +27,11 @@ from app.services.chat.chat_service import chat_stream
 from app.services.session_config import SessionConfig
 
 
-from app.services.kafka.kafka_handler import get_producer, RESPONSE_AI_TOPIC, RESPONSE_CLIENT_TOPIC, ChatMessage, ContentType
+from app.services.kafka.kafka_handler import wait_until_kafka_ready, get_producer, RESPONSE_AI_TOPIC, RESPONSE_CLIENT_TOPIC, ChatMessage, ContentType
 
 async def produce_message(sentence: str, config: SessionConfig, topic: any):
+    await wait_until_kafka_ready() 
+    
     if not sentence.strip():
         return
 
