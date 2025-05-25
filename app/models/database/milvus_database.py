@@ -153,7 +153,8 @@ class MilvusDatabase:
             embedded_speak = parsed_sentence.embedding()
             passage_data = {
                 "passage": parsed_sentence.passage,
-                "embedded_passage": embedded_speak["embedded_passage"]
+                "embedded_passage": embedded_speak["embedded_passage"],
+                "is_fix": False,
             }
 
             # 실제 DB에 저장
@@ -175,7 +176,8 @@ class MilvusDatabase:
                         "relation": parsed_sentence.relations[index],
                         "embedded_subject": embedded_speak["embedded_triplets"][index][0],
                         "embedded_object": embedded_speak["embedded_triplets"][index][1],
-                        "embedded_relation": embedded_speak["embedded_relations"][index]
+                        "embedded_relation": embedded_speak["embedded_relations"][index],
+                        "is_fix": False,
                     }
                 )
 
@@ -217,18 +219,32 @@ class MilvusDatabase:
 
     def reset_collection(self, ego_id: str):
         """
-        collection에 있는 모든 삼중항 정보를 초기화하는 함수 캡스톤 시연에 활용하기 위함이다.
+        요약:
+            collection에 있는 모든 삼중항 정보를 초기화하는 함수 캡스톤 시연에 활용하기 위함이다.
+
+        설명:
+            고정 텍스트가 아닌 채팅 내역을 삭제한다.
+
+        Parameters:
+            ego_id: 삭제될 파티션의 아이디(에고 아이디)
         """
         # id 값이 있는 모든 entity를 제거하는 함수이다.
         self.__milvus_client.delete(
             collection_name="passages",
             partition_name=ego_id,
-            filter="passages_id > 0"
+            filter="is_fix == False"
         )
         self.__milvus_client.delete(
             collection_name="triplets",
             partition_name=ego_id,
-            filter="triplets_id > 0"
+            filter="is_fix == False"
         )
+
+    def delete_partition(self, ego_id: str):
+        """
+        파티션을 삭제하는 함수
+        """
+        self.__milvus_client.release_partitions(collection_name="passages",partition_names=[ego_id])
+        self.__milvus_client.release_partitions(collection_name="triplets",partition_names=[ego_id])
 
 milvus_database = MilvusDatabase()

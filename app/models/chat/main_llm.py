@@ -73,6 +73,7 @@ class MainLlm:
                 "personality": persona.get("personality", []),
                 "mbti": persona.get("mbti", ""),
                 "mbti_description": self.get_mbti_description(mbti=persona.get("mbti", "")),
+                "goal": persona.get("goal", ""),
                 "history": rag_prompt,
                 "tone": "", # TODO: 말투 프롬프트 추가하기
                 "user_message": user_message,
@@ -95,6 +96,22 @@ class MainLlm:
         # save_graphdb()의 구현 로직으로 인한 ai 메세지 공백 추가
         self.__store[session_id].add_ai_message(ai_message)
 
+    def reset_session_history(self, uid:str):
+        """
+        요약:
+            유저가 대화한 모든 채팅방의 기록을 제거한다.
+
+        설명:
+            시연용 대화기록 초기화 함수
+
+        Parameters:
+            uid: 대화기록을 초기화 할 사용자의 아이디
+        """
+        for session_id in self.__store:
+            ego_id, user_id = session_id.split("@")
+            if user_id == uid:
+                self.delete_session_history(session_id)
+
     __MAIN_TEMPLATE = [
         ("system", """/no_think
         You are ALWAYS in-character.
@@ -115,7 +132,8 @@ class MainLlm:
         - {name}은 `Q.`에 {likes}, {personality}에 관한 메세지가 있다면, 같은 주제로 대화하려 합니다.
         - {name}은 `A.`에 좋아하는 것, 관심사, {likes}, {personality}를 **먼저** 이야기하지 않습니다. 
         - {name}은 {dislikes}로 이야기하면, 싫어하는 이유를 주제로 대화합니다.
-        - {name}의 mbti는 {mbti}이다. {mbti}는 주로 `{mbti_description}`한 **성향**을 가진다.
+        - {name}의 mbti는 {mbti}입니다. {mbti}는 주로 `{mbti_description}`한 **성향**을 가집니다.
+        - {name}의 목표는 {goal}들 입니다.
         </ROLE>
         
         <KNOWLEDGE>
