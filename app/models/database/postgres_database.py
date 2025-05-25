@@ -142,4 +142,76 @@ class PostgresDatabase:
             self.__database.rollback()
             raise ControlledException(ErrorCode.FAILURE_TRANSACTION)
 
+    def insert_tone(self, ego_id: str, tone: dict):
+        """
+        요약:
+            말투를 추가하는 함수
+
+        Parameters:
+            ego_id(str): 추가할 에고의 아이디 * BE ego 테이블과 1대1 매핑되어야 한다.
+            tone(dict): 추가할 말투 정보
+        """
+        try:
+            sql = "INSERT INTO tone (ego_id, persona) VALUES (%s, %s)"
+            self.__cursor.execute(sql, (ego_id, json.dumps(tone),))
+            self.__database.commit()
+        except Exception:
+            self.__database.rollback()
+            raise ControlledException(ErrorCode.FAILURE_TRANSACTION)
+
+    def has_tone(self, ego_id: str) -> bool:
+        """
+        요약:
+            tone 테이블에 이미 ego_id가 존재하는지 확인하는 함수
+
+        Parameters:
+            ego_id(str): 존재하는지 확인힐 ego 아이디
+        """
+        try:
+            sql = "SELECT * FROM tone WHERE ego_id = %s"
+            self.__cursor.execute(sql, (ego_id,))
+            result = self.__cursor.fetchall()
+        except Exception:
+            self.__database.rollback()
+            raise ControlledException(ErrorCode.FAILURE_TRANSACTION)
+
+        if len(result) == 0: return False
+        else: return True
+
+    def delete_tone(self, ego_id: str):
+        """
+        모든 데이터를 제거하는 함수
+        """
+        try:
+            sql = "DELETE FROM tone WHERE ego_id = %s"
+            self.__cursor.execute(sql, (ego_id,) )
+            self.__database.commit()
+        except Exception:
+            self.__database.rollback()
+            raise ControlledException(ErrorCode.FAILURE_TRANSACTION)
+
+    def create_tone(self):
+        """
+        tone 테이블을 생성하는 함수
+        """
+        try:
+            sql = "CREATE TABLE tone (ego_id VARCHAR PRIMARY KEY, tone JSON NOT NULL)"
+            self.__cursor.execute(sql)
+            self.__database.commit()
+        except Exception:
+            self.__database.rollback()
+            raise ControlledException(ErrorCode.FAILURE_TRANSACTION)
+
+    def drop_tone(self):
+        """
+        tone 테이블을 제거하는 함수
+        """
+        try:
+            sql = "DROP TABLE tone"
+            self.__cursor.execute(sql)
+            self.__database.commit()
+        except Exception:
+            self.__database.rollback()
+            raise ControlledException(ErrorCode.FAILURE_TRANSACTION)
+
 postgres_database = PostgresDatabase()

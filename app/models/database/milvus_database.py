@@ -240,4 +240,11 @@ class MilvusDatabase:
             filter="is_fix == False"
         )
 
+    def delete_partition(self, ego_id: str):
+        """
+        파티션을 삭제하는 함수
+        """
+        self.__milvus_client.release_partitions(collection_name="passages",partition_names=[ego_id])
+        self.__milvus_client.release_partitions(collection_name="triplets",partition_names=[ego_id])
+
 milvus_database = MilvusDatabase()

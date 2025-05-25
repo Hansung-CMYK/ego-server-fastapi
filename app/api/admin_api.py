@@ -65,7 +65,33 @@ async def reset_ego(user_id:str, ego_id:str, body: AdminRequest)->CommonResponse
 
     return CommonResponse(
         code=200,
-        message="delete success"
+        message="reset ego success"
     )
 
+@router.delete("/ego/{ego_id}")
+async def delete_ego(ego_id: str, body:AdminRequest)->CommonResponse:
+    """
+    요약:
+        방문객이 생성한 에고를 삭제하는 API
+
+    Parameters:
+        ego_id(str): 삭제할 에고의 아이디
+        body(AdminRequest): 관리자 권한 소유 여부 확인
+    """
+    if body.admin_id != ADMIN_ID or body.admin_password != ADMIN_PASSWORD:
+        raise ControlledException(ErrorCode.INVALID_ADMIN_ID)
+
+    # NOTE 1. PostgreSQL persona 테이블 삭제
+    postgres_database.delete_persona(ego_id=ego_id)
+
+    # NOTE 2. PostgreSQL tone 테이블 삭제
+    postgres_database.delete_tone(ego_id=ego_id)
+
+    # NOTE 3. Milvus Partition 삭제
+    milvus_database.delete_partition(ego_id=ego_id)
+
+    return CommonResponse(
+        code=200,
+        message="delete ego success"
+    )
 
