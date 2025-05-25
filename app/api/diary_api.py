@@ -78,7 +78,8 @@ async def create_diary(body: DiaryRequest)->CommonResponse:
 
     # NOTE 4. 감정 분석
     # 일기 내용을 바탕으로 감정을 추출한다.
-    feeling:list[str] = extract_emotions(topics)
+    contents = [topic["content"] for topic in topics]
+    feeling:list[str] = extract_emotions(contents)
     logging.info(msg=f"""\n
     POST: api/v1/diary [감정 분석]
     {keywords}
