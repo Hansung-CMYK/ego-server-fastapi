@@ -29,7 +29,7 @@ async def init_kafka():
         group_id=GROUP_ID,
         session_timeout_ms=SESSION_TIMEOUT_MS,
         max_poll_interval_ms=MAX_POLL_INTERVAL_MS,
-        auto_offset_reset="earliest",
+        auto_offset_reset="latest",
         enable_auto_commit=False,
         value_deserializer=lambda m: json.loads(m.decode("utf-8")),
     )
@@ -38,7 +38,15 @@ async def init_kafka():
         value_serializer=lambda v: json.dumps(v.dict(by_alias=True)).encode("utf-8"),
         key_serializer=lambda k: k.encode("utf-8"),
     )
+    
     await consumer.start()
+
+    while not consumer.assignment():
+        await asyncio.sleep(0.1)
+
+    for tp in consumer.assignment():
+        await consumer.seek_to_end(tp)
+
     await producer.start()
     LOG.info("Kafka initialized")
 
