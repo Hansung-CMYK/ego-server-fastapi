@@ -29,7 +29,7 @@ from app.services.session_config import SessionConfig
 
 from app.services.kafka.kafka_handler import get_producer, RESPONSE_AI_TOPIC, RESPONSE_CLIENT_TOPIC, ChatMessage, ContentType
 
-async def produce_message(sentence: str, config: SessionConfig, topic : any):
+async def produce_message(sentence: str, config: SessionConfig, topic: any):
     if not sentence.strip():
         return
 
@@ -59,12 +59,8 @@ async def produce_message(sentence: str, config: SessionConfig, topic : any):
     except Exception as e:
         logger.exception(f"Kafka produce failed: {e}")
 
-
-from asyncio import get_event_loop
-
-def send_sentence_from_sync(sentence: str, config: SessionConfig):
-    loop = get_event_loop()
-    asyncio.run_coroutine_threadsafe(produce_message(sentence, config), loop)
+def send_sentence_from_sync(sentence: str, config: SessionConfig, topic : any, loop: asyncio.AbstractEventLoop):
+    asyncio.run_coroutine_threadsafe(produce_message(sentence, config, topic), loop)
 
 
 class VoiceChatHandler:
@@ -127,7 +123,7 @@ class VoiceChatHandler:
     def _process_full_sentence(self, full: str):
         self._cancel_current()
         self._send(type='fullSentence', text=full)
-        send_sentence_from_sync(full, self.config, RESPONSE_CLIENT_TOPIC)
+        send_sentence_from_sync(full, self.config, RESPONSE_CLIENT_TOPIC, self.loop)
         self._start_llm_tts(full)
 
     def _cancel_current(self):
@@ -216,7 +212,7 @@ class VoiceChatHandler:
             tts_buffer.feed(chunk)
             content  += chunk
         
-        send_sentence_from_sync(content, self.config, RESPONSE_AI_TOPIC)
+        send_sentence_from_sync(content, self.config, RESPONSE_AI_TOPIC, self.loop)
 
         if not cancel_event.is_set():
             self._send(type='response_done')
