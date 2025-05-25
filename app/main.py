@@ -3,7 +3,7 @@ import sys
 import importlib.util
 
 from fastapi import FastAPI, APIRouter
-from app.api import chat_api, voice_chat_api, fal_api, diary_api, persona_api
+from app.api import chat_api, voice_chat_api, fal_api, diary_api, persona_api, tts_api
 from app.exception.exception_handler import register_exception_handlers
 from app.services.voice.tts_infer import ensure_init, ensure_init_v2
 
@@ -16,22 +16,10 @@ import logging
 logging.basicConfig(level=logging.INFO)
 
 here = os.path.dirname(__file__)
-api_file_path = os.path.abspath(os.path.join(here, "../modules/GPT-SoVITS/api_v2.py"))
-gpt_sovits_root = os.path.dirname(api_file_path)
-gpt_sovits_sub  = os.path.join(gpt_sovits_root, "GPT_SoVITS")
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 GPT_SOVITS_ROOT = os.path.join(BASE_DIR, "modules", "GPT-SoVITS", "GPT_SoVITS", "pretrained_models")
 WEIGHT_PATH = os.path.join(BASE_DIR, "modules", "GPT-SoVITS", "weights")
-
-for path in (gpt_sovits_root, gpt_sovits_sub):
-    if path not in sys.path:
-        sys.path.insert(0, path)
-
-spec = importlib.util.spec_from_file_location("gpt_sovits_api", api_file_path)
-gpt_sovits_api = importlib.util.module_from_spec(spec)
-sys.modules["gpt_sovits_api"] = gpt_sovits_api
-spec.loader.exec_module(gpt_sovits_api)
 
 user_home = os.path.expanduser("~")
 REFER_DIRECTORY = os.path.join(user_home, "refer")
@@ -76,20 +64,12 @@ async def lifespan(app: FastAPI):
     yield
     await on_shutdown()
     
-
 app = FastAPI(lifespan=lifespan)
 
-tts_router = APIRouter(prefix="/tts", tags=["tts"])
-
-for route in gpt_sovits_api.APP.routes:
-    if route.path == "/":
-        continue
-    tts_router.routes.append(route)
 
 register_exception_handlers(app)
 
-app.include_router(tts_router)
-
+app.include_router(tts_api.router, prefix="/api", tags=["tts"])
 app.include_router(chat_api.router, prefix="/api", tags=["admin"])
 app.include_router(chat_api.router, prefix="/api", tags=["chat"])
 app.include_router(voice_chat_api.router, prefix="/api", tags=["voice-chat"])
