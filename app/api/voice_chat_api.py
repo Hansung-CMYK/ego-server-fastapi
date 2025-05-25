@@ -10,11 +10,16 @@ async def websocket_voice_chat(ws: WebSocket):
     user_id = ws.query_params.get("user_id", "anonymous")
     ego_id = ws.query_params.get("ego_id", "anonymous")
     spk = ws.query_params.get("spk", "anonymous")
+    chat_room_id = int(ws.query_params.get("chat_root_id", "anonymous"))
+
     config = SessionConfig(user_id, ego_id)
     config.spk = spk
+    config.chat_room_id = chat_room_id
 
     if config is None:
         raise Exception("spk was None")
+    if chat_room_id is None:
+        raise Exception("chat_room_id was None")
     
     session = session_manager.create_session(ws, config)
 

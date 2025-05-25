@@ -11,12 +11,14 @@ from app.services.kafka.chat_message import ChatMessage, ContentType
 
 LOG = logging.getLogger("kafka-handler")
 
-KAFKA_BOOTSTRAP      = "localhost:9092"
-REQUEST_TOPIC        = "chat-requests"
-RESPONSE_TOPIC       = "chat-responses"
-GROUP_ID             = "fastapi-consumer-group"
-SESSION_TIMEOUT_MS   = 300_000
-MAX_POLL_INTERVAL_MS = 300_000
+KAFKA_BOOTSTRAP         = "localhost:9092"
+REQUEST_TOPIC           = "chat-requests"
+RESPONSE_TOPIC          = "chat-responses"
+RESPONSE_AI_TOPIC       = "chat-ai-responses"
+RESPONSE_CLIENT_TOPIC   = "chat-client-responses"
+GROUP_ID                = "fastapi-consumer-group"
+SESSION_TIMEOUT_MS      = 300_000
+MAX_POLL_INTERVAL_MS    = 300_000
 
 consumer: AIOKafkaConsumer
 producer: AIOKafkaProducer
