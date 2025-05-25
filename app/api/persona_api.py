@@ -67,3 +67,38 @@ async def create_persona(body: PersonaRequest)->CommonResponse:
         code=200,
         message="페르소나를 생성됐습니다!"
     )
+
+class ToneRequest(BaseModel):
+    """
+    요약:
+        /persona/tone POST API를 이용하기 위해서 사용하는 Request Class
+
+    설명:
+        각 Attributes는 필수이다. (not null)
+
+    Attributes:
+        ego_id(str): 말투가 생성 될 ego_id
+        anger(str): 화남
+        anxiety(str): 불안
+        happiness(str): 행복
+        neutrality(str): 평범
+        sadness(str): 슬픔
+    """
+    ego_id: str
+    anger: str
+    anxiety: str
+    happiness: str
+    neutrality: str
+    sadness: str
+
+# NOTE: 말투 저장 API
+@router.post("/tone")
+async def create_tone(body: ToneRequest)->CommonResponse:
+    # NOTE 1. 말투가 이미 존재하는지 확인한다.
+
+    # NOTE 2. PostgreSQL에 저장한다.
+
+    return CommonResponse(
+        code=200,
+        message="말투를 생성하였습니다."
+    )

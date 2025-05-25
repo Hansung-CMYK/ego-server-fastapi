@@ -26,6 +26,12 @@ class AdminRequest(BaseModel):
     admin_id: str
     admin_password: str
 
+# NOTE: 카리나 에고를 초기화 하는 API
+# NOTE 1| milvus_db의 파티션에 있는 정보들을 초기화한다. (아니면 column을 하나 더 추가하여 필터링 하게 만들기)
+# NOTE 2| postgres의 페르소나 정보들을 삭제한다.
+# NOTE 3| postgres의 페르소나 정보들을 불러온다.
+# NOTE 4| 세션 메모리 기록을 삭제한다. (loop 돌면서 user_id 전부 검사)
+# NOTE 5| 메모리 기록을 복구한다. TODO 결정할 것: 기존 내용 넣기 or 그냥 안넣기
 @router.post("/reset/{ego_id}")
 async def reset_ego(ego_id:str, body: AdminRequest)->CommonResponse:
     """
@@ -48,4 +54,5 @@ async def reset_ego(ego_id:str, body: AdminRequest)->CommonResponse:
         code=200,
         message="delete success"
     )
+
 
