@@ -11,18 +11,30 @@ from app.services.kafka.chat_message import ChatMessage, ContentType
 
 LOG = logging.getLogger("kafka-handler")
 
-KAFKA_BOOTSTRAP      = "localhost:9092"
-REQUEST_TOPIC        = "chat-requests"
-RESPONSE_TOPIC       = "chat-responses"
-GROUP_ID             = "fastapi-consumer-group"
-SESSION_TIMEOUT_MS   = 300_000
-MAX_POLL_INTERVAL_MS = 300_000
+KAFKA_BOOTSTRAP         = "localhost:9092"
+REQUEST_TOPIC           = "chat-requests"
+RESPONSE_TOPIC          = "chat-responses"
+RESPONSE_AI_TOPIC       = "chat-ai-responses"
+RESPONSE_CLIENT_TOPIC   = "chat-client-responses"
+GROUP_ID                = "fastapi-consumer-group"
+SESSION_TIMEOUT_MS      = 300_000
+MAX_POLL_INTERVAL_MS    = 300_000
 
-consumer: AIOKafkaConsumer
-producer: AIOKafkaProducer
+consumer: AIOKafkaConsumer = None
+_producer: AIOKafkaProducer = None
+
+
+import asyncio
+
+_kafka_ready = asyncio.Event()
+
+def get_producer() -> AIOKafkaProducer:
+    if _producer is None:
+        raise RuntimeError("Kafka producer is not initialized. Call init_kafka() first.")
+    return _producer
 
 async def init_kafka():
-    global consumer, producer
+    global consumer, _producer
     consumer = AIOKafkaConsumer(
         REQUEST_TOPIC,
         bootstrap_servers=KAFKA_BOOTSTRAP,
@@ -33,7 +45,7 @@ async def init_kafka():
         enable_auto_commit=False,
         value_deserializer=lambda m: json.loads(m.decode("utf-8")),
     )
-    producer = AIOKafkaProducer(
+    _producer = AIOKafkaProducer(
         bootstrap_servers=KAFKA_BOOTSTRAP,
         value_serializer=lambda v: json.dumps(v.dict(by_alias=True)).encode("utf-8"),
         key_serializer=lambda k: k.encode("utf-8"),
@@ -47,12 +59,18 @@ async def init_kafka():
     for tp in consumer.assignment():
         await consumer.seek_to_end(tp)
 
-    await producer.start()
+    await _producer.start()
+    _kafka_ready.set()
     LOG.info("Kafka initialized")
+
+
+async def wait_until_kafka_ready():
+    await _kafka_ready.wait()
+
 
 async def shutdown_kafka():
     await consumer.stop()
-    await producer.stop()
+    await _producer.stop()
     LOG.info("Kafka shutdown complete")
 
 async def consume_loop():
@@ -87,7 +105,7 @@ async def handle_message(msg):
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(None, to_response_message, message)
 
-        await producer.send_and_wait(
+        await _producer.send_and_wait(
             RESPONSE_TOPIC,
             key=message.from_,
             value=result,

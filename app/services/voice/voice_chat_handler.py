@@ -26,6 +26,45 @@ from .tts_buffer import TTSBuffer
 from app.services.chat.chat_service import chat_stream
 from app.services.session_config import SessionConfig
 
+
+from app.services.kafka.kafka_handler import wait_until_kafka_ready, get_producer, RESPONSE_AI_TOPIC, RESPONSE_CLIENT_TOPIC, ChatMessage, ContentType
+
+async def produce_message(sentence: str, config: SessionConfig, topic: any):
+    await wait_until_kafka_ready() 
+    
+    if not sentence.strip():
+        return
+
+    message = ChatMessage(
+        chatRoomId=config.chat_room_id,
+        from_=config.user_id,       # STT 결과: 사용자
+        to=config.ego_id,       
+        content=sentence,
+        contentType=ContentType.TEXT,
+        mcpEnabled=False
+    ) if topic == RESPONSE_CLIENT_TOPIC else ChatMessage(
+        chatRoomId=config.chat_room_id,
+        from_=config.ego_id,       # TTS 결과: AI
+        to=config.user_id,         
+        content=sentence,
+        contentType=ContentType.TEXT,
+        mcpEnabled=False
+    ) 
+
+    try:
+        producer = get_producer()
+        await producer.send_and_wait(
+            topic,
+            key=message.from_,
+            value=message,
+        )
+    except Exception as e:
+        logger.exception(f"Kafka produce failed: {e}")
+
+def send_sentence_from_sync(sentence: str, config: SessionConfig, topic : any, loop: asyncio.AbstractEventLoop):
+    asyncio.run_coroutine_threadsafe(produce_message(sentence, config, topic), loop)
+
+
 class VoiceChatHandler:
     def __init__(self, websocket, config: SessionConfig):
         self.id = str(uuid.uuid4())
@@ -86,6 +125,7 @@ class VoiceChatHandler:
     def _process_full_sentence(self, full: str):
         self._cancel_current()
         self._send(type='fullSentence', text=full)
+        send_sentence_from_sync(full, self.config, RESPONSE_CLIENT_TOPIC, self.loop)
         self._start_llm_tts(full)
 
     def _cancel_current(self):
@@ -165,12 +205,16 @@ class VoiceChatHandler:
             }
             self._send_payload(payload)
 
+        content = ""
         tts_buffer = TTSBuffer(send_tts)
         for chunk in chat_stream(prompt, self.config):
             if cancel_event.is_set():
                 return
             self._send(type='response_chunk', text=chunk)
             tts_buffer.feed(chunk)
+            content  += chunk
+        
+        send_sentence_from_sync(content, self.config, RESPONSE_AI_TOPIC, self.loop)
 
         if not cancel_event.is_set():
             self._send(type='response_done')
