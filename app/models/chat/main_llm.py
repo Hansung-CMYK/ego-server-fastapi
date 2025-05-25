@@ -95,6 +95,22 @@ class MainLlm:
         # save_graphdb()의 구현 로직으로 인한 ai 메세지 공백 추가
         self.__store[session_id].add_ai_message(ai_message)
 
+    def reset_session_history(self, uid:str):
+        """
+        요약:
+            유저가 대화한 모든 채팅방의 기록을 제거한다.
+
+        설명:
+            시연용 대화기록 초기화 함수
+
+        Parameters:
+            uid: 대화기록을 초기화 할 사용자의 아이디
+        """
+        for session_id in self.__store:
+            ego_id, user_id = session_id.split("@")
+            if user_id == uid:
+                self.delete_session_history(session_id)
+
     __MAIN_TEMPLATE = [
         ("system", """/no_think
         You are ALWAYS in-character.
