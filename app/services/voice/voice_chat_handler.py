@@ -27,7 +27,7 @@ from app.services.chat.chat_service import chat_stream
 from app.services.session_config import SessionConfig
 
 
-from app.services.kafka.kafka_handler import producer, RESPONSE_AI_TOPIC, RESPONSE_CLIENT_TOPIC, ChatMessage, ContentType
+from app.services.kafka.kafka_handler import get_producer, RESPONSE_AI_TOPIC, RESPONSE_CLIENT_TOPIC, ChatMessage, ContentType
 
 async def produce_message(sentence: str, config: SessionConfig, topic : any):
     if not sentence.strip():
@@ -50,6 +50,7 @@ async def produce_message(sentence: str, config: SessionConfig, topic : any):
     ) 
 
     try:
+        producer = get_producer()
         await producer.send_and_wait(
             topic,
             key=message.from_,

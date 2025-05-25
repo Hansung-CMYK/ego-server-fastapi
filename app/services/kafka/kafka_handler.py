@@ -20,8 +20,13 @@ GROUP_ID                = "fastapi-consumer-group"
 SESSION_TIMEOUT_MS      = 300_000
 MAX_POLL_INTERVAL_MS    = 300_000
 
-consumer: AIOKafkaConsumer
-producer: AIOKafkaProducer
+consumer: AIOKafkaConsumer = None
+_producer: AIOKafkaProducer = None
+
+def get_producer() -> AIOKafkaProducer:
+    if _producer is None:
+        raise RuntimeError("Kafka producer is not initialized. Call init_kafka() first.")
+    return _producer
 
 async def init_kafka():
     global consumer, producer
