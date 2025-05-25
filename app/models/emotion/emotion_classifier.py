@@ -1,4 +1,6 @@
 from transformers import ElectraTokenizer, ElectraConfig
+
+from app.exception.exceptions import ControlledException, ErrorCode
 from app.models.emotion.model import ElectraForMultiLabelClassification
 from app.models.emotion.multilabel_pipeline import MultiLabelPipeline
 
@@ -51,3 +53,43 @@ class EmotionClassifier:
             for item in doc
             for label, score in zip(item["labels"], item["scores"])
         ]
+
+    @staticmethod
+    def mapper(relation:list[tuple]):
+        """
+            요약:
+                각 감정의 BE.relationship ID를 매핑해서 반환하는 함수
+
+            Parameters:
+                relation(str): 도출된 감정
+            """
+        if relation == "존경": return 1
+        elif relation == "감탄": return 2
+        elif relation == "호감": return 3
+        elif relation == "애정": return 4
+        elif relation == "신뢰": return 5
+        elif relation == "친근감": return 6
+        elif relation == "연민":return 7
+        elif relation == "위로": return 8
+        elif relation == "격려": return 9
+        elif relation == "감사": return 10
+        elif relation == "지원": return 11
+        elif relation == "희망": return 12
+        elif relation == "분노": return 13
+        elif relation == "경멸": return 14
+        elif relation == "짜증": return 15
+        elif relation == "질투": return 16
+        elif relation == "실망": return 17
+        elif relation == "불안": return 18
+        elif relation == "무관심": return 19
+        elif relation == "놀람": return 20
+        elif relation == "호기심(긍정)": return 21
+        elif relation == "호기심(부정)": return 22
+        elif relation == "흥미": return 23
+        elif relation == "흥분": return 24
+        elif relation == "슬픔(연민)": return 25
+        elif relation == "억울함": return 26
+        elif relation == "경계심": return 27
+        elif relation == "공감": return 28
+        else:
+            raise ControlledException(ErrorCode.INVALID_RELATIONSHIP)

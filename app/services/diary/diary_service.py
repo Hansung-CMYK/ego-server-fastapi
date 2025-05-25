@@ -84,9 +84,9 @@ def save_relation(user_id:str, chat_room:str, target_date:date):
         target_date(date): 대화를 기록할 날짜
     """
     ego_id = chat_room.split('@')[1].split(':')[0]
-
+    # [('억울함', 0.8254460692405701)]
     relation = EmotionClassifier().predict(texts="\n".join(chat_room))
-    relationship_id = relationship_id_mapper(relation=relation)
+    relationship_id = EmotionClassifier().mapper(relation=relation[0][0])
 
     # LOG. 시연용 로그
     logger.info(msg=f"\n\nPOST: api/v1/diary [에고 관계]\n{relation}\n""")
@@ -145,40 +145,3 @@ def save_tags(ego_id:str, stories:list[str]):
     patch_tags(ego_id=ego_id, tags=tags)
     logger.info("save_tags success!")
 
-def relationship_id_mapper(relation: str)->int:
-    """
-    요약:
-        각 감정의 BE.relationship ID를 매핑해서 반환하는 함수
-
-    Parameters:
-        relation(str): 도출된 감정
-    """
-    if relation == "admiration": return 1      # 감탄, 존경
-    elif relation == "amusement": return 2     # 즐거움, 재미
-    elif relation == "anger": return 3         # 분노
-    elif relation == "annoyance": return 4     # 짜증
-    elif relation == "approval": return 5      # 승인, 호의
-    elif relation == "caring": return 6        # 보살핌
-    elif relation == "confusion": return 7     # 혼란
-    elif relation == "curiosity": return 8     # 호기심
-    elif relation == "desire": return 9        # 욕망, 바람
-    elif relation == "disappointment": return 10  # 실망
-    elif relation == "disapproval": return 11  # 반감, 비판
-    elif relation == "disgust": return 12      # 혐오
-    elif relation == "embarrassment": return 13  # 당황, 민망
-    elif relation == "excitement": return 14   # 흥분, 들뜸
-    elif relation == "fear": return 15         # 두려움
-    elif relation == "gratitude": return 16    # 감사
-    elif relation == "grief": return 17        # 슬픔, 비탄
-    elif relation == "joy": return 18          # 기쁨
-    elif relation == "love": return 19         # 사랑
-    elif relation == "nervousness": return 20  # 긴장
-    elif relation == "optimism": return 21     # 낙관
-    elif relation == "pride": return 22        # 자부심
-    elif relation == "realization": return 23  # 깨달음
-    elif relation == "relief": return 24       # 안도
-    elif relation == "remorse": return 25      # 후회
-    elif relation == "sadness": return 26      # 슬픔
-    elif relation == "surprise": return 27     # 놀람
-    elif relation == "neutral": return 28      # 중립
-    else: raise ControlledException(ErrorCode.INVALID_RELATIONSHIP)
