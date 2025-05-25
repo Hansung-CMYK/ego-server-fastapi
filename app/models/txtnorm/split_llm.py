@@ -49,10 +49,13 @@ class SplitLlm:
         return split_messages
 
     __SPLIT_TEMPLATE = [
-        ("system", """
-        /json
-        /no_think
-        """),
+        ("system", dedent("""/no_think
+        You have access to functions. If you decide to invoke any of the function(s),
+        you MUST put it in the format of
+        {"name": function name, "parameters": dictionary of argument name and its value}
+
+        You SHOULD NOT include any other text in the response if you call a function
+        """)),
         ("system", dedent("""
         <PRIMARY_RULE>
         무조건 JSON 형식을 유지해야 합니다.

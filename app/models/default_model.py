@@ -28,11 +28,12 @@ chat_model = ChatOllama( # MainLlm
     TopicLlm: 일기의 주제를 추출하고, 그에 대한 이야기를 서술하는 모델이다. 
         - json으로 사용안하도록. 위험도가 있음
 """
-task_model = ChatOllama(
-    model="qwen3:8b",
-    temperature=0.0,
-    format="json"
-)
+# task_model = ChatOllama(
+#     model="qwen3:8b",
+#     temperature=0.0,
+#     format="json"
+# )
+task_model = chat_model
 
 """
 기타 모델
