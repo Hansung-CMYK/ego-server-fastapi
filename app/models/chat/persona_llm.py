@@ -4,7 +4,7 @@ from langchain_core.prompts import ChatPromptTemplate
 import json
 
 from app.exception.exceptions import ControlledException, ErrorCode
-from app.models.default_model import task_model, DEFAULT_TASK_LLM_TEMPLATE
+from app.models.default_model import task_model, DEFAULT_TASK_LLM_TEMPLATE, clean_json_string
 from app.logger.logger import logger
 
 class PersonaLlm:
@@ -43,32 +43,16 @@ class PersonaLlm:
             "result_example": self.__RESULT_EXAMPLE,
             "default_task_llm_template": DEFAULT_TASK_LLM_TEMPLATE
         }).content
-        clean_answer:str = self.__clean_json_string(text=answer) # 필요없는 문자열 제거
+        clean_answer:str = clean_json_string(text=answer) # 필요없는 문자열 제거
 
         # LOG. 시연용 로그
         logger.info(msg=f"\n\nPOST: api/v1/diary [페르소나 변경사항]\n{clean_answer}\n")
 
-        # dict로 자료형 변경
+        # 반환된 문자열 dict로 변환
         try:
             return json.loads(clean_answer)
         except JSONDecodeError:
             raise ControlledException(ErrorCode.FAILURE_JSON_PARSING)
-
-    @staticmethod
-    def __clean_json_string(text: str) -> str:
-        """
-        요약:
-            LLM이 출력한 문자열에서 \```json 및 \``` 마커를 제거하고 공백을 정리한다.
-
-        Parameters:
-            text(str): 정제할 텍스트
-        """
-        text = text.strip()
-        if text.startswith("```json"):
-            text = text[len("```json"):].strip()
-        if text.endswith("```"):
-            text = text[:-3].strip()
-        return text
 
     __PERSONA_TEMPLATE = [
         ("system", "/no_think {default_task_llm_template}"),

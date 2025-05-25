@@ -44,3 +44,18 @@ You SHOULD NOT include any other text in the response if you call a function
 kiwi = Kiwi() # 형태소 분석기(명사만 남기기 위함)
 sentence_transformer = SentenceTransformer("snunlp/KR-SBERT-V40K-klueNLI-augSTS")
 keyword_model = KeyBERT(sentence_transformer) # 한국어 SBERT
+
+def clean_json_string(text: str) -> str:
+    """
+    요약:
+        LLM이 출력한 문자열에서 \```json 및 \``` 마커를 제거하고 공백을 정리한다.
+
+    Parameters:
+        text(str): 정제할 텍스트
+    """
+    text = text.strip()
+    if text.startswith("```json"):
+        text = text[len("```json"):].strip()
+    if text.endswith("```"):
+        text = text[:-3].strip()
+    return text
