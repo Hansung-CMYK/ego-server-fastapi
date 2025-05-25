@@ -9,8 +9,6 @@ from sentence_transformers import SentenceTransformer
 
 설명:
     MainLLM: 사용자에게 에고를 투영하여 알맞은 답변을 제공하는 모델이다.
-    PreferenceModel: 관계 분석 
-        - 파인 튜닝 예정
 """
 chat_model = ChatOllama( # MainLlm
     model="gemma3:12b",
@@ -28,11 +26,15 @@ chat_model = ChatOllama( # MainLlm
     TopicLlm: 일기의 주제를 추출하고, 그에 대한 이야기를 서술하는 모델이다. 
         - json으로 사용안하도록. 위험도가 있음
 """
-task_model = ChatOllama(
-    model="qwen3:8b",
-    temperature=0.0,
-    format="json"
-)
+task_model = chat_model
+
+DEFAULT_TASK_LLM_TEMPLATE = """
+You have access to functions. If you decide to invoke any of the function(s),
+you MUST put it in the format of
+{"name": function name, "parameters": dictionary of argument name and its value}
+
+You SHOULD NOT include any other text in the response if you call a function
+"""
 
 """
 기타 모델
@@ -40,3 +42,18 @@ task_model = ChatOllama(
 kiwi = Kiwi() # 형태소 분석기(명사만 남기기 위함)
 sentence_transformer = SentenceTransformer("snunlp/KR-SBERT-V40K-klueNLI-augSTS")
 keyword_model = KeyBERT(sentence_transformer) # 한국어 SBERT
+
+def clean_json_string(text: str) -> str:
+    """
+    요약:
+        LLM이 출력한 문자열에서 \```json 및 \``` 마커를 제거하고 공백을 정리한다.
+
+    Parameters:
+        text(str): 정제할 텍스트
+    """
+    text = text.strip()
+    if text.startswith("```json"):
+        text = text[len("```json"):].strip()
+    if text.endswith("```"):
+        text = text[:-3].strip()
+    return text

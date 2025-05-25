@@ -2,7 +2,7 @@ from textwrap import dedent
 
 from langchain_core.prompts import ChatPromptTemplate
 
-from app.models.default_model import task_model
+from app.models.default_model import task_model, DEFAULT_TASK_LLM_TEMPLATE, clean_json_string
 import json
 from app.logger.logger import logger
 
@@ -37,24 +37,26 @@ class DailyCommentLLM:
         """
         events = [diary["title"] for diary in diaries] # 일기에서 제목(주제)를 정제한다.
 
-        diary_string = self.__chain.invoke({ # 한줄평 추출
+        answer = self.__chain.invoke({ # 한줄평 추출
             "events": events, "feelings": feeling, "keywords":keywords,
             "return_form_example":self.__RETURN_FORM_EXAMPLE,
-            "result_example":self.__RESULT_EXAMPLE
-        }).content.strip()
+            "result_example":self.__RESULT_EXAMPLE,
+            "default_task_llm_template":DEFAULT_TASK_LLM_TEMPLATE
+        }).content
+        clean_answer: str = clean_json_string(text=answer)  # 필요없는 문자열 제거
 
         # LOG. 시연용 로그
-        logger.info(msg=f"\n\nPOST: api/v1/diary [한줄 요약 문장 생성]\n{keywords}\n")
+        logger.info(msg=f"\n\nPOST: api/v1/diary [한줄 요약 문장 생성]\n{clean_answer}\n")
 
         # 반환된 문자열 dict로 변환
         try:
-            return json.loads(diary_string)["result"]
+            return json.loads(clean_answer)["result"]
         except json.JSONDecodeError:
             logger.exception(f"\n\nLLM이 일기 한줄 요약을 실패했습니다.\n")
             return ""
 
     __DAILY_TEMPLATE = [
-        ("system", "/no_think"),
+        ("system", "/no_think {default_task_llm_template}"),
         ("system", dedent("""
         <PRIMARY_RULE>
         무조건 JSON 형식을 유지해야 합니다.

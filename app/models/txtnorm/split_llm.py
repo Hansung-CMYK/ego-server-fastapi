@@ -5,7 +5,8 @@ from datetime import datetime
 import json
 
 from app.exception.exceptions import ControlledException, ErrorCode
-from app.models.default_model import task_model
+from app.models.default_model import task_model, DEFAULT_TASK_LLM_TEMPLATE, clean_json_string
+from app.logger.logger import logger
 
 class SplitLlm:
     """
@@ -35,10 +36,16 @@ class SplitLlm:
         Raises:
             JSONDecodeError: JSON Decoding 실패 시, 빈 리스트(`[]`) 반환
         """
-        split_messages_string = self.__chain.invoke({"input": complex_sentence, "datetime": datetime.now().isoformat(), "result_example":self.__RESULT_EXAMPLE}).content.strip()
+        answer = self.__chain.invoke({
+            "input": complex_sentence,
+            "datetime": datetime.now().isoformat(),
+            "result_example":self.__RESULT_EXAMPLE,
+            "default_task_llm_template": DEFAULT_TASK_LLM_TEMPLATE
+        }).content
+        clean_answer: str = clean_json_string(text=answer)  # 필요없는 문자열 제거
 
         try:
-            split_messages = json.loads(split_messages_string)["result"]
+            split_messages = json.loads(clean_answer)["result"]
         except json.JSONDecodeError:
             raise ControlledException(ErrorCode.FAILURE_SPLIT_MESSAGE)
 
@@ -46,13 +53,13 @@ class SplitLlm:
         if len(split_messages) == 0:
             raise ControlledException(ErrorCode.FAILURE_SPLIT_MESSAGE)
 
+        # LOG. 시연용 로그
+        logger.info(msg=f"\n\nPOST: api/v1/chat [단일 문장 분리 성공]\n")
+
         return split_messages
 
     __SPLIT_TEMPLATE = [
-        ("system", """
-        /json
-        /no_think
-        """),
+        ("system", "/no_think {default_task_llm_template}"),
         ("system", dedent("""
         <PRIMARY_RULE>
         무조건 JSON 형식을 유지해야 합니다.

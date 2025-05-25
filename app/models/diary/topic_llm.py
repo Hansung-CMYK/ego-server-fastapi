@@ -4,7 +4,7 @@ from textwrap import dedent
 from langchain_core.prompts import ChatPromptTemplate
 
 from app.exception.exceptions import ControlledException, ErrorCode
-from app.models.default_model import task_model
+from app.models.default_model import task_model, DEFAULT_TASK_LLM_TEMPLATE, clean_json_string
 from app.logger.logger import logger
 
 class TopicLlm:
@@ -35,21 +35,27 @@ class TopicLlm:
             JSONDecodeError: JSON Decoding 실패 시, 작업 중단
             KeyError: 키 값에  "result"가 존재하지 않는 경우, 작업 중단
         """
-        answer = self.__chain.invoke({"input": "\n".join(chat_rooms), "return_form_example":self.__RETURN_FORM_EXAMPLE, "result_example":self.__RESULT_EXAMPLE}).content
+        answer = self.__chain.invoke({
+            "input": "\n".join(chat_rooms),
+            "return_form_example":self.__RETURN_FORM_EXAMPLE,
+            "result_example":self.__RESULT_EXAMPLE,
+            "default_task_llm_template":DEFAULT_TASK_LLM_TEMPLATE
+        }).content
+        clean_answer: str = clean_json_string(text=answer)  # 필요없는 문자열 제거
 
         # LOG. 시연용 로그
-        logger.info(msg=f"\n\nPOST: api/v1/diary [일기 생성 LLM]\n{answer}\n")
+        logger.info(msg=f"\n\nPOST: api/v1/diary [일기 생성 LLM]\n{clean_answer}\n")
 
+        # 반환된 문자열 dict로 변환
         try:
-            diary = json.loads(answer)["result"]
+            return json.loads(clean_answer)["result"]
         except json.JSONDecodeError:
             raise ControlledException(ErrorCode.FAILURE_JSON_PARSING)
         except KeyError:
             raise ControlledException(ErrorCode.INVALID_DATA_TYPE)
-        return diary
 
     __DIARY_TEMPLATE = [
-        ("system", "/no_think"),
+        ("system", "/no_think {default_task_llm_template}"),
         ("system", dedent("""
         <PRIMARY_RULE>
         무조건 JSON 형식을 유지해야 합니다.
