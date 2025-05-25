@@ -165,6 +165,7 @@ class VoiceChatHandler:
                     "prompt_lang": speaker.default_refer.lang,
                     "sample_steps": 16,
                     "speed_factor": 1.0,
+                    "sample_steps": 4
                 })
 
                 for sr, chunk in gen:

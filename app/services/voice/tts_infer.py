@@ -83,7 +83,7 @@ async def ensure_init_v2(
     from GPT_SoVITS.TTS_infer_pack.TTS import TTS, TTS_Config
 
     custom_config = {
-        "version": "v2",
+        "version": "v4",
         "device": str(device),
         "is_half": is_half,
         "t2s_weights_path": gpt_path,
