@@ -9,17 +9,10 @@ import re
 import base64
 import emoji
 import logging
-import torch
 import numpy as np
-import torchaudio
 import time
 
 logger = logging.getLogger(__name__)
-
-silero_model, silero_utils = torch.hub.load(
-    'snakers4/silero-vad', 'silero_vad', force_reload=False
-)
-(get_speech_timestamps, _, read_audio, *_ ) = silero_utils
 
 REALTIME_STT_PATH = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "../../../modules/RealtimeSTT")
@@ -32,23 +25,6 @@ from app.util.audio_utils import decode_and_resample
 from .tts_buffer import TTSBuffer
 from app.services.chat.chat_service import chat_stream
 from app.services.session_config import SessionConfig
-
-CHAR_TO_SEC = 0.05
-TIMEOUT_MARGIN = 5
-
-def speech_ratio(pcm: bytes, sample_rate: int = 24000) -> float:
-    samples = np.frombuffer(pcm, dtype=np.int16).astype(np.float32) / 32768.0
-    tensor = torch.from_numpy(samples)
-    sr = sample_rate
-    if sr != 16000:
-        tensor = tensor.unsqueeze(0)
-        tensor = torchaudio.transforms.Resample(orig_freq=sr, new_freq=16000)(tensor).squeeze(0)
-        sr = 16000
-    timestamps = get_speech_timestamps(tensor, silero_model, sampling_rate=sr)
-    if not timestamps:
-        return 0.0
-    voiced = sum(item['end'] - item['start'] for item in timestamps)
-    return voiced / tensor.shape[0]
 
 class VoiceChatHandler:
     def __init__(self, websocket, config: SessionConfig):
@@ -138,66 +114,39 @@ class VoiceChatHandler:
             if not clean:
                 return
 
-            expected_time = len(clean) * CHAR_TO_SEC
-            timeout = expected_time * TIMEOUT_MARGIN
-
-            retries = 0
             final_pcm = None
             sr_of_final = None
 
             logger.warning(clean)
-            while retries <= self.max_retries:
-                start_time = time.monotonic()
-                pcm = bytearray()
+            start_time = time.monotonic()
+            pcm = bytearray()
 
-                from app.services.voice.tts_model_registry import get_tts_pipeline
-                import gpt_sovits_api
+            from app.services.voice.tts_model_registry import get_tts_pipeline
+            import gpt_sovits_api
 
-                speaker = gpt_sovits_api.speaker_list.get(self.config.spk)
-                tts_pipe = get_tts_pipeline(self.config.spk)
-                tts_pipe.set_ref_audio(speaker.default_refer.path)
+            speaker = gpt_sovits_api.speaker_list.get(self.config.spk)
+            tts_pipe = get_tts_pipeline(self.config.spk)
+            tts_pipe.set_ref_audio(speaker.default_refer.path)
 
-                gen = tts_pipe.run({
-                    "text": clean,
-                    "text_lang": "ko",
-                    "ref_audio_path": speaker.default_refer.path,
-                    "prompt_text": speaker.default_refer.text,
-                    "prompt_lang": speaker.default_refer.lang,
-                    "sample_steps": 16,
-                    "speed_factor": 1.0,
-                    "sample_steps": 4
-                })
+            gen = tts_pipe.run({
+                "text": clean,
+                "text_lang": "ko",
+                "ref_audio_path": speaker.default_refer.path,
+                "prompt_text": speaker.default_refer.text,
+                "prompt_lang": speaker.default_refer.lang,
+                "sample_steps": 16,
+                "speed_factor": 1.0,
+                "sample_steps": 4
+            })
 
-                for sr, chunk in gen:
-                    sr_of_final = sr
-                    if cancel_event.is_set():
-                        return
-                    pcm.extend(chunk)
-                    elapsed = time.monotonic() - start_time
-                    if elapsed > timeout:
-                        logger.error(
-                            "Timeout mid-generation idx %d after %.2f>%.2fsec, retry %d/%d",
-                            tts_index, elapsed, timeout, retries+1, self.max_retries
-                        )
-                        break
-                else:
-                    elapsed = time.monotonic() - start_time
-                    ratio = speech_ratio(pcm, self.sample_rate)
-                    if elapsed <= timeout and ratio >= self.vad_threshold:
-                        final_pcm = pcm
-                        break
-                    logger.error(
-                        "Retry idx %d: elapsed=%.2fsec, voiced_ratio=%.2f",
-                        tts_index, elapsed, ratio
-                    )
-                break
-                retries += 1
+            for sr, chunk in gen:
+                sr_of_final = sr
+                if cancel_event.is_set():
+                    return
+                pcm.extend(chunk)
+                elapsed = time.monotonic() - start_time
 
             if final_pcm is None:
-                logger.error(
-                    "Failed to generate valid TTS for idx %d after %d retries",
-                    tts_index, self.max_retries
-                )
                 final_pcm = pcm
 
             from io import BytesIO
@@ -215,7 +164,6 @@ class VoiceChatHandler:
                 "audio_base64": base64.b64encode(wav_bytes).decode("ascii")
             }
             self._send_payload(payload)
-            tts_index += 1
 
         tts_buffer = TTSBuffer(send_tts)
         for chunk in chat_stream(prompt, self.config):
