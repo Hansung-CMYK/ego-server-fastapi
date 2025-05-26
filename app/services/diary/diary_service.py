@@ -13,7 +13,6 @@ from dotenv import load_dotenv
 
 from app.services.diary.tag_service import search_tags
 
-load_dotenv()
 SPRING_URI = os.getenv('SPRING_URI')
 
 def get_all_chat(user_id: str, target_date: date):

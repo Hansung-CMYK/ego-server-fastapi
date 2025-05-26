@@ -5,7 +5,6 @@ from dotenv import load_dotenv
 mp.set_start_method('fork', force=True)
 import subprocess
 import os
-import re
 
 def get_free_gpu():
     try:

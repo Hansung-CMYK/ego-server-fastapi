@@ -1,5 +1,6 @@
 import os
 
+from dotenv import load_dotenv
 from fastapi import APIRouter
 from pydantic import BaseModel
 
@@ -9,6 +10,8 @@ from app.models.database.milvus_database import milvus_database
 from app.models.database.postgres_database import postgres_database
 from app.services.chat.persona_store import KARINA_PERSONA, MYEONGJUN_PERSONA
 from app.models.chat.main_llm import main_llm
+
+load_dotenv()
 
 router = APIRouter(prefix="/admin")
 

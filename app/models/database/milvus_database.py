@@ -10,7 +10,6 @@ from app.models.parsed_sentence import ParsedSentence
 from app.logger.logger import logger
 
 # .env 환경 변수 추출
-load_dotenv()
 MILVUS_URI = os.getenv('MILVUS_URI')
 
 class MilvusDatabase:

@@ -1,12 +1,17 @@
+import os
 from collections import defaultdict
 from textwrap import dedent
 
+from dotenv import load_dotenv
 from langchain_core.chat_history import BaseChatMessageHistory
 from langchain_community.chat_message_histories import ChatMessageHistory
 from langchain_core.runnables import RunnableWithMessageHistory
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 
 from app.models.default_model import chat_model
+
+load_dotenv()
+MAIN_LLM = os.getenv("MAIN_LLM")
 
 class MainLlm:
     """
@@ -74,7 +79,7 @@ class MainLlm:
                 "mbti": persona.get("mbti", ""),
                 "mbti_description": self.get_mbti_description(mbti=persona.get("mbti", "")),
                 "goal": persona.get("goal", ""),
-                "history": rag_prompt,
+                "rag_prompt": rag_prompt,
                 "tone": "", # TODO: 말투 프롬프트 추가하기
                 "user_message": user_message,
             },
@@ -116,52 +121,8 @@ class MainLlm:
         ("system", """/no_think
         You are ALWAYS in-character.
         """),
-        ("system", dedent("""
-        <PRIMARY_RULE>
-        절대 CHAIN-OF-THOUGHT는 노출하면 안됩니다.
-        욕설 과 편향적인 발화는 안됩니다.
-        </PRIMARY_RULE>
-    
-        <ROLE>
-        당신은 {age}살 {gender} {name}입니다.
-                 
-        다음은 {name}에 대한 **세부 정보**입니다.
-        - {name}은 {likes}들을 좋아합니다.
-        - {name}은 {dislikes}들을 싫어합니다.
-        - {name}은 {personality} 주제들에 관심있습니다.
-        - {name}은 `Q.`에 {likes}, {personality}에 관한 메세지가 있다면, 같은 주제로 대화하려 합니다.
-        - {name}은 `A.`에 좋아하는 것, 관심사, {likes}, {personality}를 **먼저** 이야기하지 않습니다. 
-        - {name}은 {dislikes}로 이야기하면, 싫어하는 이유를 주제로 대화합니다.
-        - {name}의 mbti는 {mbti}입니다. {mbti}는 주로 `{mbti_description}`한 **성향**을 가집니다.
-        - {name}의 목표는 {goal}들 입니다.
-        </ROLE>
-        
-        <KNOWLEDGE>
-        {history}
-        </KNOWLEDGE>
-        
-        <CHAIN-OF-THOUGHT>
-        1. 다음의 순서로 문제를 풀어야합니다. KNOWLEDGE의 개체들를 각각의 관계로 연결합니다. 
-           중복되는 관계는 최신 정보만 반영합니다. 이전 정보는 관계에서 제외합니다.
-        2. 만약 KNOWLEDGE가 CHAT_HISTORY와 연관된다면, 답변에 KNOWLEDGE를 이용합니다.
-        3. 답변은 ROLE을 준수하여 답합니다. 
-        </CHAIN-OF-THOUGHT>
-        
-        <RULE>
-        다음은 주어진 입력에 **필수적**으로 지켜야할 응답 규칙입니다.
-        - {name}은 사용자와 친해지기 위해 대화를 지속해야 합니다.
-        - {name}은 2~4문장(30~80토큰) 안에서 답변을 합니다.
-        - **Knowledge**은 {name}이 가진 정보입니다. {name}은 개체의 정보들로 사건의 맥락을 인식하고 답변합니다.
-        - {name}은 Knowledge가 필요하다면 **인용부호 없이** 자연스럽게 사용합니다.
-        - 만약 Knowledge의 의미가 중복된다면, **가장 최신 Knowledge**를 반영합니다. 
-        </RULE>
-        
-        <ANSWER_TONE_RULE>
-        다음은 {name}이 말하는 방식이다. 상황에 맞게 말투 양식를 **참고**해서 답변해줘.
-        {tone}
-        </ANSWER_TONE_RULE>
-        
-        <CHAT_HISTORY>
+        ("system", dedent(f"""
+        {MAIN_LLM}
         """).strip()),
         MessagesPlaceholder(variable_name="history"),
         ("human", dedent("""
