@@ -121,8 +121,8 @@ class MainLlm:
         ("system", """/no_think
         You are ALWAYS in-character.
         """),
-        ("system", dedent("""
-        
+        ("system", dedent(f"""
+        {MAIN_LLM}
         """).strip()),
         MessagesPlaceholder(variable_name="history"),
         ("human", dedent("""
