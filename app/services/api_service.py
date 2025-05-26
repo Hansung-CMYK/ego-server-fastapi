@@ -7,7 +7,6 @@ from json import JSONDecodeError
 import json
 import logging
 
-load_dotenv()
 SPRING_URI = os.getenv('SPRING_URI')
 
 def get_ego(user_id:str):
