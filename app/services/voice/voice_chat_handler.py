@@ -1,9 +1,6 @@
-import os
-import sys
 import uuid
 import json
 import threading
-import importlib
 import asyncio
 import re
 import base64
@@ -14,19 +11,13 @@ import time
 
 logger = logging.getLogger(__name__)
 
-REALTIME_STT_PATH = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "../../../modules/RealtimeSTT")
-)
-if REALTIME_STT_PATH not in sys.path:
-    sys.path.insert(0, REALTIME_STT_PATH)
-
-from RealtimeSTT.audio_recorder import AudioToTextRecorder
 from app.util.audio_utils import decode_and_resample
 from .tts_buffer import TTSBuffer
 from app.services.chat.chat_service import chat_stream
 from app.services.session_config import SessionConfig
 
 from app.services.diary.kobert_handler import extract_emotions
+from app.services.voice.stt_recorder import get_stt_recorder
 
 
 from app.services.kafka.kafka_handler import wait_until_kafka_ready, get_producer, RESPONSE_AI_TOPIC, RESPONSE_CLIENT_TOPIC, ChatMessage, ContentType
@@ -86,8 +77,11 @@ class VoiceChatHandler:
     def _init_recorder(self):
         cfg = self._recorder_config()
         cfg['on_realtime_transcription_stabilized'] = self._on_realtime
-        self.recorder = AudioToTextRecorder(**cfg)
-        threading.Thread(target=self._recorder_loop, daemon=True).start()
+        self.recorder = get_stt_recorder(
+            cfg,
+            on_realtime=self._on_realtime,
+            on_full_sentence=self._process_full_sentence
+        )
 
     def _recorder_config(self) -> dict:
         return {
@@ -104,7 +98,7 @@ class VoiceChatHandler:
             'enable_realtime_transcription': True,
             'realtime_processing_pause': 0,
             'use_main_model_for_realtime': True,
-            'compute_type': 'float16'
+            #'compute_type': 'float16'
         }
 
     def handle_audio(self, msg: bytes):
@@ -153,6 +147,7 @@ class VoiceChatHandler:
             if cancel_event.is_set():
                 return
             clean = self._clean_text(sentence)
+            print(clean)
             if not clean:
                 return
 
@@ -178,7 +173,6 @@ class VoiceChatHandler:
                 "prompt_lang": speaker.default_refer.lang,
                 "sample_steps": 16,
                 "speed_factor": 1.0,
-                "sample_steps": 4
             })
 
             for sr, chunk in gen:
@@ -187,7 +181,7 @@ class VoiceChatHandler:
                     return
                 pcm.extend(chunk)
                 elapsed = time.monotonic() - start_time
-
+            print(clean, ' : 전송롼료')
             if final_pcm is None:
                 final_pcm = pcm
 
