@@ -11,7 +11,7 @@ import time
 
 logger = logging.getLogger(__name__)
 
-from app.util.audio_utils import decode_and_resample
+from app.util.audio_utils import decode_and_resample_v2 as decode_and_resample
 from .tts_buffer import TTSBuffer
 from app.services.chat.chat_service import chat_stream
 from app.services.session_config import SessionConfig
