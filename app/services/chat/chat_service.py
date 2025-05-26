@@ -37,7 +37,7 @@ def chat_stream(user_message: str, config: SessionConfig):
     session_id:str = f"{ego_id}@{user_id}"
 
     # NOTE 0. 비동기로 사용자의 답변을 지식 그래프에 추가한다.
-    worker(session_id=session_id, user_message=user_message)
+    # worker(session_id=session_id, user_message=user_message)
 
     # NOTE 1. 에고의 페르소나를 적용한다.
     persona = persona_store.get_persona(ego_id=ego_id)
