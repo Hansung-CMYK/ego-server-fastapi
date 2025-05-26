@@ -45,11 +45,15 @@ def chat_stream(user_message: str, config: SessionConfig):
     # NOTE 2. 에고가 가진 지식 그래프에서 정보를 조회한다.
     rag_prompt = get_rag_prompt(ego_id=ego_id, user_message=user_message)
 
-    # NOTE 3. 에고의 답변을 청크 단위로 출력한다.
+    # NOTE 3. 사용자의 이름 추출
+    my_ego = get_ego(user_id=user_id)
+
+    # NOTE 4. 에고의 답변을 청크 단위로 출력한다.
     for chunk in main_llm.main_stream(
         user_message= user_message,
         persona = persona,
         rag_prompt = rag_prompt,
+        human_name = my_ego["name"],
         session_id = session_id
     ):
         yield chunk
