@@ -5,7 +5,7 @@ from datetime import datetime
 import json
 
 from app.exception.exceptions import ControlledException, ErrorCode
-from app.models.default_model import task_model, DEFAULT_TASK_LLM_TEMPLATE, clean_json_string
+from app.models.default_model import task_model, DEFAULT_TASK_LLM_TEMPLATE, clean_json_string, llm_sem
 from app.logger.logger import logger
 
 class SplitLlm:
@@ -36,12 +36,13 @@ class SplitLlm:
         Raises:
             JSONDecodeError: JSON Decoding 실패 시, 빈 리스트(`[]`) 반환
         """
-        answer = self.__chain.invoke({
-            "input": complex_sentence,
-            "datetime": datetime.now().isoformat(),
-            "result_example":self.__RESULT_EXAMPLE,
-            "default_task_llm_template": DEFAULT_TASK_LLM_TEMPLATE
-        }).content
+        with llm_sem:
+            answer = self.__chain.invoke({
+                "input": complex_sentence,
+                "datetime": datetime.now().isoformat(),
+                "result_example":self.__RESULT_EXAMPLE,
+                "default_task_llm_template": DEFAULT_TASK_LLM_TEMPLATE
+            }).content
         clean_answer: str = clean_json_string(text=answer)  # 필요없는 문자열 제거
 
         try:
@@ -59,45 +60,45 @@ class SplitLlm:
         return split_messages
 
     __SPLIT_TEMPLATE = [
-        ("system", "/no_think {default_task_llm_template}"),
+        ("system", """
+        /json
+        /no_think
+        {default_task_llm_template}
+        """),
         ("system", dedent("""
         <PRIMARY_RULE>
-        무조건 JSON 형식을 유지해야 합니다.
-        무조건 `A.`는 [주어, 술어, 목적어/보어]를 가져야 합니다.
-        응답은 `HUMAN:`의 문장만 반환합니다.
+        1. **Return valid JSON only** – nothing before/after the object.
+        2. Every item in `"result"` **must** follow the pattern [Subject, Verb, Object/Complement].
+        3. Extract & rewrite **HUMAN:** sentences _only_ – **never** include or split `AI:` lines.
         </PRIMARY_RULE>
-        
+
         <ROLE>
-        당신의 임무는 `Q. HUMAN: ` 복합 문장을 **여러 문장으로 분리**하는 것 입니다.
-        문장을 분리할 땐, 단일 사건이나 단일 의미를 [주어, 술어, 목적어/보어] 형태로 만들어야 합니다. 
+        • Your task is to **split each complex Korean sentence** under `Q. HUMAN:`  
+          into multiple single-fact sentences, each in the triple form [S, V, O/C].
         </ROLE>
 
-        <RULE>
-        다음은 주어진 입력에 **필수적**으로 지켜야 할 반환 규칙입니다.
-        - 원본 문장에 있는 대명사는 모두 동일한 의미를 가진 명사로 대체합니다.
-        - 원본 문장에 있는 의미없는 부사, 감탄사(예: '와!', '헐'), 접속어(예: '그래서', '하지만')은 제거합니다.
-        - 분리된 각 문장은 [주어, 술어, 목적어/보어] 형태의 단일 사건이나 의미입니다.
-        - 분리된 모든 문장 뒤에는 현재 시간({datetime})을 명시합니다. (예:'0000-00-00T00:00:000')
-        - **`HUMAN:`의 문장만** 반환해야 합니다.
-        - `AI:` 문장은 대화 맥락을 이해하는데 참고합니다.  
-        - `AI:` 문장은 분리를 **절대** 금지합니다.
-        - `AI:` 문장은 반환을 **절대** 금지합니다.
-        - 아무런 정보가 없는 문장은 문장 분리를 제외합니다. (예: 아 배고파, 뭐하지, 심심해 ...)
-        - 아무런 정보가 없는 문장은 문장 반환을 제외합니다. (예: 아 배고파, 뭐하지, 심심해 ...)
-        - 본인을 지칭하는 명사가 문장에 없다면, `나`를 사용합니다.
-        </RULE>
-        
-        <RETURN_TYPE>
-        - 출력은 반드시 아래 예시와 동일한 JSON 구조로 반환합니다.
-        - 최상위 key는 `result`입니다.
-        - `result` `key`의 `value`는 `list[str]` `type`입니다. 
-        - `result` `key`의 `value`는 분리된 여러 문장들이 저장됩니다.
-        </RETURN_TYPE>
+        <SPLITTING_GUIDELINES>
+        • Replace pronouns with their explicit noun referents.  
+        • Drop filler adverbs / interjections / conjunctions (e.g. “와!”, “헐”, “그래서”, “하지만”).  
+        • If a line has no informative content (e.g. “아 배고파”, “뭐하지”) → **skip** it.  
+        • If the original sentence lacks an explicit first-person noun, use “나”.  
+        • Append current timestamp `{datetime}` to the end of **every** output sentence  
+          (format: `YYYY-MM-DDTHH:MM:SSSSS`).
+        </SPLITTING_GUIDELINES>
 
-        <RESULT>
+        <OUTPUT_SCHEMA>
+        ```json
+        {{"result": [ "<sentence 1>", "<sentence 2>", ... ]}}
+        ```
+        </OUTPUT_SCHEMA>
+
+        <EXAMPLE_RESULT>
         {result_example}
+        </EXAMPLE_RESULT>
+
         Q. {input}
-        A. """)),
+        A.
+        """)),
     ]
 
     __RESULT_EXAMPLE = dedent("""

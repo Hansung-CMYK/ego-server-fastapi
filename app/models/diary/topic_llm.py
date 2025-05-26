@@ -4,7 +4,7 @@ from textwrap import dedent
 from langchain_core.prompts import ChatPromptTemplate
 
 from app.exception.exceptions import ControlledException, ErrorCode
-from app.models.default_model import task_model, DEFAULT_TASK_LLM_TEMPLATE, clean_json_string
+from app.models.default_model import task_model, DEFAULT_TASK_LLM_TEMPLATE, clean_json_string, llm_sem
 from app.logger.logger import logger
 
 class TopicLlm:
@@ -35,12 +35,16 @@ class TopicLlm:
             JSONDecodeError: JSON Decoding 실패 시, 작업 중단
             KeyError: 키 값에  "result"가 존재하지 않는 경우, 작업 중단
         """
-        answer = self.__chain.invoke({
-            "input": "\n".join(chat_rooms),
-            "return_form_example":self.__RETURN_FORM_EXAMPLE,
-            "result_example":self.__RESULT_EXAMPLE,
-            "default_task_llm_template":DEFAULT_TASK_LLM_TEMPLATE
-        }).content
+        # LOG. 시연용 로그
+        logger.info(msg=f"\n\nPOST: api/v1/diary [topic_invoke 채팅 기록]\n{"\n".join(chat_rooms)}\n")
+
+        with llm_sem:
+            answer = self.__chain.invoke({
+                "input": "\n".join(chat_rooms),
+                "return_form_example":self.__RETURN_FORM_EXAMPLE,
+                "result_example":self.__RESULT_EXAMPLE,
+                "default_task_llm_template":DEFAULT_TASK_LLM_TEMPLATE,
+            }).content
         clean_answer: str = clean_json_string(text=answer)  # 필요없는 문자열 제거
 
         # LOG. 시연용 로그
@@ -55,59 +59,50 @@ class TopicLlm:
             raise ControlledException(ErrorCode.INVALID_DATA_TYPE)
 
     __DIARY_TEMPLATE = [
-        ("system", "/no_think {default_task_llm_template}"),
+        ("system", """
+        /no_think 
+        {default_task_llm_template}
+        """),
         ("system", dedent("""
         <PRIMARY_RULE>
-        무조건 JSON 형식을 유지해야 합니다.
-        JSON 외에 자연어 해설은 없습니다.
-        AI, 챗봇, 대화방, 시스템, 주석, 설명, 프롬프트 등 메타 표현은 절대 금지합니다.
+        1. **Return ONLY valid JSON** – _no other characters_ before/after the object.
+        2. Do **NOT** output explanations, comments, markdown, or system tags.
+        3. Keys & string values MUST use straight double-quotes (").
+        4. Please answer all questions in Korean from now on.  
+        5. Even if the question is written in another language, always respond naturally and fluently in Korean.
         </PRIMARY_RULE>
-        
+
         <ROLE>
-        당신의 임무는 `Q.`에 있는 문장들로 일기를 작성하는 것입니다.
-        일기는 1인칭 일기체를 사용합니다. (예: 나는 ~했다. 오늘은 ~였다.)
+        • You are the diarist: rewrite the sentences under <INPUT> as a **first-person diary**.
         </ROLE>
-        
+
         <KNOWLEDGE>
+        • Conversation snippets to base the diary on (latest duplicates win):
         {input}
-        </KONWLEDGE>
-        
-        <RULE>
-        다음은 주어진 입력에 **필수적**으로 지켜야 할 반환 규칙입니다.
-        - KNOWLEDGE는 일기에 이용될 대화 기록입니다.
-        - KNOWLEDGE에 중복된 정보가 있다면 가장 최근의 문장을 이용합니다.
-        - 제공된 대화기록외에 일기 작성에 **새로운 사실**은 절대 사용하면 안됩니다.
-        </RULE>
-        
-        <EXCEPTION>
-        만약 일기를 도출하지 못했다면, `empty list`(`[]`) 반환합니다.
-        </EXCEPTION>
-        
+        </KNOWLEDGE>
+
+        <STRICT_RULES>
+        • Do **NOT** invent facts beyond the Knowledge block.
+        • If Knowledge is insufficient → return exactly **[]** as the value of "result".
+        </STRICT_RULES>
+
         <WRITING_INSTRUCTIONS>
-        다음은 일기를 작성할 때, 지켜야 할 일기 작성 규칙입니다. 
-        - 주제(`title`) 규칙
-            - `title`은 **1문장 이내**로 핵심어를 이용해 작성해야 합니다.
-        - 본문(`content`) 규칙
-            - `content`는 3문장~10문장으로 완성해야 합니다.
-            - 가능하면 감정이나 환경 묘사(시각/청각/후각)를 한 줄 이상 삽입해야 합니다.
+        • Each diary topic ⇒ one object:
+            - "title"   : ≤ 1 short sentence (core keywords).
+            - "content" : 3-10 sentences; include ≥ 1 sensory or emotion line.
+        • Keep total output ≤ 1 k tokens for safety.
         </WRITING_INSTRUCTIONS>
-        
-        <RETURN_TYPE>
-        - 출력은 반드시 아래 예시와 동일한 JSON 구조로 반환합니다.
-        - 최상위 `key`는 `result`입니다.
-        - `result` `key`의 `value`는 `list[dict]` `type`입니다.
-        - `list[dict]`에는 주제를 `dict type`으로 저장합니다.
-        - `dict`의 `key`는 무조건 `title`, `content`만 가능합니다.
-        </RETURN_TYPE>
-        
-        <RETURN_FORM>
+
+        <OUTPUT_SCHEMA>
         {return_form_example}
-        </RETURN_FORM>
-        
-        <RESULT>
+        </OUTPUT_SCHEMA>
+
+        <RETURN_EXAMPLE>
         {result_example}
+        </RETURN_EXAMPLE>
+
         Q. <INPUT> {input} </INPUT>
-        A. """))
+        A."""))
     ]
 
     __RETURN_FORM_EXAMPLE = dedent("""

@@ -31,7 +31,7 @@ class AdminRequest(BaseModel):
     admin_id: str
     admin_password: str
 
-@router.post("/reset/{ego_id}")
+@router.post("/reset/{user_id}/{ego_id}")
 async def reset_ego(user_id:str, ego_id:str, body: AdminRequest)->CommonResponse:
     """
     요약:

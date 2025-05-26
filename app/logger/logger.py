@@ -1,6 +1,7 @@
 import logging
 
 logger = logging.getLogger("default")
+logger.propagate = False
 logger.setLevel(logging.INFO)
 
 # Console handler
