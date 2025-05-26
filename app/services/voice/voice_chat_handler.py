@@ -232,7 +232,7 @@ class VoiceChatHandler:
         return re.sub(r'\s+', ' ', text).strip()
     
     def _send_emotion(self, text: str) :
-        emotion = extract_emotions([text], float=0.5, top_k=1)
+        emotion = extract_emotions([text], alpha=0.5, top_k=1)
         asyncio.run_coroutine_threadsafe(
             self.ws.send_text(json.dumps({"emotion": emotion})),
             self.loop
