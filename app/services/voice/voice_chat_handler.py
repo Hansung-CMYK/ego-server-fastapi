@@ -9,79 +9,82 @@ import logging
 import numpy as np
 import time
 
-logger = logging.getLogger(__name__)
-
 from app.util.audio_utils import decode_and_resample_v2 as decode_and_resample
 from .tts_buffer import TTSBuffer
 from app.services.chat.chat_service import chat_stream
 from app.services.session_config import SessionConfig
-
 from app.services.diary.kobert_handler import extract_emotions
-from app.services.voice.stt_recorder import get_stt_recorder
 
+from app.services.voice.stt_recorder import get_stt_recorder, release_stt_recorder
 
-from app.services.kafka.kafka_handler import wait_until_kafka_ready, get_producer, RESPONSE_AI_TOPIC, RESPONSE_CLIENT_TOPIC, ChatMessage, ContentType
+from app.services.kafka.kafka_handler import (
+    wait_until_kafka_ready,
+    get_producer,
+    RESPONSE_AI_TOPIC,
+    RESPONSE_CLIENT_TOPIC,
+    ChatMessage,
+    ContentType
+)
 
-async def produce_message(sentence: str, config: SessionConfig, topic: any):
-    await wait_until_kafka_ready() 
-    
+logger = logging.getLogger(__name__)
+
+async def produce_message(sentence: str, config: SessionConfig, topic: str):
+    await wait_until_kafka_ready()
     if not sentence.strip():
         return
 
     message = ChatMessage(
         chatRoomId=config.chat_room_id,
-        from_=config.user_id,       # STT 결과: 사용자
-        to=config.ego_id,       
+        from_=config.user_id if topic == RESPONSE_CLIENT_TOPIC else config.ego_id,
+        to=config.ego_id if topic == RESPONSE_CLIENT_TOPIC else config.user_id,
         content=sentence,
         contentType=ContentType.TEXT,
         mcpEnabled=False
-    ) if topic == RESPONSE_CLIENT_TOPIC else ChatMessage(
-        chatRoomId=config.chat_room_id,
-        from_=config.ego_id,       # TTS 결과: AI
-        to=config.user_id,         
-        content=sentence,
-        contentType=ContentType.TEXT,
-        mcpEnabled=False
-    ) 
+    )
 
     try:
         producer = get_producer()
-        await producer.send_and_wait(
-            topic,
-            key=message.from_,
-            value=message,
-        )
+        await producer.send_and_wait(topic, key=message.from_, value=message)
     except Exception as e:
         logger.exception(f"Kafka produce failed: {e}")
 
-def send_sentence_from_sync(sentence: str, config: SessionConfig, topic : any, loop: asyncio.AbstractEventLoop):
-    asyncio.run_coroutine_threadsafe(produce_message(sentence, config, topic), loop)
-
+def send_sentence_from_sync(sentence: str, config: SessionConfig, topic: str, loop: asyncio.AbstractEventLoop):
+    asyncio.run_coroutine_threadsafe(
+        produce_message(sentence, config, topic),
+        loop
+    )
 
 class VoiceChatHandler:
+    INACTIVITY_TIMEOUT = 10.0
+
     def __init__(self, websocket, config: SessionConfig):
         self.id = str(uuid.uuid4())
         self.ws = websocket
         self.loop = asyncio.get_running_loop()
+        self.config = config
+
         self.running = True
         self.cancel_event = threading.Event()
         self.llm_thread = None
 
-        self.config = config
-        self.vad_threshold = 0.2
-        self.max_retries = 2
         self.sample_rate = 24000
+        self._last_audio_time = time.monotonic()
+        self._has_stt_lock = False
 
-        self._init_recorder()
+        try:
+            self._init_recorder()
+            self._has_stt_lock = True
+        except RuntimeError:
+            asyncio.run_coroutine_threadsafe(
+                self.ws.send_text(json.dumps({
+                    "type": "error",
+                    "message": "STT 엔진이 사용 중입니다. 잠시 후 다시 시도해주세요."
+                })),
+                self.loop
+            )
+            raise
 
-    def _init_recorder(self):
-        cfg = self._recorder_config()
-        cfg['on_realtime_transcription_stabilized'] = self._on_realtime
-        self.recorder = get_stt_recorder(
-            cfg,
-            on_realtime=self._on_realtime,
-            on_full_sentence=self._process_full_sentence
-        )
+        self._start_inactivity_watchdog()
 
     def _recorder_config(self) -> dict:
         return {
@@ -90,18 +93,51 @@ class VoiceChatHandler:
             'use_microphone': False,
             'model': 'large-v3',
             'language': 'ko',
-            'silero_sensitivity': 0.6,
+            'silero_sensitivity': 0.4,
             'webrtc_sensitivity': 1,
-            'post_speech_silence_duration': 0.7,
-            'min_length_of_recording': 0,
-            'min_gap_between_recordings': 0,
+            'post_speech_silence_duration': 0.6,
             'enable_realtime_transcription': True,
-            'realtime_processing_pause': 0,
+            'realtime_processing_pause': 0.1,
             'use_main_model_for_realtime': True,
-            #'compute_type': 'float16'
         }
 
+    def _init_recorder(self):
+        cfg = self._recorder_config()
+        self.recorder = get_stt_recorder(
+            cfg,
+            on_realtime=self._on_realtime,
+            on_full_sentence=self._process_full_sentence
+        )
+
+        if self.recorder is None:
+            logger.warning(f"[{self.id}] STT 엔진 할당 실패 — 이미 사용 중")
+            asyncio.run_coroutine_threadsafe(
+                self.ws.send_text(json.dumps({
+                    "type": "error",
+                    "message": "현재 다른 세션이 STT를 사용 중입니다. 잠시 후 다시 시도해주세요."
+                })),
+                self.loop
+            )
+            asyncio.run_coroutine_threadsafe(self.ws.close(), self.loop)
+            self.running = False
+            return
+
+    def _start_inactivity_watchdog(self):
+        def watchdog():
+            while self.running:
+                elapsed = time.monotonic() - self._last_audio_time
+                if elapsed > self.INACTIVITY_TIMEOUT:
+                    logger.info(f"[{self.id}] 무입력 {elapsed:.1f}s 경과, 세션 종료")
+                    self.stop()
+                    break
+                time.sleep(5.0)
+        t = threading.Thread(target=watchdog, daemon=True)
+        t.start()
+
     def handle_audio(self, msg: bytes):
+        # 오디오 수신 시 타이머 갱신
+        self._last_audio_time = time.monotonic()
+
         header_len = int.from_bytes(msg[:4], 'little')
         meta = json.loads(msg[4:4+header_len].decode())
         pcm_chunk = msg[4+header_len:]
@@ -109,16 +145,14 @@ class VoiceChatHandler:
         self.recorder.feed_audio(pcm)
 
     def _on_realtime(self, text: str):
+        # 실시간 텍스트 수신 시
+        self._last_audio_time = time.monotonic()
         self._send(type='realtime', text=text)
         self._send(type='cancel_audio')
 
-    def _recorder_loop(self):
-        while self.running:
-            full = self.recorder.text()
-            if full:
-                self._process_full_sentence(full)
-
     def _process_full_sentence(self, full: str):
+        # 완전 문장 수신 시
+        self._last_audio_time = time.monotonic()
         self._cancel_current()
         self._send(type='fullSentence', text=full)
         send_sentence_from_sync(full, self.config, RESPONSE_CLIENT_TOPIC, self.loop)
@@ -147,16 +181,8 @@ class VoiceChatHandler:
             if cancel_event.is_set():
                 return
             clean = self._clean_text(sentence)
-            print(clean)
             if not clean:
                 return
-
-            final_pcm = None
-            sr_of_final = None
-
-            logger.warning(clean)
-            start_time = time.monotonic()
-            pcm = bytearray()
 
             from app.services.voice.tts_model_registry import get_tts_pipeline
             import gpt_sovits_api
@@ -164,6 +190,9 @@ class VoiceChatHandler:
             speaker = gpt_sovits_api.speaker_list.get(self.config.spk)
             tts_pipe = get_tts_pipeline(self.config.spk)
             tts_pipe.set_ref_audio(speaker.default_refer.path)
+
+            pcm = bytearray()
+            sr_of_final = None
 
             gen = tts_pipe.run({
                 "text": clean,
@@ -176,22 +205,18 @@ class VoiceChatHandler:
             })
 
             for sr, chunk in gen:
-                sr_of_final = sr
                 if cancel_event.is_set():
                     return
+                sr_of_final = sr
                 pcm.extend(chunk)
-                elapsed = time.monotonic() - start_time
-            print(clean, ' : 전송롼료')
-            if final_pcm is None:
-                final_pcm = pcm
 
             from io import BytesIO
-            import numpy as np
-
-            pcm_np = np.frombuffer(bytes(final_pcm), dtype=np.int16)
-
             wav_buf = BytesIO()
-            wav_buf = gpt_sovits_api.pack_wav(wav_buf, pcm_np, sr_of_final or self.sample_rate)
+            wav_buf = gpt_sovits_api.pack_wav(
+                wav_buf,
+                np.frombuffer(bytes(pcm), dtype=np.int16),
+                sr_of_final or self.sample_rate
+            )
             wav_bytes = wav_buf.getvalue()
 
             payload = {
@@ -200,6 +225,7 @@ class VoiceChatHandler:
                 "audio_base64": base64.b64encode(wav_bytes).decode("ascii")
             }
             self._send_payload(payload)
+            tts_index += 1
 
         content = ""
         tts_buffer = TTSBuffer(send_tts)
@@ -209,7 +235,7 @@ class VoiceChatHandler:
             self._send(type='response_chunk', text=chunk)
             tts_buffer.feed(chunk)
             content += chunk
-        
+
         send_sentence_from_sync(content, self.config, RESPONSE_AI_TOPIC, self.loop)
         self._send_emotion(content)
 
@@ -224,8 +250,8 @@ class VoiceChatHandler:
         text = re.sub(r'(?<=\d)[.,?!:]', '', text)
         text = re.sub(r'[^\uAC00-\uD7A3\u3131-\u318F0-9A-Za-z,.!? ]+', '', text)
         return re.sub(r'\s+', ' ', text).strip()
-    
-    def _send_emotion(self, text: str) :
+
+    def _send_emotion(self, text: str):
         emotion = extract_emotions([text], alpha=0.5, top_k=1)
         asyncio.run_coroutine_threadsafe(
             self.ws.send_text(json.dumps({"emotion": emotion})),
@@ -245,12 +271,23 @@ class VoiceChatHandler:
         )
 
     def stop(self):
+        # 세션 종료 시 호출
+        if not self.running:
+            return
         self.running = False
         self.cancel_event.set()
         if self.llm_thread and self.llm_thread.is_alive():
             self.llm_thread.join()
+
+        # STT recorder 정지
         try:
             self.recorder.stop()
-            self.recorder.join()
         except Exception:
             pass
+
+        # 세마포어 해제
+        if self._has_stt_lock:
+            release_stt_recorder()
+            self._has_stt_lock = False
+
+        logger.info(f"[{self.id}] VoiceChatHandler 리소스 정리 완료")
