@@ -79,7 +79,7 @@ class MainLlm:
                 "mbti": persona.get("mbti", ""),
                 "mbti_description": self.get_mbti_description(mbti=persona.get("mbti", "")),
                 "goal": persona.get("goal", ""),
-                "history": rag_prompt,
+                "rag_prompt": rag_prompt,
                 "tone": "", # TODO: 말투 프롬프트 추가하기
                 "user_message": user_message,
             },
