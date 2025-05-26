@@ -54,4 +54,4 @@ def extract_emotions(
     }
 
     top_indices = sorted(score, key=score.get, reverse=True)[:top_k]
-    return [_labels[i] for i in top_indices]
+    return [_labels[i] for i in top_indices] if len([_labels[i] for i in top_indices]) >= top_k else ["평범"]
