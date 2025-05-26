@@ -31,7 +31,7 @@ task_model = chat_model
 DEFAULT_TASK_LLM_TEMPLATE = """
 You have access to functions. If you decide to invoke any of the function(s),
 you MUST put it in the format of
-{"name": function name, "parameters": dictionary of argument name and its value}
+{"result": dictionary of argument name and its value }
 
 You SHOULD NOT include any other text in the response if you call a function
 """
