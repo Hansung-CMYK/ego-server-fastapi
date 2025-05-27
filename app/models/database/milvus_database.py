@@ -8,6 +8,7 @@ from app.exception.exception_handler import ControlledException
 from app.exception.exceptions import ErrorCode
 from app.models.parsed_sentence import ParsedSentence
 from app.logger.logger import logger
+from app.models.txtnorm.embedding_model import embedding_model
 
 # .env 환경 변수 추출
 MILVUS_URI = os.getenv('MILVUS_URI')
@@ -128,7 +129,8 @@ class MilvusDatabase:
 
     def insert_messages(
             self,
-            splited_messages: list[str],
+            passage:str,
+            single_sentences: list[str],
             ego_id: str
     ):
         """
@@ -136,7 +138,8 @@ class MilvusDatabase:
             임베딩된 텍스트를 DB에 저장한다.
 
         Parameters:
-            splited_messages(list[str]): 단일 문장으로 분리된 문장 리스트
+            passage(str): 원문 정보
+            single_sentences(list[str\]): 단일 문장으로 분리된 문장 리스트
             ego_id(str): 저장할 파티션 명
         """
         # 만약 partition이 생성되어 있지 않다면, 로그 생성 및 저장 안함
@@ -145,40 +148,40 @@ class MilvusDatabase:
                 raise ControlledException(ErrorCode.PARTITION_NOT_FOUND)
 
         # 문장을 삼중항으로 분리한다.
-        parsed_sentences = [ParsedSentence(splited_message) for splited_message in splited_messages]
+        parsed_sentences = [ParsedSentence(passage=passage, single_sentence=single_sentence) for single_sentence in single_sentences]
 
         # NOTE 1. Passages에 값을 저장한다.
-        for parsed_sentence in parsed_sentences:
-            embedded_speak = parsed_sentence.embedding()
-            passage_data = {
-                "passage": parsed_sentence.passage,
-                "embedded_passage": embedded_speak["embedded_passage"],
-                "is_fix": False,
-            }
+        passage_data = {
+            "passage": passage,
+            "embedded_passage": embedding_model.embedding(passage)[0],
+            "is_fix": False,
+        }
 
-            # 실제 DB에 저장
-            res = self.__milvus_client.insert(
-                collection_name="passages",
-                partition_name=ego_id,
-                data=[passage_data]
+        # 실제 DB에 저장
+        response = self.__milvus_client.insert(
+            collection_name="passages",
+            partition_name=ego_id,
+            data=[passage_data]
+        )
+        passages_ids = response["ids"][0] # res는 저장된 원문 ids 값
+
+        # NOTE 2. triplets에 값을 저장한다.
+        triplet_datas = []
+
+        for index, parsed_sentence in enumerate(parsed_sentences):
+            embedded_sentence = parsed_sentence.element_embedding()
+            triplet_datas.append(
+                {
+                    "passages_id": passages_ids,
+                    "subject": parsed_sentence.triplet[0],
+                    "object": parsed_sentence.triplet[1],
+                    "relation": parsed_sentence.relation,
+                    "embedded_subject": embedded_sentence["embedded_triplet"][0],
+                    "embedded_object": embedded_sentence["embedded_triplet"][1],
+                    "embedded_relation": embedded_sentence["embedded_relation"],
+                    "is_fix": False,
+                }
             )
-            passages_ids = res["ids"][0] # res는 저장된 원문 ids 값
-
-            # NOTE 2. triplets에 값을 저장한다.
-            triplet_datas = []
-            for index, triplet in enumerate(parsed_sentence.triplets) :
-                triplet_datas.append(
-                    {
-                        "passages_id": passages_ids,
-                        "subject": triplet[0],
-                        "object": triplet[1],
-                        "relation": parsed_sentence.relations[index],
-                        "embedded_subject": embedded_speak["embedded_triplets"][index][0],
-                        "embedded_object": embedded_speak["embedded_triplets"][index][1],
-                        "embedded_relation": embedded_speak["embedded_relations"][index],
-                        "is_fix": False,
-                    }
-                )
 
             self.__milvus_client.insert(
                 collection_name="triplets",

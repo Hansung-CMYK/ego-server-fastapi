@@ -1,5 +1,8 @@
-from app.models.txtnorm.ner_model import ner_model
+from numpy import ndarray
+
 from app.models.txtnorm.embedding_model import embedding_model
+from app.services.ner.ner_service import split_to_triplets
+import re
 
 class ParsedSentence:
     """
@@ -8,21 +11,21 @@ class ParsedSentence:
 
     Attributes:
         passage(str): 사용자가 입력한 자연어 문장, 원문 텍스트.
-        triplets(list[list[str]]): 추출된 삼중항 정보. 각 항목은 [주어, 서술어, 목적어]의 리스트 형태.
-        relations(list[str]): 각 삼중항을 공백 기준으로 연결한 관계 표현 문자열 리스트.
+        triplet(list[str]): 추출된 삼중항 정보. 각 항목은 [주어, 서술어, 목적어]
+        relation(str): 각 삼중항을 공백 기준으로 연결한 관계 표현 문자열
     """
-    def __init__(self, passage:str):
+    def __init__(self, passage:str, single_sentence:str) -> None:
         """
         Parameters:
             passage(str): 삼중항과 원문으로 저장할 문자열(문장)
         """
         # 순환 호출 문제로 인해 내부 import
-        triplets = ner_model.extract_triplets(passage)
+        triplets = split_to_triplets(single_sentence)
         self.passage = passage
-        self.triplets = triplets["triplets"]
-        self.relations = triplets["relations"]
+        self.triplet:list = triplets["triplet"]
+        self.relation:str = triplets["relation"]
 
-    def embedding(self)->dict:
+    def element_embedding(self)->dict:
         """
         요약:
             speak 정보를 임베딩하는 함수이다.
@@ -35,11 +38,27 @@ class ParsedSentence:
         """
 
         # NOTE 1. Speak 객체의 속성을 모두 임베딩 한다.
-        embedded_triplets = [embedding_model.embedding(texts=triplet) for triplet in self.triplets]
-        embedded_relations = embedding_model.embedding(texts=self.relations)
-        embedded_passage = embedding_model.embedding(texts=[self.passage])[0]
+        embedded_triplet:list[ndarray] = embedding_model.embedding(texts=self.triplet)
+
+        embedded_relations:ndarray = embedding_model.embedding(texts=[self.relation])[0]
         return {
-            "embedded_triplets": embedded_triplets,
-            "embedded_relations": embedded_relations,
-            "embedded_passage": embedded_passage
+            "embedded_triplet": embedded_triplet,
+            "embedded_relation": embedded_relations
         }
+
+def split_sentence(text: str, delimiters: str = r"[.,!?;]") -> list[str]:
+    """
+    문장을 지정된 구분자로 분리하는 함수
+
+    Parameters:
+        text (str): 입력 문장
+        delimiters (str): 구분자들을 포함한 정규표현식 패턴 (기본: . , ! ? ;)
+
+    Returns:
+        List[str]: 분리된 문장 리스트 (공백 제거됨)
+    """
+    # 구분자로 분리
+    parts = re.split(delimiters, text)
+
+    # 공백 제거 및 빈 문자열 제거
+    return [part.strip() for part in parts if part.strip()]
