@@ -3,7 +3,7 @@ import sys
 import importlib.util
 
 from fastapi import FastAPI, APIRouter
-from app.api import chat_api, voice_chat_api, fal_api, diary_api, persona_api, tts_api, admin_api
+from app.api import chat_api, voice_chat_api, fal_api, diary_api, persona_api, tts_api, admin_api, stt_api
 from app.exception.exception_handler import register_exception_handlers
 from app.services.voice.tts_infer import ensure_init, ensure_init_v2
 
@@ -69,6 +69,7 @@ app = FastAPI(lifespan=lifespan)
 
 register_exception_handlers(app)
 
+app.include_router(stt_api.router, prefix='/api', tags=['stt'])
 app.include_router(tts_api.router, prefix="/api", tags=["tts"])
 app.include_router(admin_api.router, prefix="/api", tags=["admin"])
 app.include_router(chat_api.router, prefix="/api", tags=["chat"])
