@@ -83,6 +83,8 @@ class TopicLlm:
 
         <STRICT_RULES>
         • Do **NOT** invent facts beyond the Knowledge block.
+        • Use **ONLY the lines that start with `u@`** as material for the diary.  
+        • Lines that start with `e@` are context only and must **NOT** be quoted or summarized.
         • If Knowledge is insufficient → return exactly **[]** as the value of "result".
         </STRICT_RULES>
 
