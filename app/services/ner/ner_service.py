@@ -80,7 +80,7 @@ def split_to_triplets(single_sentence:str)->dict:
     if not sentence["SRL"]:
         return {
         "triplet": ["", "", single_sentence.strip()],
-        "relation": sentence
+        "relation": sentence["text"]
     }
 
     frame = sentence["SRL"][0]
@@ -100,9 +100,3 @@ def split_to_triplets(single_sentence:str)->dict:
         "triplet": [picked[0], picked[1], single_sentence.strip()],
         "relation": sentence["text"]
     }
-
-if __name__ == "__main__":
-    sent = "여태까지 한번도 우승 트로피를 갖지 못했던 손흥민이 이번에 유로파 리그를 우승하면서 축구 커리어 마지막 퍼즐 조각을 채웠어."
-
-    print("ner_service::")
-    print(split_to_triplets(sent))

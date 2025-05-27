@@ -35,9 +35,9 @@ def get_rag_prompt(ego_id:str, user_message:str)->str:
         embedded_sentence = parsed_sentence.element_embedding()
 
         # 주어, 목적어, 관계가 비어있지 않으면, 추가
-        if parsed_sentence.triplet[0] != "": embedding_subject.append(embedded_sentence)
-        if parsed_sentence.triplet[1] != "": embedding_object.append(embedded_sentence)
-        if parsed_sentence.relation != "": embedding_relation.append(embedded_sentence)
+        if parsed_sentence.triplet[0] != "": embedding_subject.append(embedded_sentence["embedded_triplet"][0])
+        if parsed_sentence.triplet[1] != "": embedding_object.append(embedded_sentence["embedded_triplet"][1])
+        if parsed_sentence.relation != "": embedding_relation.append(embedded_sentence["embedded_relation"])
 
 
     triplets_with_similar_subject = milvus_database.search_triplets(

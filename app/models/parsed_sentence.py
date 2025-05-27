@@ -11,8 +11,8 @@ class ParsedSentence:
 
     Attributes:
         passage(str): 사용자가 입력한 자연어 문장, 원문 텍스트.
-        triplet(list[list[str]]): 추출된 삼중항 정보. 각 항목은 [주어, 서술어, 목적어]
-        relation(list[str]): 각 삼중항을 공백 기준으로 연결한 관계 표현 문자열
+        triplet(list[str]): 추출된 삼중항 정보. 각 항목은 [주어, 서술어, 목적어]
+        relation(str): 각 삼중항을 공백 기준으로 연결한 관계 표현 문자열
     """
     def __init__(self, passage:str, single_sentence:str) -> None:
         """
@@ -39,7 +39,8 @@ class ParsedSentence:
 
         # NOTE 1. Speak 객체의 속성을 모두 임베딩 한다.
         embedded_triplet:list[ndarray] = embedding_model.embedding(texts=self.triplet)
-        embedded_relations:ndarray = embedding_model.embedding(texts=self.relation)[0]
+
+        embedded_relations:ndarray = embedding_model.embedding(texts=[self.relation])[0]
         return {
             "embedded_triplet": embedded_triplet,
             "embedded_relation": embedded_relations
