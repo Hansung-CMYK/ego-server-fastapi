@@ -10,7 +10,7 @@ async def websocket_voice_chat(ws: WebSocket):
     user_id = ws.query_params.get("user_id", "anonymous")
     ego_id = ws.query_params.get("ego_id", "anonymous")
     spk = ws.query_params.get("spk", "anonymous")
-    chat_room_id = int(ws.query_params.get("chat_room_id", "anonymous"))
+    chat_room_id = ws.query_params.get("chat_room_id", "anonymous")
 
     config = SessionConfig(user_id, ego_id)
     config.spk = spk
