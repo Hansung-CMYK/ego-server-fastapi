@@ -2,7 +2,7 @@ import numpy as np
 from collections import defaultdict
 from scipy.sparse import csr_matrix
 
-from app.models.parsed_sentence import ParsedSentence
+from app.models.parsed_sentence import ParsedSentence, split_sentence
 from app.models.database.milvus_database import milvus_database
 from app.logger.logger import logger
 
@@ -19,45 +19,54 @@ def get_rag_prompt(ego_id:str, user_message:str)->str:
         user_message(str): 사용자가 말한 음성 정보이다. 해당 정보를 활용해 관계를 조회한다.
     """
     # NOTE 1. 답변 받은 문장을 Graph RAG에 맞는 형식으로 변환한다.
-    parsed_user_speak = ParsedSentence(user_message)
-    embedded_user_speak = parsed_user_speak.embedding()
+    single_sentences = split_sentence(text=user_message)
+
+    # parsed_user_speak = ParsedSentence(passage=user_message,single_sentence=user_message)
+    # embedded_user_speak = parsed_user_speak.element_embedding()
 
     # NOTE 2. Milvus Database에서 사용자 답변과 유사한 Triplet 정보 검색
     # TODO 1. 주어로도 목적어를 조회하고, 목적어로도 주어를 조회할 수 있어야 하는 것 아님?
     # 주어, 목적어, 관계와 유사한 삼중항 조회
-    if parsed_user_speak.triplets[0][0] != "":
-        triplets_with_similar_subject = milvus_database.search_triplets(
-            ego_id=ego_id,
-            field_name="embedded_subject",
-            datas=[embedded_triplets[0] for embedded_triplets in embedded_user_speak["embedded_triplets"]]
-        )
-        triplets_with_similar_subject.extend(milvus_database.search_triplets(
-            ego_id=ego_id,
-            field_name="embedded_object",
-            datas=[embedded_triplets[0] for embedded_triplets in embedded_user_speak["embedded_triplets"]]
-        ))
-    else: triplets_with_similar_subject = []
+    embedding_subject:list = []
+    embedding_object:list = []
+    embedding_relation:list = []
+    for single_sentence in single_sentences:
+        parsed_sentence = ParsedSentence(passage="", single_sentence=single_sentence)
+        embedded_sentence = parsed_sentence.element_embedding()
 
-    if parsed_user_speak.triplets[0][1] != "":
-        triplets_with_similar_object = milvus_database.search_triplets(
-            ego_id=ego_id,
-            field_name="embedded_object",
-            datas=[embedded_triplets[1] for embedded_triplets in embedded_user_speak["embedded_triplets"]]
-        )
-        triplets_with_similar_object.extend(milvus_database.search_triplets(
-            ego_id=ego_id,
-            field_name="embedded_subject",
-            datas=[embedded_triplets[1] for embedded_triplets in embedded_user_speak["embedded_triplets"]]
-        ))
-    else : triplets_with_similar_object = []
+        # 주어, 목적어, 관계가 비어있지 않으면, 추가
+        if parsed_sentence.triplet[0] != "": embedding_subject.append(embedded_sentence)
+        if parsed_sentence.triplet[1] != "": embedding_object.append(embedded_sentence)
+        if parsed_sentence.relation != "": embedding_relation.append(embedded_sentence)
 
-    if parsed_user_speak.relations != "":
-        triplets_with_similar_relations = milvus_database.search_triplets(
-            ego_id=ego_id,
-            field_name="embedded_relation",
-            datas=embedded_user_speak["embedded_relations"]
-        )
-    else : triplets_with_similar_relations = []
+
+    triplets_with_similar_subject = milvus_database.search_triplets(
+        ego_id=ego_id,
+        field_name="embedded_subject",
+        datas=embedding_subject
+    )
+    triplets_with_similar_subject.extend(milvus_database.search_triplets(
+        ego_id=ego_id,
+        field_name="embedded_object",
+        datas=embedding_subject
+    ))
+
+    triplets_with_similar_object = milvus_database.search_triplets(
+        ego_id=ego_id,
+        field_name="embedded_object",
+        datas=embedding_object
+    )
+    triplets_with_similar_object.extend(milvus_database.search_triplets(
+        ego_id=ego_id,
+        field_name="embedded_subject",
+        datas=embedding_object
+    ))
+
+    triplets_with_similar_relations = milvus_database.search_triplets(
+        ego_id=ego_id,
+        field_name="embedded_relation",
+        datas=embedding_relation
+    )
 
     # NOTE 3. 검색된 Triplet 정보 중 서로 연결된 관계들을 계산한다.
     related_passages_ids = get_passages_id_from_triplets(
