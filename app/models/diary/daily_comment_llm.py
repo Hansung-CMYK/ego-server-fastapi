@@ -2,7 +2,7 @@ from textwrap import dedent
 
 from langchain_core.prompts import ChatPromptTemplate
 
-from app.models.default_model import task_model, DEFAULT_TASK_LLM_TEMPLATE, clean_json_string
+from app.models.default_model import task_model, DEFAULT_TASK_LLM_TEMPLATE, clean_json_string, llm_sem
 import json
 from app.logger.logger import logger
 
@@ -37,12 +37,13 @@ class DailyCommentLLM:
         """
         events = [diary["title"] for diary in diaries] # 일기에서 제목(주제)를 정제한다.
 
-        answer = self.__chain.invoke({ # 한줄평 추출
-            "events": events, "feelings": feeling, "keywords":keywords,
-            "return_form_example":self.__RETURN_FORM_EXAMPLE,
-            "result_example":self.__RESULT_EXAMPLE,
-            "default_task_llm_template":DEFAULT_TASK_LLM_TEMPLATE
-        }).content
+        with llm_sem:
+            answer = self.__chain.invoke({ # 한줄평 추출
+                "events": events, "feelings": feeling, "keywords":keywords,
+                "return_form_example":self.__RETURN_FORM_EXAMPLE,
+                "result_example":self.__RESULT_EXAMPLE,
+                "default_task_llm_template":DEFAULT_TASK_LLM_TEMPLATE
+            }).content
         clean_answer: str = clean_json_string(text=answer)  # 필요없는 문자열 제거
 
         # LOG. 시연용 로그
@@ -56,53 +57,55 @@ class DailyCommentLLM:
             return ""
 
     __DAILY_TEMPLATE = [
-        ("system", "/no_think {default_task_llm_template}"),
+        # 1) Ollama meta tags
+        ("system", """
+        /no_think
+        {default_task_llm_template}
+        """),
+
+        # 2) Main prompt (English)
         ("system", dedent("""
         <PRIMARY_RULE>
-        무조건 JSON 형식을 유지해야 합니다.
-        JSON 외에 자연어 해설은 없습니다.
-        AI, 챗봇, 대화방, 시스템, 주석, 설명, 프롬프트 등 메타 표현은 절대 금지합니다.
+        1. **Return valid JSON only** – no extra text before/after.  
+        2. Do **NOT** output explanations, comments or system tags.  
+        3. Keys & string values must use straight double-quotes (").
         </PRIMARY_RULE>
-        
+
         <ROLE>
-        당신의 임무는 INPUT에 있는 문장들을 한 문장으로 요약하는 것입니다.
-        반환되는 문장을 80자 이하입니다.
+        • Summarise the given Korean `INPUT` sentences into **one single Korean sentence** (≤ 80 characters).  
+        • This sentence becomes the user's “one-line diary”.
         </ROLE>
-        
-        <RULE>
-        다음은 주어진 입력에 **필수적**으로 지켜야 할 반환 규칙입니다.
-        - 대화와 일기를 기반으로 ‘하루 한 줄 요약’을 작성한다.
-        - INPUT 정보를 한 문장으로 요약합니다.
-        - INPUT 정보를 자연스럽게 연결해야 합니다.
-        - INPUT 정보는 빠짐없이 **전부** 이용해야 합니다.
-        - 출력은 한글로 문장으로 작성합니다. 문장은 80자 이하입니다.
-        </RULE>
-        
-        <RETURN_TYPE>
-        - 출력은 반드시 아래 예시와 동일한 JSON 구조로 반환합니다.
-        - 최상위 `key`는 `result`입니다.
-        - `result` `key`의 `value`는 `str` `type`입니다.
-        </RETURN_TYPE>
-        
-        <WRITING_INSTRUCTIONS>
-        다음은 문장을 요약할 때, 지켜야 할 요약문 작성 규칙입니다.
-        - 요약된 문장에는 **무조건** 매개변수인 `events`, `feelings`, `keywords` 들을 **모두** 추가해야 합니다.
-        - 각 매개변수들의 의미는 다음과 같습니다:
-            * events(list[str]): 오늘 일기에 작성된 사건입니다.
-            * feelings(list[str]): 오늘 작성자가 느꼈던 감정입니다. feelings의 값들은 단일따옴표(`'`) 로 감싸서 사용해야 합니다.
-            * keywords(list[str]): 오늘 자주 거론된 단어입니다. keywords의 값들은 단일따옴표(`'`) 로 감싸서 사용해야 합니다.
-        </WRITING_INSTRUCTIONS>
-        
-        <RETURN_FORM>
-        다음은 출력 정보 예시입니다. 형식에 유사한 답변을 반환합니다.
+
+        <SUMMARY_REQUIREMENTS>
+        • Base the summary on both chat logs & diary topics (“events”).  
+        • Use **every** piece of information – nothing may be omitted.  
+        • Merge the data smoothly so it feels natural in Korean.  
+        • Include the following placeholders in the sentence (wrap each with single quotes `'`):  
+            – `events`   (list of strings)  
+            – `feelings` (list of strings)  
+            – `keywords` (list of strings)  
+        • If a placeholder list is empty, you may omit it and keep the sentence fluent.
+        </SUMMARY_REQUIREMENTS>
+
+        <OUTPUT_SCHEMA>
+        ```json
+        {{
+          "result": "<summarised sentence>"
+        }}
+        ```
+        </OUTPUT_SCHEMA>
+
+        <EXAMPLE_OUTPUT>
         {return_form_example}
-        - 만약 매개변수가 부족하여 문장을 완성할 수 없다면, 해당 요소를 생략하고 자연스럽게 문장을 연결합니다.
-        </RETURN_FORM>
-        
-        <RESULT>
+        </EXAMPLE_OUTPUT>
+
+        <REFERENCE>
         {result_example}
+        </REFERENCE>
+
         Q. <INPUT> events: {events}, feelings: {feelings}, keywords: {keywords} </INPUT>
-        A. """))
+        A.
+        """)),
     ]
 
     __RETURN_FORM_EXAMPLE = dedent("""

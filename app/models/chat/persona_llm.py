@@ -4,7 +4,7 @@ from langchain_core.prompts import ChatPromptTemplate
 import json
 
 from app.exception.exceptions import ControlledException, ErrorCode
-from app.models.default_model import task_model, DEFAULT_TASK_LLM_TEMPLATE, clean_json_string
+from app.models.default_model import task_model, DEFAULT_TASK_LLM_TEMPLATE, clean_json_string, llm_sem
 from app.logger.logger import logger
 
 class PersonaLlm:
@@ -36,13 +36,13 @@ class PersonaLlm:
             JSONDecodeError: JSON Decoding 실패 시, 빈 딕셔너리 반환
         """
         # 페르소나 변경사항
-        answer:str = self.__chain.invoke({
-            "session_history": session_history,
-            "current_persona": user_persona,
-            "return_form": self.__RETURN_FORM_EXAMPLE,
-            "result_example": self.__RESULT_EXAMPLE,
-            "default_task_llm_template": DEFAULT_TASK_LLM_TEMPLATE
-        }).content
+        with llm_sem:
+            answer:str = self.__chain.invoke({
+                "session_history": session_history,
+                "current_persona": user_persona,
+                "result_example": self.__RESULT_EXAMPLE,
+                "default_task_llm_template": DEFAULT_TASK_LLM_TEMPLATE
+            }).content
         clean_answer:str = clean_json_string(text=answer) # 필요없는 문자열 제거
 
         # LOG. 시연용 로그
@@ -55,72 +55,73 @@ class PersonaLlm:
             raise ControlledException(ErrorCode.FAILURE_JSON_PARSING)
 
     __PERSONA_TEMPLATE = [
-        ("system", "/no_think {default_task_llm_template}"),
+        # 1) Ollama 제어 메타 태그 ― 모델을 JSON 출력 모드로 고정
+        ("system", """
+        /json
+        /no_think
+        {default_task_llm_template}
+        """),
+
+        # 2) 역할‧규칙 블록 ― 전부 영어
         ("system", dedent("""
         <PRIMARY_RULE>
-        무조건 JSON 형식을 유지해야 합니다.
-        JSON 외에 자연어 해설은 없습니다.
-        시스템, 주석, 설명, 프롬프트 등 메타 표현은 절대 금지합니다.
+        1. **Return strictly valid JSON only.**
+        2. Do **NOT** output any natural-language commentary, markdown, system tags, or explanations.
         </PRIMARY_RULE>
-        
+
         <ROLE>
-        당신의 임무는 `Q.` 속 Human의 **Persona 변화**를 찾아내는 것 입니다.
-        추가 및 삭제 되어야 할 값은 정해진 `key`로 반환합니다.
+        • Your job is to detect **persona changes** for the Human speaker inside <INPUT>  
+          and express them as JSON patches to the existing persona.
+        • All Human utterances are in **Korean**, but you must still follow these English instructions exactly.
         </ROLE>
-        
+
         <CURRENT_PERSONA>
         {current_persona}
         </CURRENT_PERSONA>
-        
-        <RULE>
-        다음은 주어진 입력에 **필수적**으로 지켜야 할 반환 규칙입니다.
-        - CURRENT_PERSONA는 변경이 될 JSON 정보입니다.
-        - CURRENT_PERSONA를 참고해 각 값을 **삽입, 삭제** 정보를 추출합니다.
-        </RULE>
-        
-        <RETURN_TYPE>
-        - 출력은 반드시 아래 예시와 동일한 JSON 구조로 반환합니다.
-        - 주어진 `key`를 제외하고 다른 키 값은 **무조건** 사용하면 안됩니다.
-        - 주어진 `key`는 SAMPLE_JSON의 `key`만 사용할 수 있습니다.
-        - 최상위 `key`는 `$set`과 `$unset`입니다.
-        - 최상위 `key`인 `$set`과 `$unset`은 출력 값에 **무조건** 포함됩니다.
-        - `$set`은 CURRENT_PERSONA에 **추가**될 정보입니다.
-        - `$set` `key`의 `value`는 `dict`입니다.
-        - `$set`은 CURRENT_PERSONA에 **삭제**될 정보입니다.
-        - `$unset` `key`의 `value`는 `dict`입니다.
-        - `dict`의 `key`는 무조건 'likes(좋아하는 것)', 'dislikes(싫어하는 것)', 'personality(성격)', personality(관심사), 'goal(목표)'만 가능합니다.
-        - `dict`의 `key`는 **생성, 삭제 될 경우에만** 출력됩니다. 
-        - 추가 및 삭제 되어야 할 값은 **정해진 `key` 값**을 유지해서 출력됩니다.
-        </RETURN_TYPE>
 
-        <RETURN_FORM>
-        # 추가될 정보
-        {return_form}
-        </RETURN_FORM>
-        
-        <RESULT>
+        <GUIDELINES>
+        • Treat CURRENT_PERSONA as the baseline document to be updated.  
+        • Compare the new chat log and list the attributes that should be **added to** or **removed from** the persona.
+        </GUIDELINES>
+
+        <OUTPUT_SCHEMA>
+        • Use only the keys that appear in the SAMPLE section below.  
+        • Top-level keys **must** be "$set" and "$unset" (both present, even if empty).  
+        • Allowed attribute keys inside those objects:  
+            - "likes"          (things the user likes)  
+            - "dislikes"       (things the user dislikes)  
+            - "personality"    (personality traits)  
+            - "goal"           (goals)  
+        • If there is nothing to add/remove for a given attribute, omit that attribute key.
+        </OUTPUT_SCHEMA>
+
+        <SAMPLE_JSON>
+        {{ 
+            "result": {{
+                "$set": {{
+                    "likes": [<str, 좋아하는 것>, ...],
+                    "dislikes": [<str, 싫어하는 것>, ...]
+                    "personality": [<str, 성격>, ...],
+                    "goal": [str, 경제적 목표, ...]
+                }},
+                "$unset": {{
+                    "likes": [<str, 좋아하는 것>, ...],
+                    "dislikes": [<str, 싫어하는 것>, ...]
+                    "personality": [<str, 성격>, ...],
+                    "goal": [str, 경제적 목표, ...]
+                }} 
+            }} 
+        }}
+        </SAMPLE_JSON>
+
+        <EXAMPLE_RESULT>
         {result_example}
-        Q. <INPUT>{session_history}</INPUT>
-        A. """))
-    ]
+        </EXAMPLE_RESULT>
 
-    __RETURN_FORM_EXAMPLE = dedent("""
-    "result": {
-        "$set": {
-            "likes": [<str, 좋아하는 것>, ...],
-            "dislikes": [<str, 싫어하는 것>, ...]
-            "personality": [<str, 성격>, ...],
-            "goal": [str, 경제적 목표, ...]
-        },
-        # 삭제될 정보
-        "$unset": {
-            "likes": [<str, 좋아하는 것>, ...],
-            "dislikes": [<str, 싫어하는 것>, ...]
-            "personality": [<str, 성격>, ...],
-            "goal": [str, 경제적 목표, ...]
-        }
-    }
-    """)
+        Q. <INPUT>{session_history}</INPUT>
+        A.
+        """)),
+    ]
 
     __RESULT_EXAMPLE = dedent("""
     Q. <INPUT> U@Human: 요즘 암벽등반 시작했는데 손끝이 아플 만큼 재밌어! at 2025-05-21T19:12:14.002\nU@Human: 대신 커피는 입에 안 맞아서 끊었어. at 2025-05-21T19:12:45.110\nU@Human: 발표력 키워서 좀 더 외향적으로 변하고 싶다. at 2025-05-21T19:13:08.550 </INPUT>

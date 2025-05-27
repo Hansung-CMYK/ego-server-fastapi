@@ -8,7 +8,7 @@ from langchain_community.chat_message_histories import ChatMessageHistory
 from langchain_core.runnables import RunnableWithMessageHistory
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 
-from app.models.default_model import chat_model
+from app.models.default_model import chat_model, llm_sem
 
 load_dotenv()
 MAIN_LLM = os.getenv("MAIN_LLM")
@@ -69,25 +69,26 @@ class MainLlm:
             session_id(str): 사용자가 ego와 채팅한 대화 기록
             human_name(str): 대화하고 있는 사용자의 이름
         """
-        for chunk in self.__prompt.stream(
-            input={
-                "name": persona.get("name", ""),
-                "age": persona.get("age", ""),
-                "gender": persona.get("gender", ""),
-                "likes": persona.get("likes", []),
-                "dislikes": persona.get("dislikes", ""),
-                "personality": persona.get("personality", []),
-                "mbti": persona.get("mbti", ""),
-                "mbti_description": self.get_mbti_description(mbti=persona.get("mbti", "")),
-                "goal": persona.get("goal", ""),
-                "human_name": human_name,
-                "rag_prompt": rag_prompt,
-                "tone": "", # TODO: 말투 프롬프트 추가하기
-                "user_message": user_message,
-            },
-            config={"configurable": {"session_id": f"{session_id}"}}
-        ):
-            yield chunk.content
+        with llm_sem:
+            for chunk in self.__prompt.stream(
+                input={
+                    "name": persona.get("name", ""),
+                    "age": persona.get("age", ""),
+                    "gender": persona.get("gender", ""),
+                    "likes": persona.get("likes", []),
+                    "dislikes": persona.get("dislikes", ""),
+                    "personality": persona.get("personality", []),
+                    "mbti": persona.get("mbti", ""),
+                    "mbti_description": self.get_mbti_description(mbti=persona.get("mbti", "")),
+                    "goal": persona.get("goal", ""),
+                    "human_name": human_name,
+                    "rag_prompt": rag_prompt,
+                    "tone": "", # TODO: 말투 프롬프트 추가하기
+                    "user_message": user_message,
+                },
+                config={"configurable": {"session_id": f"{session_id}"}}
+            ):
+                yield chunk.content
 
     def add_message_in_session_history(self, session_id:str, human_message:str, ai_message:str=""):
         """
@@ -120,7 +121,9 @@ class MainLlm:
                 self.delete_session_history(session_id)
 
     __MAIN_TEMPLATE = [
-        ("system", """/no_think
+        ("system", """
+        /json
+        /no_think
         You are ALWAYS in-character.
         """),
         ("system", dedent(f"""

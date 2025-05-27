@@ -80,10 +80,6 @@ async def create_diary(body: DiaryRequest)->CommonResponse:
     # 일기 내용을 바탕으로 감정을 추출한다.
     contents = [topic["content"] for topic in topics]
     feeling:list[str] = extract_emotions(contents)
-    logging.info(msg=f"""\n
-    POST: api/v1/diary [감정 분석]
-    {keywords}
-    \n""")
 
     # NOTE 5. 한줄 요약 문장 생성
     # 키워드, 일기, 감정을 기반으로 한줄평을 생성한다.

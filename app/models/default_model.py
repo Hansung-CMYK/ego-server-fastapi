@@ -1,3 +1,5 @@
+import threading
+
 from keybert import KeyBERT
 from kiwipiepy import Kiwi
 from langchain_ollama import ChatOllama
@@ -46,7 +48,7 @@ keyword_model = KeyBERT(sentence_transformer) # 한국어 SBERT
 def clean_json_string(text: str) -> str:
     """
     요약:
-        LLM이 출력한 문자열에서 \```json 및 \``` 마커를 제거하고 공백을 정리한다.
+        LLM이 출력한 문자열에서 ```json 및 ``` 마커를 제거하고 공백을 정리한다.
 
     Parameters:
         text(str): 정제할 텍스트
@@ -57,3 +59,5 @@ def clean_json_string(text: str) -> str:
     if text.endswith("```"):
         text = text[:-3].strip()
     return text
+
+llm_sem = threading.Semaphore(1)
