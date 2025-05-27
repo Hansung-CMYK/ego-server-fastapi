@@ -74,7 +74,7 @@ class MilvusDatabase:
                 search_params={
                     "metric_type": "COSINE",
                     "params": {
-                        "radius": 0.5
+                        "radius": 0.7
                     }
                 },
                 output_fields=[
