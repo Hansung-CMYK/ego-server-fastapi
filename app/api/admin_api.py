@@ -48,6 +48,12 @@ async def reset_ego(user_id:str, ego_id:str, body: AdminRequest)->CommonResponse
     if body.admin_id != ADMIN_ID or body.admin_password != ADMIN_PASSWORD:
         raise ControlledException(ErrorCode.INVALID_ADMIN_ID)
 
+    if int(user_id.split("user_id_")[1]) != int(ego_id):
+        return CommonResponse(
+            code=500,
+            message="에고 아이디와 유저 아이디가 일치하지 않습니다."
+        )
+
     # NOTE 1. milvus_db의 파티션에 있는 정보들을 초기화한다.
     milvus_database.reset_collection(ego_id=ego_id)
 
@@ -57,7 +63,7 @@ async def reset_ego(user_id:str, ego_id:str, body: AdminRequest)->CommonResponse
     # NOTE 3. postgres의 페르소나 정보들을 불러온다.
     postgres_database.insert_persona(
         ego_id=ego_id,
-        persona=KARINA_PERSONA if ego_id == 5 else MYEONGJUN_PERSONA # 만약에 에고 아이디가 2가 아니면 명준 페르소나 삽입
+        persona=KARINA_PERSONA if ego_id == "5" else MYEONGJUN_PERSONA # 만약에 에고 아이디가 2가 아니면 명준 페르소나 삽입
     )
 
     # NOTE 4. 세션 메모리 기록을 삭제한다. (loop 돌면서 user_id 전부 검사)
