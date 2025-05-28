@@ -8,49 +8,24 @@ from app.models.default_model import task_model, DEFAULT_TASK_LLM_TEMPLATE, clea
 from app.logger.logger import logger
 
 class TopicLlm:
-    """
-    요약:
-        채팅 내역을 바탕으로 일기를 생성하는 Ollama 클래스
-
-    설명:
-        채팅 내역에서 주제를 추출하여 일기를 작성하는 모델이다.
-
-    Attributes:
-        __chain: llm을 활용하기 위한 lang_chain
-    """
     def __init__(self):
-        # 랭체인 생성
         prompt = ChatPromptTemplate.from_messages(self.__DIARY_TEMPLATE)
         self.__chain = prompt | task_model
 
-    def topic_invoke(self, chat_rooms: list[str]) -> list[dict]:
-        """
-        요약:
-            대화 내역에서 주제를 추출하여 일기를 생성하는 함수
-
-        Parameters:
-            chat_rooms(list[str]): 사용자의 대화 내역
-
-        Raises:
-            JSONDecodeError: JSON Decoding 실패 시, 작업 중단
-            KeyError: 키 값에  "result"가 존재하지 않는 경우, 작업 중단
-        """
-        # LOG. 시연용 로그
-        logger.info(msg=f"\n\nPOST: api/v1/diary [topic_invoke 채팅 기록]\n{"\n".join(chat_rooms)}\n")
+    def topic_invoke(self, summary: str) -> list[dict]:
+        logger.info(msg=f"\n\nPOST: api/v1/diary [topic_invoke 요약문]\n{summary}\n")
 
         with llm_sem:
             answer = self.__chain.invoke({
-                "input": "\n".join(chat_rooms),
-                "return_form_example":self.__RETURN_FORM_EXAMPLE,
-                "result_example":self.__RESULT_EXAMPLE,
-                "default_task_llm_template":DEFAULT_TASK_LLM_TEMPLATE,
+                "input": summary,
+                "return_form_example": self.__RETURN_FORM_EXAMPLE,
+                "result_example": self.__RESULT_EXAMPLE,
+                "default_task_llm_template": DEFAULT_TASK_LLM_TEMPLATE,
             }).content
-        clean_answer: str = clean_json_string(text=answer)  # 필요없는 문자열 제거
+        clean_answer: str = clean_json_string(text=answer)
 
-        # LOG. 시연용 로그
-        logger.info(msg=f"\n\nPOST: api/v1/diary [일기 생성 LLM]\n{clean_answer}\n")
+        logger.info(msg=f"\n\nPOST: api/v1/diary [일기 생성 LLM 결과]\n{clean_answer}\n")
 
-        # 반환된 문자열 dict로 변환
         try:
             return json.loads(clean_answer)["result"]
         except json.JSONDecodeError:
@@ -60,40 +35,36 @@ class TopicLlm:
 
     __DIARY_TEMPLATE = [
         ("system", """
-        /no_think 
+        /no_think
         {default_task_llm_template}
         """),
         ("system", dedent("""
         <PRIMARY_RULE>
-        1. **Return ONLY valid JSON** – _no other characters_ before/after the object.
-        2. Do **NOT** output explanations, comments, markdown, or system tags.
-        3. Keys & string values MUST use straight double-quotes (").
-        4. Please answer all questions in Korean from now on.  
-        5. Even if the question is written in another language, always respond naturally and fluently in Korean.
+        1. Return ONLY valid JSON – no additional text.
+        2. No comments, markdown, or system tags.
+        3. Use straight double-quotes (").
+        4. All output must be in fluent, natural Korean.
         </PRIMARY_RULE>
 
         <ROLE>
-        • You are the diarist: rewrite the sentences under <INPUT> as a **first-person diary**.
+        * You are a sensitive and precise diary writer.
+        * Turn the summarized chat log into reflective diary entries.
         </ROLE>
 
         <KNOWLEDGE>
-        • Conversation snippets to base the diary on (latest duplicates win):
-        {input}
+        * Use only lines starting with `u@` as diary content.
+        * Treat `e@` lines as reference context — do not quote or summarize them.
+        * If there is no usable content → respond with exactly [] as "result".
         </KNOWLEDGE>
 
-        <STRICT_RULES>
-        • Do **NOT** invent facts beyond the Knowledge block.
-        • Use **ONLY the lines that start with `u@`** as material for the diary.  
-        • Lines that start with `e@` are context only and must **NOT** be quoted or summarized.
-        • If Knowledge is insufficient → return exactly **[]** as the value of "result".
-        </STRICT_RULES>
-
-        <WRITING_INSTRUCTIONS>
-        • Each diary topic ⇒ one object:
-            - "title"   : ≤ 1 short sentence (core keywords).
-            - "content" : 3-10 sentences; include ≥ 1 sensory or emotion line.
-        • Keep total output ≤ 1 k tokens for safety.
-        </WRITING_INSTRUCTIONS>
+        <WRITING_GUIDELINES>
+        * Split the day into multiple diary topics, each as an object.
+        * Each object:
+          - "title": 1 short sentence (clear topic).
+          - "content": 3–10 fluent sentences with at least one emotional or sensory element.
+        * Do not hallucinate or infer beyond the summarized input.
+        * Keep the total output within 1,000 tokens.
+        </WRITING_GUIDELINES>
 
         <OUTPUT_SCHEMA>
         {return_form_example}
@@ -104,22 +75,23 @@ class TopicLlm:
         </RETURN_EXAMPLE>
 
         Q. <INPUT> {input} </INPUT>
-        A."""))
+        A.
+        """))
     ]
 
     __RETURN_FORM_EXAMPLE = dedent("""
     {
-        "result": [
-            {
-                "title": "<주제 1>", 
-                "content": "<본문 1>. <본문 2>..."
-            },
-            {
-                "title": "<주제 2>",
-                "content": "..."
-            },
-            ...
-        ]
+    "result": [
+        {
+            "title": "<주제 1>",
+            "content": "<본문 1>. <본문 2>..."
+        },
+        {
+            "title": "<주제 2>",
+            "content": "..."
+        },
+        ...
+    ]
     }
     """)
 

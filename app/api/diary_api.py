@@ -7,6 +7,7 @@ import asyncio
 from app.api.common_response import CommonResponse
 from app.exception.exceptions import ControlledException, ErrorCode
 from app.models.diary.daily_comment_llm import daily_comment_llm
+from app.models.diary.summary_llm import summary_llm
 from app.models.diary.topic_llm import topic_llm
 from app.models.diary.keyword_model import keyword_model
 from datetime import date
@@ -67,6 +68,9 @@ async def create_diary(body: DiaryRequest)->CommonResponse:
     # 예외처리 1. 일기 생성 전, 일기를 생성하기 위한 문장 수가 충분한지 확인한다.
     if sum(len(all_chat_of_chat_room) for all_chat_of_chat_room in all_chat) < 5: # 24시간 내에 대화한 채팅이 5개 이상이어야 한다.
         raise ControlledException(ErrorCode.CHAT_COUNT_NOT_ENOUGH)
+
+    # 대화 내역 요약
+    summary = summary_llm.summary_invoke(chat_rooms=chat_rooms)
 
     # 일기 생성
     # 각 주제가 list[{"title": str, "content": str}]로 저장된다.
