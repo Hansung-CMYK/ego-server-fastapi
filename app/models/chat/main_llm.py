@@ -12,7 +12,7 @@ from app.models.default_model import chat_model, llm_sem
 
 load_dotenv()
 
-with open("$HOME/ego-server-fastapi/main_llm_prompt.txt", "r", encoding="utf-8") as f:
+with open(os.path.join(os.environ["HOME"], "ego-server-fastapi", "main_llm_prompt.txt"), "r", encoding="utf-8") as f:
     MAIN_LLM = f.read()
 
 class MainLlm:
