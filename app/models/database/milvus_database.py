@@ -233,12 +233,12 @@ class MilvusDatabase:
         self.__milvus_client.delete(
             collection_name="passages",
             partition_name=ego_id,
-            filter="is_fix == True"
+            filter="is_fix == False"
         )
         self.__milvus_client.delete(
             collection_name="triplets",
             partition_name=ego_id,
-            filter="is_fix == True"
+            filter="is_fix == False"
         )
 
     def delete_partition(self, ego_id: str):
