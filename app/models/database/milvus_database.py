@@ -75,7 +75,7 @@ class MilvusDatabase:
                 search_params={
                     "metric_type": "COSINE",
                     "params": {
-                        "radius": 0.7
+                        "radius": 0.3
                     }
                 },
                 output_fields=[
@@ -234,12 +234,12 @@ class MilvusDatabase:
         self.__milvus_client.delete(
             collection_name="passages",
             partition_name=ego_id,
-            filter="is_fix == False"
+            filter="is_fix == True"
         )
         self.__milvus_client.delete(
             collection_name="triplets",
             partition_name=ego_id,
-            filter="is_fix == False"
+            filter="is_fix == True"
         )
 
     def delete_partition(self, ego_id: str):
