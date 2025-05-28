@@ -11,7 +11,9 @@ from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from app.models.default_model import chat_model, llm_sem
 
 load_dotenv()
-MAIN_LLM = os.getenv("MAIN_LLM")
+
+with open("$HOME/ego-server-fastapi/main_llm_prompt.txt", "r", encoding="utf-8") as f:
+    MAIN_LLM = f.read()
 
 class MainLlm:
     """
