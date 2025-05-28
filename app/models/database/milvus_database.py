@@ -1,6 +1,5 @@
 import os
 
-from dotenv import load_dotenv
 from numpy import ndarray
 from pymilvus import MilvusClient, MilvusException
 

@@ -1,8 +1,5 @@
-import re, requests, os, json
+import re, requests, os
 from dotenv import load_dotenv
-from lxml.html.defs import phrase_tags
-
-from app.models.txtnorm.ner_model import ner_model
 
 load_dotenv()
 
