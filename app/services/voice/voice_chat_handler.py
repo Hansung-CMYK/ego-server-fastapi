@@ -88,7 +88,7 @@ class VoiceChatHandler:
 
     def _recorder_config(self) -> dict:
         return {
-            'device': 'cuda:1',
+            'device': 'cuda',
             'spinner': False,
             'use_microphone': False,
             'model': 'large-v3',
