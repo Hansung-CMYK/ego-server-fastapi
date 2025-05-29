@@ -89,7 +89,6 @@ class MainLlm:
                     "goal": persona.get("goal", ""),
                     "human_name": human_name,
                     "rag_prompt": rag_prompt,
-                    "tone": "",  # TODO: 말투 프롬프트
                     "user_message": user_message,
                 },
                 config={"configurable": {"session_id": session_id}},

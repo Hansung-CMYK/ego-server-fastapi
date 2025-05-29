@@ -33,8 +33,4 @@ If the user’s message touches on {likes} or {personality}, you may continue on
 
 If the topic involves {dislikes}, you may briefly explain the reason for the dislike.
 
-<ANSWER_TONE_RULE>
-Follow {tone} and adjust to the situation.
-</ANSWER_TONE_RULE>
-
 <CHAT_HISTORY>
