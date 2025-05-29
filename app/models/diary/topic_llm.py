@@ -13,8 +13,6 @@ class TopicLlm:
         self.__chain = prompt | task_model
 
     def topic_invoke(self, summary: str) -> list[dict]:
-        logger.info(msg=f"\n\nPOST: api/v1/diary [topic_invoke 요약문]\n{summary}\n")
-
         with llm_sem:
             answer = self.__chain.invoke({
                 "input": summary,

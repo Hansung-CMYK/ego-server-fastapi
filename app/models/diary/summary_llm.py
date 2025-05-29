@@ -2,7 +2,7 @@ from textwrap import dedent
 
 from langchain_core.prompts import ChatPromptTemplate
 
-from app.models.default_model import chat_model, llm_sem
+from app.models.default_model import chat_model, llm_sem, clean_json_string
 from app.logger.logger import logger
 
 class SummaryLlm:
@@ -15,6 +15,7 @@ class SummaryLlm:
             answer = self.__chain.invoke({
                 "input": "\n".join(chat_rooms),
             }).content
+        answer = clean_json_string(answer)
         logger.info(msg=f"\n\nPOST: api/v1/diary [summary_invoke 요약문]\n{answer}\n")
         return answer
 
