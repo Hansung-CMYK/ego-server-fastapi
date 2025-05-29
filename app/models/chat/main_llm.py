@@ -85,7 +85,11 @@ class MainLlm:
                 },
                 config={"configurable": {"session_id": session_id}},
             ):
-                yield chunk.content
+                # <think> 마커만 제거
+                clean = chunk.content.replace("<think>", "").replace("</think>", "")
+                # 마커만 있고 다른 내용이 없으면 건너뛰고, 있으면 내보냄
+                if clean:
+                    yield clean
 
     def add_message_in_session_history(
         self, session_id: str, human_message: str, ai_message: str = ""
