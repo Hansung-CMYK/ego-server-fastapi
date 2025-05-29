@@ -26,7 +26,7 @@ from app.services.kafka.kafka_handler import (
     ContentType
 )
 
-logger = logging.getLogger(__name__)
+from app.logger.logger import logger
 
 async def produce_message(sentence: str, config: SessionConfig, topic: str):
     await wait_until_kafka_ready()
