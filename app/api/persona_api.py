@@ -26,7 +26,6 @@ class PersonaRequest(BaseModel):
     """
     ego_id: str
     name: Optional[str] = None
-    age: Optional[int] = None
     mbti: Optional[str] = None
     interview: Optional[str] = None
 

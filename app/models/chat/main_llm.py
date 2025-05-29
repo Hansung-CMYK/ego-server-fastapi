@@ -76,7 +76,6 @@ class MainLlm:
             for chunk in self.__prompt.stream(
                 input={
                     "name": persona.get("name", ""),
-                    "age": persona.get("age", ""),
                     "likes": persona.get("likes", []),
                     "dislikes": persona.get("dislikes", ""),
                     "personality": persona.get("personality", []),
