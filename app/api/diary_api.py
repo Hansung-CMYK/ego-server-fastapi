@@ -74,7 +74,7 @@ async def create_diary(body: DiaryRequest)->CommonResponse:
 
     # 일기 생성
     # 각 주제가 list[{"title": str, "content": str}]로 저장된다.
-    topics:list[dict] = topic_llm.topic_invoke(chat_rooms=chat_rooms)
+    topics:list[dict] = topic_llm.topic_invoke(summary=summary)
 
     # 예외처리 2. 일기로 아무 내용이 반환되지 않았는지 확인한다.
     if len(topics) < 1:
