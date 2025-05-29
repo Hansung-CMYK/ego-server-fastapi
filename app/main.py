@@ -26,24 +26,13 @@ REFER_DIRECTORY = os.path.join(user_home, "refer")
 
 async def init_models():
     await ensure_init_v2(
-        "karina",
+        "default",
         # ckpt
         os.path.join(WEIGHT_PATH, "karina-v4-2505242-e20.ckpt"),
         # pth
         os.path.join(WEIGHT_PATH, "karina-v4-2505242_e8_s200_l64.pth"),
         os.path.join(REFER_DIRECTORY, "karina.wav"),
         "내 마음에 드는 거 있으면 낭독해줄게?",
-        "ko"
-    )
-
-    await ensure_init_v2(
-        "ralo",
-        # ckpt
-        os.path.join(WEIGHT_PATH, "ralo-v4-2505251-e20.ckpt"),
-        # pth
-        os.path.join(WEIGHT_PATH, "ralo-v4-2505251_e8_s344_l64.pth"),
-        os.path.join(REFER_DIRECTORY, "ralo.wav"),
-        "안 나오네? 이거 누가 좀 찾아주세요 내가 이상한 사람 되잖아 저기 누가 좀 찾아주십시오 제... 제가",
         "ko"
     )
 

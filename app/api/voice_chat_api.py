@@ -27,10 +27,12 @@ async def websocket_voice_chat(ws: WebSocket):
 
     if user_id is None:
         logger.error('user_id 조회 실패')
-        config.refer_path = None
     else :
-        config.refer_path = _get_refer_path(ego_user_id)
-
+        refer_path = _get_refer_path(ego_user_id)
+        if refer_path is not None and 'karina' not in refer_path:
+            config.refer_path = refer_path
+            config.prompt_text = "2025년 캡스톤디자인 에고 시연입니다."
+            
     if config is None:
         raise Exception("spk was None")
     if chat_room_id is None:
