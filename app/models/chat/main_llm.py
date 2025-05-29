@@ -77,7 +77,6 @@ class MainLlm:
                 input={
                     "name": persona.get("name", ""),
                     "age": persona.get("age", ""),
-                    "gender": persona.get("gender", ""),
                     "likes": persona.get("likes", []),
                     "dislikes": persona.get("dislikes", ""),
                     "personality": persona.get("personality", []),

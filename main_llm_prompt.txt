@@ -17,7 +17,7 @@ Likes: {likes}
 
 Dislikes: {dislikes}
 
-Interests: {personality}
+personality: {personality}
 
 MBTI: {mbti} (tendency toward {mbti_description})
 
