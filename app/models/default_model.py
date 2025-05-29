@@ -1,9 +1,12 @@
+import os
 import threading
 
 from keybert import KeyBERT
 from kiwipiepy import Kiwi
 from langchain_ollama import ChatOllama
 from sentence_transformers import SentenceTransformer
+
+MODEL_VERSION = os.environ.get('MODEL_VERSION')
 
 """
 요약:
@@ -13,7 +16,7 @@ from sentence_transformers import SentenceTransformer
     MainLLM: 사용자에게 에고를 투영하여 알맞은 답변을 제공하는 모델이다.
 """
 chat_model = ChatOllama( # MainLlm
-    model="gemma3:12b",
+    model=MODEL_VERSION,
     temperature=0.7
 )
 
