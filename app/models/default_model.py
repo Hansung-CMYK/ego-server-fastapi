@@ -1,11 +1,13 @@
 import os
 import threading
 
+from dotenv import load_dotenv
 from keybert import KeyBERT
 from kiwipiepy import Kiwi
 from langchain_ollama import ChatOllama
 from sentence_transformers import SentenceTransformer
 
+load_dotenv()
 MODEL_VERSION = os.environ.get('MODEL_VERSION')
 
 """
