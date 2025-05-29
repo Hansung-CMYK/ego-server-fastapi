@@ -30,6 +30,7 @@ class PersonaRequest(BaseModel):
     age: Optional[int] = None
     gender: Optional[str] = None
     mbti: Optional[str] = None
+    interview: Optional[str] = None
 
 @router.post("")
 async def create_persona(body: PersonaRequest)->CommonResponse:
