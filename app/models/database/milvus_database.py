@@ -196,6 +196,8 @@ class MilvusDatabase:
         Parameters:
             partition_name(str): 존재하는지 확인할 파티션 명
         """
+        print(self.__milvus_client.has_partition(collection_name="passages", partition_name=partition_name))
+        print(self.__milvus_client.has_partition(collection_name="triplets", partition_name=partition_name))
         return (
             self.__milvus_client.has_partition(collection_name="passages",partition_name=partition_name)
             or self.__milvus_client.has_partition(collection_name="triplets",partition_name=partition_name)
@@ -245,7 +247,7 @@ class MilvusDatabase:
         """
         파티션을 삭제하는 함수
         """
-        self.__milvus_client.release_partitions(collection_name="passages",partition_names=[ego_id])
-        self.__milvus_client.release_partitions(collection_name="triplets",partition_names=[ego_id])
+        self.__milvus_client.drop_partition(collection_name="passages",partition_name=ego_id)
+        self.__milvus_client.drop_partition(collection_name="triplets",partition_name=ego_id)
 
 milvus_database = MilvusDatabase()
