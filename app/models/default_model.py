@@ -50,19 +50,33 @@ kiwi = Kiwi() # 형태소 분석기(명사만 남기기 위함)
 sentence_transformer = SentenceTransformer("snunlp/KR-SBERT-V40K-klueNLI-augSTS")
 keyword_model = KeyBERT(sentence_transformer) # 한국어 SBERT
 
+import re
+
 def clean_json_string(text: str) -> str:
     """
     요약:
-        LLM이 출력한 문자열에서 ```json 및 ``` 마커를 제거하고 공백을 정리한다.
+        LLM이 출력한 문자열에서 ```json / ``` 마커와
+        <think> ... </think> 블록을 제거하고 양쪽 공백을 정리한다.
 
     Parameters:
-        text(str): 정제할 텍스트
+        text (str): 정제할 텍스트
+
+    Returns:
+        str: 정제된 문자열
     """
+    # 양쪽 공백 제거
     text = text.strip()
+
+    # 코드펜스 ```json ... ``` 제거
     if text.startswith("```json"):
         text = text[len("```json"):].strip()
     if text.endswith("```"):
         text = text[:-3].strip()
-    return text
+
+    # <think> ... </think> 블록 제거 (여러 개 가능)
+    text = re.sub(r'<think>.*?</think>\s*', '', text, flags=re.DOTALL)
+
+    return text.strip()
+
 
 llm_sem = threading.Semaphore(1)
