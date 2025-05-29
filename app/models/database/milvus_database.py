@@ -196,8 +196,6 @@ class MilvusDatabase:
         Parameters:
             partition_name(str): 존재하는지 확인할 파티션 명
         """
-        print(self.__milvus_client.has_partition(collection_name="passages", partition_name=partition_name))
-        print(self.__milvus_client.has_partition(collection_name="triplets", partition_name=partition_name))
         return (
             self.__milvus_client.has_partition(collection_name="passages",partition_name=partition_name)
             or self.__milvus_client.has_partition(collection_name="triplets",partition_name=partition_name)
