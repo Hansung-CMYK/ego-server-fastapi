@@ -30,7 +30,6 @@ async def websocket_voice_chat(ws: WebSocket):
         while True:
             msg = await ws.receive_bytes()
             session.handle_audio(msg)
-            logger.info(msg=f"\n\nPOST: api/v1/ws/voice-chat [청크]\n대화 청크: {msg}\n")
     except WebSocketDisconnect:
         pass
     finally:
