@@ -2,126 +2,144 @@ import os
 import uuid
 import json
 import asyncio
+import math
+import wave
+
 from difflib import SequenceMatcher
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
-from app.util.audio_utils import decode_and_resample_v2 as decode_and_resample, save_wav
+
+import numpy as np
+from scipy.signal import resample_poly
+
 from app.services.voice.stt_recorder import get_stt_recorder, release_stt_recorder
 
 router = APIRouter()
 
-import logging
-logger = logging.getLogger(__name__)
+TARGET_SR = 16_000
+SAVE_DIR = "/home/keem/refer"
+os.makedirs(SAVE_DIR, exist_ok=True)
+
+def _decode_resample_le(pcm_bytes: bytes, src_sr: int, tgt_sr: int = TARGET_SR) -> bytes:
+    audio = np.frombuffer(pcm_bytes, dtype="<i2").astype(np.float32) / 32768.0
+    if src_sr != tgt_sr:
+        g = math.gcd(src_sr, tgt_sr)
+        audio = resample_poly(audio, tgt_sr // g, src_sr // g)
+    audio = np.clip(audio, -1.0, 1.0)
+    return (audio * 32767).astype("<i2").tobytes()
+
+def _save_wav(pcm: bytes, sr: int, path: str):
+    with wave.open(path, "wb") as wf:
+        wf.setnchannels(1)
+        wf.setsampwidth(2)
+        wf.setframerate(sr)
+        wf.writeframes(pcm)
+    print(f"[PRINT] WAV saved → {path}")
 
 @router.websocket("/ws/pronunciation-test")
 async def pronunciation_test(ws: WebSocket):
     await ws.accept()
     loop = asyncio.get_event_loop()
+    print("[PRINT] ▶ WS connection accepted")
 
-    state = {"expected_script": None}
+    expected_script = None
     pcm_buffer = bytearray()
+    src_sr = None
 
     async def on_realtime(text: str):
-        await ws.send_json({"type": "realtime", "text": text})
+        await ws.send_json({"type":"realtime","text":text})
+        print(f"[PRINT] ▶ realtime: {text}")
 
     async def on_full(full: str):
-        await ws.send_json({"type": "fullSentence", "text": full})
-        script = state["expected_script"] or ""
-        ratio = SequenceMatcher(None, script, full).ratio()
+        # fullSentence + result 전송
+        await ws.send_json({"type":"fullSentence","text":full})
+        ratio = SequenceMatcher(None, expected_script or "", full).ratio()
         verdict = "OK" if ratio >= 0.8 else "RETRY"
+        await ws.send_json({"type":"result","accuracy":round(ratio,3),"verdict":verdict})
+        print(f"[PRINT] ▶ fullSentence: '{full}' ratio={ratio:.3f} verdict={verdict}")
 
-        await ws.send_json({
-            "type": "result",
-            "accuracy": round(ratio, 3),
-            "verdict": verdict
-        })
-
+        # OK면 저장만, 세션은 유지
         if verdict == "OK":
-            save_dir = "/home/keem/refer"
-            os.makedirs(save_dir, exist_ok=True)
             fname = f"{uuid.uuid4().hex}.wav"
-            path = os.path.join(save_dir, fname)
-            save_wav(bytes(pcm_buffer), sample_rate=24000, path=path)
-            await ws.send_json({"type": "saved", "path": path})
-            await ws.close()
+            path = os.path.join(SAVE_DIR, fname)
+            _save_wav(bytes(pcm_buffer), TARGET_SR, path)
+            await ws.send_json({"type":"saved","path":path})
+            print("[PRINT] ▶ audio saved; session remains open")
 
     cfg = {
-        'device': 'cuda',
-        'spinner': False,
-        'use_microphone': False,
-        'model': 'large-v3',
-        'language': 'ko',
-        'silero_sensitivity': 0.6,
-        'webrtc_sensitivity': 1,
-        'post_speech_silence_duration': 1,
-        'min_length_of_recording': 0,
-        'min_gap_between_recordings': 0,
-        'enable_realtime_transcription': True,
-        'realtime_processing_pause': 0.05,
-        'use_main_model_for_realtime': True,
+        "device":"cuda","spinner":False,"use_microphone":False,
+        "model":"large-v3","language":"ko",
+        "silero_sensitivity":0.6,"webrtc_sensitivity":1,
+        "post_speech_silence_duration":0.3,
+        "min_length_of_recording":0,"min_gap_between_recordings":0,
+        "enable_realtime_transcription":True,"realtime_processing_pause":0.05,
+        "use_main_model_for_realtime":True,
     }
 
-    # ① STT engine 할당 시도
-    try:
-        recorder = get_stt_recorder(
-            cfg,
-            on_realtime=lambda t: asyncio.run_coroutine_threadsafe(on_realtime(t), loop),
-            on_full_sentence=lambda s: asyncio.run_coroutine_threadsafe(on_full(s), loop)
-        )
-
-        if recorder is None:
-            logger.warning(f"STT 엔진 할당 실패 — 이미 사용 중")
-            await ws.send_json({
-                "type": "error",
-                "message": "STT 엔진이 사용 중입니다. 잠시 후 다시 시도해주세요."
-            })
-            await ws.close()
-            return
-    except RuntimeError:
-        # 이미 사용 중인 경우 바로 에러 전송 후 종료
-        await ws.send_json({
-            "type": "error",
-            "message": "STT 엔진이 사용 중입니다. 잠시 후 다시 시도해주세요."
-        })
+    recorder = get_stt_recorder(
+        cfg,
+        on_realtime=lambda t: asyncio.run_coroutine_threadsafe(on_realtime(t), loop),
+        on_full_sentence=lambda s: asyncio.run_coroutine_threadsafe(on_full(s), loop),
+    )
+    if recorder is None:
+        await ws.send_json({"type":"error","message":"STT 엔진이 사용 중입니다."})
         await ws.close()
         return
+    print("[PRINT] ▶ STT recorder allocated")
 
-    # ② 메시지 루프
     try:
         while True:
             try:
                 msg = await ws.receive()
-            except WebSocketDisconnect:
-                break
-            except RuntimeError:
+            except (WebSocketDisconnect, RuntimeError):
+                print("[PRINT] ▶ WS disconnected or closed")
                 break
 
-            # 텍스트 메시지 처리
-            if msg.get("type") == "websocket.receive" and "text" in msg:
+            if msg.get("type") != "websocket.receive":
+                continue
+
+            # 텍스트 메시지 처리 (script 또는 eos)
+            if "text" in msg:
                 data = json.loads(msg["text"])
+
+                if data.get("eos"):
+                    print("[PRINT] ▶ Received EOS — flushing buffer")
+                    # 남은 버퍼 강제 처리
+                    try:
+                        recorder.stop()
+                    except:
+                        pass
+                    # on_full 로 강제 전달 (빈 텍스트도 내부 버퍼로)
+                    await on_full("")
+                    pcm_buffer.clear()
+                    # 재할당 없이 동일 recorder 사용 복원
+                    continue
+
                 if "script" in data:
-                    state["expected_script"] = data["script"]
+                    expected_script = data["script"]
+                    print(f"[PRINT] ▶ script set to '{expected_script}'")
+                continue
 
-            # 오디오 바이너리 처리
-            elif msg.get("type") == "websocket.receive" and "bytes" in msg:
+            # 오디오 바이트 처리
+            if "bytes" in msg:
                 raw = msg["bytes"]
-                header_len = int.from_bytes(raw[:4], 'little')
-                meta = json.loads(raw[4:4+header_len].decode())
-                pcm_chunk = raw[4+header_len:]
-                pcm = decode_and_resample(
-                    pcm_chunk,
-                    meta.get('sampleRate', 16000),
-                    24000
-                )
-                pcm_buffer.extend(pcm)
-                recorder.feed_audio(pcm)
+                hdr_len = int.from_bytes(raw[:4], 'little')
+                meta = json.loads(raw[4:4+hdr_len].decode())
+                block = raw[4+hdr_len:]
+                sr = int(meta.get("sampleRate", TARGET_SR))
+                if src_sr is None:
+                    src_sr = sr
+                    print(f"[PRINT] ▶ first packet sampleRate={src_sr}")
 
+                pcm16 = _decode_resample_le(block, src_sr, TARGET_SR)
+                pcm_buffer.extend(pcm16)
+                recorder.feed_audio(pcm16)
+                print(f"[PRINT] ▶ feed {len(pcm16)} bytes @16k")
+    except WebSocketDisconnect:
+        print("[PRINT] ▶ WS disconnected by client")
     finally:
-        # ③ 세션 종료 시 리소스 해제
-        try:
-            recorder.stop()
-        except Exception:
-            pass
-
+        # 세션 종료 시 리소스 해제
+        try: recorder.stop()
+        except: pass
         release_stt_recorder()
-        pcm_buffer.clear()
-        print("[WebSocket] 세션 종료 및 리소스 해제 완료")
+        print("[PRINT] ▶ STT recorder released")
+        print("[PRINT] ▶ WS session ended")
