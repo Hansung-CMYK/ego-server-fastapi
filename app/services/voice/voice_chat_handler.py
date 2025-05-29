@@ -8,6 +8,7 @@ import emoji
 import logging
 import numpy as np
 import time
+import torch
 
 from app.util.audio_utils import decode_and_resample_v2 as decode_and_resample
 from .tts_buffer import TTSBuffer
@@ -16,6 +17,7 @@ from app.services.session_config import SessionConfig
 from app.services.diary.kobert_handler import extract_emotions
 
 from app.services.voice.stt_recorder import get_stt_recorder, release_stt_recorder
+from app.services.voice.tts_infer import pick_least_used_gpu
 
 from app.services.kafka.kafka_handler import (
     wait_until_kafka_ready,
@@ -87,8 +89,14 @@ class VoiceChatHandler:
         self._start_inactivity_watchdog()
 
     def _recorder_config(self) -> dict:
+        _best_gpu = pick_least_used_gpu()
+        if _best_gpu is not None:
+            device = torch.device(f"cuda:{_best_gpu}")
+        else:
+            device = torch.device("cpu")
+            
         return {
-            'device': 'cuda',
+            'device': str(torch.device(device)),
             'spinner': False,
             'use_microphone': False,
             'model': 'large-v3',
