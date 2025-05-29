@@ -253,8 +253,12 @@ class VoiceChatHandler:
 
     def _send_emotion(self, text: str):
         emotion = extract_emotions([text], alpha=0.5, top_k=1)
+        payload = {
+            "type": "emotion",
+            "emotion": emotion
+        }
         asyncio.run_coroutine_threadsafe(
-            self.ws.send_text(json.dumps({"emotion": emotion})),
+            self.ws.send_text(json.dumps(payload)),
             self.loop
         )
 
