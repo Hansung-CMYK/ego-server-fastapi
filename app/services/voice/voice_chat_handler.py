@@ -145,14 +145,12 @@ class VoiceChatHandler:
         self.recorder.feed_audio(pcm)
 
     def _on_realtime(self, text: str):
-        logger.info(msg=f"\n\nPOST: api/v1/ws/voice-chat [_on_realtime]")
         # 실시간 텍스트 수신 시
         self._last_audio_time = time.monotonic()
         self._send(type='realtime', text=text)
         self._send(type='cancel_audio')
 
     def _process_full_sentence(self, full: str):
-        logger.info(msg=f"\n\nPOST: api/v1/ws/voice-chat [_process_full_sentence]")
         # 완전 문장 수신 시
         self._last_audio_time = time.monotonic()
         self._cancel_current()
@@ -161,7 +159,6 @@ class VoiceChatHandler:
         self._start_llm_tts(full)
 
     def _cancel_current(self):
-        logger.info(msg=f"\n\nPOST: api/v1/ws/voice-chat [_cancel_current]")
         self.cancel_event.set()
         if self.llm_thread and self.llm_thread.is_alive():
             self.llm_thread.join()

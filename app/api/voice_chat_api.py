@@ -13,8 +13,6 @@ async def websocket_voice_chat(ws: WebSocket):
     spk = ws.query_params.get("spk", "anonymous")
     chat_room_id = ws.query_params.get("chat_room_id", "anonymous")
 
-    logger.info(msg=f"\n\nPOST: api/v1/ws/voice-chat [음성 들어옴]\nuser_id:{user_id}, ego_id:{ego_id}\n")
-
     config = SessionConfig(user_id, ego_id)
     config.spk = spk
     config.chat_room_id = chat_room_id
