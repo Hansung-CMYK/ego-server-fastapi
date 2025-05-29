@@ -92,10 +92,7 @@ class MainLlm:
                     "tone": "",  # TODO: 말투 프롬프트
                     "user_message": user_message,
                 },
-                config={
-                    "configurable": {"session_id": session_id},
-                    'callbacks': [ConsoleCallbackHandler()]
-                },
+                config={"configurable": {"session_id": session_id}},
             ):
                 yield chunk.content
 
