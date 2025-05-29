@@ -197,9 +197,9 @@ class VoiceChatHandler:
             gen = tts_pipe.run({
                 "text": clean,
                 "text_lang": "ko",
-                "ref_audio_path": speaker.default_refer.path,
-                "prompt_text": speaker.default_refer.text,
-                "prompt_lang": speaker.default_refer.lang,
+                "ref_audio_path": self.config.refer_path if self.config.refer_path is not None else speaker.default_refer.path,
+                "prompt_text": "2025년 캡스톤디자인 에고 시연입니다" if self.config.refer_path is not None else speaker.default_refer.text,
+                "prompt_lang": "ko",
                 "sample_steps": 16,
                 "speed_factor": 1.0,
             })
