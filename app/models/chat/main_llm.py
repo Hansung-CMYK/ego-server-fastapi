@@ -69,23 +69,17 @@ class MainLlm:
         user_message: str,
         persona: dict,
         rag_prompt: str,
-        human_name: str,
         session_id: str,
     ):
         with llm_sem:
             for chunk in self.__prompt.stream(
                 input={
                     "name": persona.get("name", ""),
-                    "likes": persona.get("likes", []),
-                    "dislikes": persona.get("dislikes", ""),
-                    "personality": persona.get("personality", []),
                     "mbti": persona.get("mbti", ""),
                     "mbti_description": self.get_mbti_description(
                         persona.get("mbti", "")
                     ),
                     "interview": persona.get("interview", ""),
-                    "goal": persona.get("goal", ""),
-                    "human_name": human_name,
                     "rag_prompt": rag_prompt,
                     "user_message": user_message,
                 },
