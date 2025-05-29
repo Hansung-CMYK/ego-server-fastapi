@@ -86,7 +86,7 @@ class MainLlm:
                 config={"configurable": {"session_id": session_id}},
             ):
                 # <think> 마커만 제거
-                clean = chunk.content.replace("<think>", "").replace("</think>", "")
+                clean = chunk.content.replace("<", "").replace(">", "").replace("/", "").replace("think", "").replace("think", "")
                 # 마커만 있고 다른 내용이 없으면 건너뛰고, 있으면 내보냄
                 if clean:
                     yield clean
