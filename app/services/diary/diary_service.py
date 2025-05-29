@@ -106,19 +106,19 @@ def save_persona(ego_id:str, chat_rooms:list[str]):
     user_persona = persona_store.get_persona(ego_id=ego_id)
 
     # NOTE 2. 대화내역을 바탕으로 변경사항을 추출한다.
-    delta_persona = persona_llm.persona_invoke(
-        user_persona=user_persona,
-        session_history=chat_rooms
-    )
+    # delta_persona = persona_llm.persona_invoke(
+    #     user_persona=user_persona,
+    #     session_history=chat_rooms
+    # )
 
     # NOTE 3. 변경사항을 저장한다.
-    persona_store.update(ego_id=ego_id, delta_persona=delta_persona)  # 변경사항 업데이트
+    # persona_store.update(ego_id=ego_id, delta_persona=delta_persona)  # 변경사항 업데이트
 
     # NOTE 4. 변경사항을 DB에 저장한다.
-    postgres_database.update_persona(
-        ego_id=ego_id,
-        persona=persona_store.get_persona(ego_id=ego_id)
-    )  # 데이터베이스에 업데이트 된 페르소나 저장
+    # postgres_database.update_persona(
+    #     ego_id=ego_id,
+    #     persona=persona_store.get_persona(ego_id=ego_id)
+    # )  # 데이터베이스에 업데이트 된 페르소나 저장
 
     # NOTE 5. 메모리에서 자신의 페르소나를 내린다.
     # 메모리 과사용 방지를 위한 작업
