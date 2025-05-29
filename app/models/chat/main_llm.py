@@ -1,40 +1,43 @@
 import os
-from collections import defaultdict
 from textwrap import dedent
 
 from dotenv import load_dotenv
+
 from langchain_core.chat_history import BaseChatMessageHistory
-from langchain_community.chat_message_histories import ChatMessageHistory
+from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.runnables import RunnableWithMessageHistory
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 
-from app.models.default_model import chat_model, llm_sem
+from langchain.memory import ConversationSummaryBufferMemory
+from langchain_core.tracers import ConsoleCallbackHandler
+
+from app.models.default_model import chat_model, llm_sem  # chat_model = 답변 LLM
 
 load_dotenv()
 
-with open(os.path.join(os.environ["HOME"], "ego-server-fastapi", "main_llm_prompt.txt"), "r", encoding="utf-8") as f:
-    MAIN_LLM = f.read()
+with (open(
+    os.path.join(
+        os.environ["HOME"], "ego-server-fastapi", "main_llm_prompt.txt"),
+        "r",encoding="utf-8")
+    as f):MAIN_LLM = f.read()
+
 
 class MainLlm:
     """
-    요약:
-        LLM 채팅을 생성하는 Ollama 클래스
+    LLM 채팅 핸들러 (ConversationSummaryBufferMemory 버전)
 
-    Attributes:
-        __store(dict): 세션 정보를 저장해두는 매핑 객체
-            * session_id를 key로 user와 ai의 채팅 내역이 저장되어 있다.
-        __prompt: llm이 수행할 명령어가 저장된 시스템 프롬프트
-            * 실제 정보는 __MAIN_TEMPLATE 참고
+    * __store: 세션별 ConversationSummaryBufferMemory 보관
+    * 첫 인삿말은 "오늘은 어떤 일이 있었어?"
     """
-    # 세션 정보를 저장해두는 매핑 테이블
-    __store : dict[str, ChatMessageHistory] = {}
+
+    __store: dict[str, ConversationSummaryBufferMemory] = {}
 
     def __init__(self):
-        # 랭체인 생성
+        # 프롬프트 체인
         template = ChatPromptTemplate.from_messages(self.__MAIN_TEMPLATE)
         main_chain = template | chat_model
 
-        # 동적으로 채팅 내역을 변경하기 위한 작업
+        # history에는 BaseChatMessageHistory만 주입
         self.__prompt = RunnableWithMessageHistory(
             main_chain,
             self.get_session_history,
@@ -42,35 +45,34 @@ class MainLlm:
             history_messages_key="history",
         )
 
-    def get_session_history(self, session_id:str) -> BaseChatMessageHistory:
-        """
-        요약:
-            세션 아이디로 기존 대화 내역을 불러오는 함수
+    def _create_memory(self) -> ConversationSummaryBufferMemory:
+        """새 세션용 Memory 객체 생성"""
+        mem = ConversationSummaryBufferMemory(
+            llm=chat_model,           # 요약용 LLM (작은 모델로 교체 가능)
+            max_token_limit=200,      # 토큰 한도 초과 시 요약 + 원문 슬라이딩
+            return_messages=True,
+        )
+        first_ai = AIMessage(content="오늘은 어떤 일이 있었어?")
+        mem.chat_memory.add_message(first_ai)
+        return mem
 
-        Parameters:
-            session_id: 사용자 대화 기록이 담긴 세션 ID(채팅방)
-        """
-        if session_id not in self.__store: # 새로운 session_id가 등장했다면,
-            self.__store[session_id] = ChatMessageHistory() # 새로운 session을 추가한다.
-            # TODO: 에고의 첫 대사가 정해지면 수정할 것
-            self.__store[session_id].add_ai_message("오늘은 어떤 일이 있었어?") # AI의 첫 대사를 미리 저장
-        return self.__store[session_id]
+    def get_session_history(self, session_id: str) -> BaseChatMessageHistory:
+        if session_id not in self.__store:
+            self.__store[session_id] = self._create_memory()
+        # RunnableWithMessageHistory가 요구하는 BaseChatMessageHistory 반환
+        return self.__store[session_id].chat_memory
 
-    def delete_session_history(self, session_id:str):
+    def delete_session_history(self, session_id: str):
         self.__store.pop(session_id, None)
 
-    def main_stream(self, user_message:str, persona:dict, rag_prompt:str, human_name:str, session_id:str):
-        """
-        요약:
-            LLM이 AI의 답변을 청크 단위로 출력하는 함수
-
-        Parameters:
-            user_message(str): 사용자의 채팅
-            persona(defaultdict): 에고의 페르소나
-            rag_prompt(str): 사용자 채팅에서 추출한 관계 정보
-            session_id(str): 사용자가 ego와 채팅한 대화 기록
-            human_name(str): 대화하고 있는 사용자의 이름
-        """
+    def main_stream(
+        self,
+        user_message: str,
+        persona: dict,
+        rag_prompt: str,
+        human_name: str,
+        session_id: str,
+    ):
         with llm_sem:
             for chunk in self.__prompt.stream(
                 input={
@@ -81,64 +83,52 @@ class MainLlm:
                     "dislikes": persona.get("dislikes", ""),
                     "personality": persona.get("personality", []),
                     "mbti": persona.get("mbti", ""),
-                    "mbti_description": self.get_mbti_description(mbti=persona.get("mbti", "")),
+                    "mbti_description": self.get_mbti_description(
+                        persona.get("mbti", "")
+                    ),
                     "goal": persona.get("goal", ""),
                     "human_name": human_name,
                     "rag_prompt": rag_prompt,
-                    "tone": "", # TODO: 말투 프롬프트 추가하기
+                    "tone": "",  # TODO: 말투 프롬프트
                     "user_message": user_message,
                 },
-                config={"configurable": {"session_id": f"{session_id}"}}
+                config={"configurable": {"session_id": session_id}},
             ):
                 yield chunk.content
 
-    def add_message_in_session_history(self, session_id:str, human_message:str, ai_message:str=""):
-        """
-        요약:
-            session_id에 사용자의 메세지를 저장하는 함수
+    def add_message_in_session_history(
+        self, session_id: str, human_message: str, ai_message: str = ""
+    ):
+        mem = self.__store[session_id]
+        mem.save_context(  # 원문 저장 + 필요 시 자동 요약
+            {"input": human_message},
+            {"output": ai_message},
+        )
 
-        Parameters:
-            session_id(str): 대화를 추가할 세션 ID
-            human_message(str): human_message로 추가할 메세지
-            ai_message(str): ai_message로 추가할 메세지
-        """
-        self.__store[session_id].add_user_message(human_message)
-        # save_graphdb()의 구현 로직으로 인한 ai 메세지 공백 추가
-        self.__store[session_id].add_ai_message(ai_message)
-
-    def reset_session_history(self, uid:str):
-        """
-        요약:
-            유저가 대화한 모든 채팅방의 기록을 제거한다.
-
-        설명:
-            시연용 대화기록 초기화 함수
-
-        Parameters:
-            uid: 대화기록을 초기화 할 사용자의 아이디
-        """
-        for session_id in self.__store:
-            ego_id, user_id = session_id.split("@")
+    def reset_session_history(self, uid: str):
+        """특정 사용자(uid)의 모든 세션 초기화"""
+        for session_id in list(self.__store.keys()):
+            _, user_id = session_id.split("@")
             if user_id == uid:
                 self.delete_session_history(session_id)
 
     __MAIN_TEMPLATE = [
-        ("system", """
+        ("system","""
         /json
         /no_think
         You are ALWAYS in-character.
         """),
-        ("system", dedent(f"""
+        ("system",dedent(f"""
         {MAIN_LLM}
         """).strip()),
         MessagesPlaceholder(variable_name="history"),
-        ("human", dedent("""
+        ("human",
+        dedent("""
         </CHAT_HISTORY>
-        
+
         <RESULT>
         Q. {user_message}
-        A. """))
-    ]
+        A. """))]
 
     @staticmethod
     def get_mbti_description(mbti:str):
