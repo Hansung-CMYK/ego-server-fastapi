@@ -9,6 +9,7 @@ from langchain_core.runnables import RunnableWithMessageHistory
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 
 from langchain.memory import ConversationSummaryBufferMemory
+from langchain_core.tracers import ConsoleCallbackHandler
 
 from app.models.default_model import chat_model, llm_sem  # chat_model = 답변 LLM
 
@@ -48,7 +49,7 @@ class MainLlm:
         """새 세션용 Memory 객체 생성"""
         mem = ConversationSummaryBufferMemory(
             llm=chat_model,           # 요약용 LLM (작은 모델로 교체 가능)
-            max_token_limit=800,      # 토큰 한도 초과 시 요약 + 원문 슬라이딩
+            max_token_limit=200,      # 토큰 한도 초과 시 요약 + 원문 슬라이딩
             return_messages=True,
         )
         first_ai = AIMessage(content="오늘은 어떤 일이 있었어?")
@@ -91,7 +92,10 @@ class MainLlm:
                     "tone": "",  # TODO: 말투 프롬프트
                     "user_message": user_message,
                 },
-                config={"configurable": {"session_id": session_id}},
+                config={
+                    "configurable": {"session_id": session_id},
+                    'callbacks': [ConsoleCallbackHandler()]
+                },
             ):
                 yield chunk.content
 
