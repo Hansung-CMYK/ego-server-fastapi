@@ -43,6 +43,8 @@ class ErrorCode(Enum):
     INVALID_ADMIN_ID = (-701, "관리자 인증에 실패했습니다.")
     # Postgres 에러
     FAILURE_TRANSACTION = (-801, "Postgres 트랙젝션 실패")
+    # AI API DATA 키 에러
+    OUT_OF_BOUND_KEYS = (-901, "준비해둔 모든 AI API DATA키를 소진하였습니다.")
 
 
 class ControlledException(RuntimeError):
