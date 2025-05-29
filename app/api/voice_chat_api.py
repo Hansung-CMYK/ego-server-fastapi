@@ -1,6 +1,7 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from app.services.voice.voice_chat_manager import VoiceChatSessionManager
 from app.services.session_config import SessionConfig
+from app.logger.logger import logger
 router = APIRouter()
 session_manager = VoiceChatSessionManager()
 
@@ -26,7 +27,7 @@ async def websocket_voice_chat(ws: WebSocket):
     try:
         while True:
             msg = await ws.receive_bytes()
-            session.handle_audio(msg) 
+            session.handle_audio(msg)
     except WebSocketDisconnect:
         pass
     finally:

@@ -4,12 +4,11 @@ from textwrap import dedent
 from dotenv import load_dotenv
 
 from langchain_core.chat_history import BaseChatMessageHistory
-from langchain_core.messages import AIMessage, HumanMessage
+from langchain_core.messages import AIMessage
 from langchain_core.runnables import RunnableWithMessageHistory
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 
 from langchain.memory import ConversationSummaryBufferMemory
-from langchain_core.tracers import ConsoleCallbackHandler
 
 from app.models.default_model import chat_model, llm_sem  # chat_model = 답변 LLM
 
@@ -86,6 +85,7 @@ class MainLlm:
                     "mbti_description": self.get_mbti_description(
                         persona.get("mbti", "")
                     ),
+                    "interview": persona.get("interview", ""),
                     "goal": persona.get("goal", ""),
                     "human_name": human_name,
                     "rag_prompt": rag_prompt,
