@@ -2,7 +2,7 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from app.services.voice.voice_chat_manager import VoiceChatSessionManager
 from app.services.session_config import SessionConfig
 from app.logger.logger import logger
-import httpx
+import httpx, json
 router = APIRouter()
 session_manager = VoiceChatSessionManager()
 
@@ -42,8 +42,25 @@ async def websocket_voice_chat(ws: WebSocket):
 
     try:
         while True:
-            msg = await ws.receive_bytes()
-            session.handle_audio(msg)
+            msg = await ws.receive()
+
+            # 1) 텍스트 제어 메시지 처리 (EOS / script)
+            if msg.get("type") == "websocket.receive" and "text" in msg:
+                data = json.loads(msg["text"])
+
+                # EOS 신호만 받으면 handle_eos() 호출
+                if data.get("eos"):
+                    session.handle_eos()
+                    continue
+
+                # 기존 script 처리
+                if "script" in data:
+                    session.config.expected_script = data["script"]
+                    continue
+
+            # 2) 바이너리(오디오) 메시지 처리
+            if msg.get("type") == "websocket.receive" and "bytes" in msg:
+                session.handle_audio(msg["bytes"])
     except WebSocketDisconnect:
         pass
     finally:

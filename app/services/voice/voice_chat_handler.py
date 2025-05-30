@@ -134,6 +134,14 @@ class VoiceChatHandler:
         t = threading.Thread(target=watchdog, daemon=True)
         t.start()
 
+
+    def handle_eos(self):
+        logger.info(f"[{self.id}] ▶ Received EOS — end of utterance")
+        try:
+            self.recorder.stop()
+        except Exception as e:
+            logger.warning(f"Failed to stop recorder on EOS: {e}")
+
     def handle_audio(self, msg: bytes):
         # 오디오 수신 시 타이머 갱신
         self._last_audio_time = time.monotonic()
