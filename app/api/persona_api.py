@@ -27,7 +27,7 @@ class PersonaRequest(BaseModel):
     ego_id: str
     name: Optional[str] = None
     mbti: Optional[str] = None
-    interview: Optional[str] = None
+    interview: Optional[list[list[str]]] = None
 
 @router.post("")
 async def create_persona(body: PersonaRequest)->CommonResponse:
@@ -51,8 +51,11 @@ async def create_persona(body: PersonaRequest)->CommonResponse:
     if milvus_database.has_partition(partition_name=body.ego_id):
         raise ControlledException(ErrorCode.ALREADY_CREATED_PARTITION)
 
+    interview = build_interview_log(interview=body.interview)
+
     # NOTE 2. None이 아닌 값만 필터링해서 저장
-    persona = {key: value for key, value in body.model_dump().items() if key != "ego_id" and value is not None}
+    persona = {key: value for key, value in body.model_dump().items() if (key != "ego_id" or key != "interview") and value is not None}
+    persona.update({"interview": interview})
 
     # NOTE 3. 에고 정보를 JSON으로 만들어 저장한다.
     postgres_database.insert_persona(ego_id= body.ego_id, persona=persona)
@@ -110,3 +113,30 @@ async def create_tone(body: ToneRequest)->CommonResponse:
         code=200,
         message="말투를 생성하였습니다."
     )
+
+def build_interview_log(interview: list[list[str]]) -> str:
+    """
+    인터뷰(2중 리스트)에서 첫 두 리스트를 교대로 이어붙여
+    Java StringBuilder 로직과 동일한 로그 문자열을 반환합니다.
+
+    Parameters
+    ----------
+    interview : list[list[str]]
+        [[Q1, Q2, …], [A1, A2, …], …] 형태의 중첩 리스트
+
+    Returns
+    -------
+    str
+        Q1\nA1\nQ2\nA2\n … 형식의 문자열
+    """
+    if len(interview) < 2:           # 리스트가 2개 미만이면 빈 문자열 반환
+        return ""
+
+    first_list, second_list = interview[0], interview[1]
+
+    lines: list[str] = []
+    for q, a in zip(first_list, second_list):
+        lines.append(q)
+        lines.append(a)
+
+    return "\n".join(lines)
