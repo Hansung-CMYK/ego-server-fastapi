@@ -25,9 +25,9 @@ class PersonaRequest(BaseModel):
         mbti(str|None): 에고(사용자)의 mbti
     """
     ego_id: str
-    name: Optional[str] = None
-    mbti: Optional[str] = None
-    interview: Optional[list[list[str]]] = None
+    name: str
+    mbti: str
+    interview: list[list[str]]
 
 @router.post("")
 async def create_persona(body: PersonaRequest)->CommonResponse:
