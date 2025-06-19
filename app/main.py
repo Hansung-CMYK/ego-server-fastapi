@@ -1,18 +1,25 @@
 import os
-import sys
-import importlib.util
 
-from fastapi import FastAPI, APIRouter
-from app.api import chat_api, voice_chat_api, fal_api, diary_api, persona_api, tts_api, admin_api, stt_api
-from app.exception.exception_handler import register_exception_handlers
-from app.services.voice.tts_infer import ensure_init, ensure_init_v2
+from fastapi import FastAPI
 
 from contextlib import asynccontextmanager
 
-import app.services.kafka.kafka_handler as kh
+import config.kafka.kafka_handler as kh
 import asyncio
 
 import logging
+
+from app.internal.admin import admin_controller
+from app.internal.exception.exception_handler import register_exception_handlers
+from app.routers.chat import chat_controller
+from app.routers.diary import diary_controller
+from app.routers.fal import fal_controller
+from app.routers.persona import persona_controller
+from app.routers.stt import stt_controller
+from app.routers.tts import tts_controller
+from app.routers.voice import voice_controller
+from config.voice.tts_infer import ensure_init_v2
+
 logging.basicConfig(level=logging.INFO)
 
 here = os.path.dirname(__file__)
@@ -58,11 +65,11 @@ app = FastAPI(lifespan=lifespan)
 
 register_exception_handlers(app)
 
-app.include_router(stt_api.router, prefix='/api', tags=['stt'])
-app.include_router(tts_api.router, prefix="/api", tags=["tts"])
-app.include_router(admin_api.router, prefix="/api", tags=["admin"])
-app.include_router(chat_api.router, prefix="/api", tags=["chat"])
-app.include_router(voice_chat_api.router, prefix="/api", tags=["voice-chat"])
-app.include_router(fal_api.router, prefix="/api", tags=["image"])
-app.include_router(diary_api.router, prefix="/api", tags=["diary"])
-app.include_router(persona_api.router, prefix="/api", tags=["persona"])
+app.include_router(stt_controller.router, prefix='/api', tags=['stt'])
+app.include_router(tts_controller.router, prefix="/api", tags=["tts"])
+app.include_router(admin_controller.router, prefix="/api", tags=["admin"])
+app.include_router(chat_controller.router, prefix="/api", tags=["chat"])
+app.include_router(voice_controller.router, prefix="/api", tags=["voice-chat"])
+app.include_router(fal_controller.router, prefix="/api", tags=["image"])
+app.include_router(diary_controller.router, prefix="/api", tags=["diary"])
+app.include_router(persona_controller.router, prefix="/api", tags=["persona"])
