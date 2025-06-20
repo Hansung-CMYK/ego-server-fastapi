@@ -46,6 +46,7 @@ You SHOULD NOT include any other text in the response if you call a function
 
 import re
 
+
 def clean_json_string(text: str) -> str:
     """
     요약:

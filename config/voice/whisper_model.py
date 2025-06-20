@@ -1,4 +1,6 @@
-import os, sys
+import os
+import sys
+
 import faster_whisper
 from faster_whisper import WhisperModel as _OriginalWhisperModel
 

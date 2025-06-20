@@ -1,4 +1,4 @@
-from transformers import ElectraTokenizer, ElectraConfig
+from transformers import ElectraConfig, ElectraTokenizer
 
 from app.internal.exception.error_code import ControlledException, ErrorCode
 from config.emotion.model import ElectraForMultiLabelClassification

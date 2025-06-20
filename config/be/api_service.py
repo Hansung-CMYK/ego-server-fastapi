@@ -1,11 +1,11 @@
-import os
-from datetime import date
-
-from dotenv import load_dotenv
-import requests
-from json import JSONDecodeError
 import json
 import logging
+import os
+from datetime import date
+from json import JSONDecodeError
+
+import requests
+from dotenv import load_dotenv
 
 SPRING_URI = os.getenv('SPRING_URI')
 

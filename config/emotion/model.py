@@ -1,6 +1,7 @@
 import torch.nn as nn
 from torch.nn import BCEWithLogitsLoss
-from transformers.models.electra.modeling_electra import ElectraModel, ElectraPreTrainedModel
+from transformers.models.electra.modeling_electra import (
+    ElectraModel, ElectraPreTrainedModel)
 
 
 class ElectraForMultiLabelClassification(ElectraPreTrainedModel):

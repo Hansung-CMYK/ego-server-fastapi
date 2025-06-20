@@ -1,11 +1,10 @@
-import torch
 import importlib
 
+import GPUtil
+import torch
 from deprecated import deprecated
 
-import GPUtil
-
-from config.voice.tts_model_registry import register_model, has_model
+from config.voice.tts_model_registry import has_model, register_model
 
 
 def pick_least_used_gpu() -> int | None:

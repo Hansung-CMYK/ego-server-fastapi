@@ -1,11 +1,12 @@
+import json
 from textwrap import dedent
 
 from langchain_core.prompts import ChatPromptTemplate
 
-import json
-
 from app.internal.logger.logger import logger
-from config.common.default_model import task_model, llm_sem, DEFAULT_TASK_LLM_TEMPLATE, clean_json_string
+from config.common.default_model import (DEFAULT_TASK_LLM_TEMPLATE,
+                                         clean_json_string, llm_sem,
+                                         task_model)
 
 
 class DailyCommentLLM:

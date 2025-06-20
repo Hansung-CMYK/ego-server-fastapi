@@ -1,9 +1,10 @@
-from numpy import ndarray
-
 import re
 
-from config.ner.ner_service import split_to_triplets
+from numpy import ndarray
+
 from config.embedding.embedding_model import embedding_model
+from config.ner.ner_service import split_to_triplets
+
 
 class ParsedSentence:
     """

@@ -5,7 +5,9 @@ from langchain_core.prompts import ChatPromptTemplate
 
 from app.internal.exception.error_code import ControlledException, ErrorCode
 from app.internal.logger.logger import logger
-from config.common.default_model import task_model, llm_sem, clean_json_string, DEFAULT_TASK_LLM_TEMPLATE
+from config.common.default_model import (DEFAULT_TASK_LLM_TEMPLATE,
+                                         clean_json_string, llm_sem,
+                                         task_model)
 
 
 class TopicLlm:

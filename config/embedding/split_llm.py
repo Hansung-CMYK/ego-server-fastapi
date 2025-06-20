@@ -1,12 +1,14 @@
+import json
+from datetime import datetime
 from textwrap import dedent
 
 from langchain_core.prompts import ChatPromptTemplate
-from datetime import datetime
-import json
 
 from app.internal.exception.error_code import ControlledException, ErrorCode
 from app.internal.logger.logger import logger
-from config.common.default_model import task_model, DEFAULT_TASK_LLM_TEMPLATE, clean_json_string, llm_sem
+from config.common.default_model import (DEFAULT_TASK_LLM_TEMPLATE,
+                                         clean_json_string, llm_sem,
+                                         task_model)
 
 
 class SplitLlm:

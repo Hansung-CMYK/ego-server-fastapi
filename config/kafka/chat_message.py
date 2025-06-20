@@ -1,6 +1,8 @@
-from pydantic import BaseModel, Field
 from enum import Enum
 from typing import Optional
+
+from pydantic import BaseModel, Field
+
 
 class ContentType(str, Enum):
     TEXT = "TEXT"

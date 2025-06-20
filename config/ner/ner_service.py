@@ -1,5 +1,8 @@
 import json
-import re, requests, os
+import os
+import re
+
+import requests
 from dotenv import load_dotenv
 
 from app.internal.exception.error_code import ControlledException, ErrorCode

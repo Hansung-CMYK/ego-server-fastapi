@@ -1,10 +1,11 @@
-import numpy as np
 from collections import defaultdict
+
+import numpy as np
 from scipy.sparse import csr_matrix
 
-from app.routers.chat.parsed_sentence import split_sentence, ParsedSentence
-from config.database.milvus_database import milvus_database
 from app.internal.logger.logger import logger
+from app.routers.chat.parsed_sentence import ParsedSentence, split_sentence
+from config.database.milvus_database import milvus_database
 
 """
 Graph RAG를 활용하기 위한 서비스

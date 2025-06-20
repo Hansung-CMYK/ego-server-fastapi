@@ -1,9 +1,9 @@
+import gc
+import logging
 import os
 import sys
 import threading
 import time
-import logging
-import gc
 
 REALTIME_STT_PATH = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "../../../modules/RealtimeSTT")

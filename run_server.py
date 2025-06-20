@@ -3,8 +3,9 @@ import multiprocessing as mp
 from dotenv import load_dotenv
 
 mp.set_start_method('fork', force=True)
-import subprocess
 import os
+import subprocess
+
 
 def get_free_gpu():
     try:
@@ -21,10 +22,12 @@ def get_free_gpu():
 
 os.environ["CUDA_VISIBLE_DEVICES"] = get_free_gpu()
 
-from app.main import app
+import os
+
 import uvicorn
 
-import os
+from app.main import app
+
 load_dotenv()
 
 PORT = int(os.getenv('PORT'))

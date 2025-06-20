@@ -1,6 +1,6 @@
 import base64
 
-from fastapi import APIRouter, UploadFile, File, Form
+from fastapi import APIRouter, File, Form, UploadFile
 from pydantic import BaseModel
 
 from app.internal.exception.error_code import ControlledException, ErrorCode

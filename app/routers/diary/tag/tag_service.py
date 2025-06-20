@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+from typing import List
+
 import numpy as np
 import torch
 import torch.nn.functional as F
-from typing import List
 from kiwi import kiwi
 
 from app.routers.diary.tag.tag_embedding_service import load_index

@@ -1,9 +1,11 @@
 import base64
 
 from langchain_core.messages import HumanMessage
+
 from config.common.default_model import chat_model as vision_model
-from config.session.session_config import SessionConfig
 from config.llm.main_llm import main_llm
+from config.session.session_config import SessionConfig
+
 
 class ImageDescriptor:
     @staticmethod

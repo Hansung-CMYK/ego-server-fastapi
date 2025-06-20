@@ -1,6 +1,9 @@
-import importlib, os, sys
-from fastapi import APIRouter, HTTPException, UploadFile, File
+import importlib
+import os
 import shutil
+import sys
+
+from fastapi import APIRouter, File, HTTPException, UploadFile
 
 here = os.path.dirname(__file__)
 api_file_path = os.path.abspath(os.path.join(here, "../../modules/GPT-SoVITS/api_v2.py"))

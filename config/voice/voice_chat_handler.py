@@ -1,30 +1,27 @@
-import uuid
-import json
-import threading
 import asyncio
-import re
 import base64
+import json
+import re
+import threading
+import time
+import uuid
+
 import emoji
 import numpy as np
-import time
 
 from app.internal.logger.logger import logger
 from app.routers.chat.chat_service import chat_stream
 from app.routers.diary.feeling.kobert_handler import extract_emotions
 from app.routers.tts.tts_controller import gpt_sovits_api
+from config.kafka.kafka_handler import (RESPONSE_AI_TOPIC,
+                                        RESPONSE_CLIENT_TOPIC, ChatMessage,
+                                        ContentType, get_producer,
+                                        wait_until_kafka_ready)
+
+from ..session.session_config import SessionConfig
 from .stt_recorder import get_stt_recorder, release_stt_recorder
 from .tts_buffer import TTSBuffer
-
-from config.kafka.kafka_handler import (
-    wait_until_kafka_ready,
-    get_producer,
-    RESPONSE_AI_TOPIC,
-    RESPONSE_CLIENT_TOPIC,
-    ChatMessage,
-    ContentType
-)
 from .util.audio_utils import decode_and_resample
-from ..session.session_config import SessionConfig
 
 
 async def produce_message(sentence: str, config: SessionConfig, topic: str):

@@ -2,7 +2,7 @@ from textwrap import dedent
 
 from langchain_core.prompts import ChatPromptTemplate
 
-from config.common.default_model import llm_sem, clean_json_string
+from config.common.default_model import clean_json_string, llm_sem
 
 
 class SummaryLlm:

@@ -1,7 +1,9 @@
 import math
+import wave
+
 import numpy as np
 from scipy.signal import resample, resample_poly
-import wave
+
 
 def decode_and_resample(data: bytes, sr: int, tr: int) -> bytes:
     arr = np.frombuffer(data, np.int16)

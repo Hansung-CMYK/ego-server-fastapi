@@ -3,8 +3,8 @@ from pydantic import BaseModel
 
 from app.internal.exception.error_code import ControlledException, ErrorCode
 from config.common.common_response import CommonResponse
-from config.database.postgres_database import postgres_database
 from config.database.milvus_database import milvus_database
+from config.database.postgres_database import postgres_database
 
 router = APIRouter(prefix="/persona")
 

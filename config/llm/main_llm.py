@@ -2,15 +2,14 @@ import os
 from textwrap import dedent
 
 from dotenv import load_dotenv
-
+from langchain.memory import ConversationSummaryBufferMemory
 from langchain_core.chat_history import BaseChatMessageHistory
 from langchain_core.messages import AIMessage
-from langchain_core.runnables import RunnableWithMessageHistory
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.runnables import RunnableWithMessageHistory
 
-from langchain.memory import ConversationSummaryBufferMemory
-
-from config.common.default_model import chat_model, llm_sem # chat_model = 답변 LLM
+from config.common.default_model import (chat_model,  # chat_model = 답변 LLM
+                                         llm_sem)
 
 load_dotenv()
 

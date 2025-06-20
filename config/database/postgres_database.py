@@ -1,215 +1,68 @@
 import os
+import threading
 
 import psycopg2
-import json
+from psycopg2 import DatabaseError
 
 from app.internal.exception.error_code import ControlledException, ErrorCode
+from config.common.common_database import CommonDatabase
 
-
-class PostgresDatabase:
+# TODO 1. 멀티스레드로 다중성 관리하기 # ConnectionPool
+class PostgresDatabase(CommonDatabase):
     """
     요약:
         PostgreSQL을 이용하기 위한 Client
 
     Attributes:
-        __database: 데이터베이스에 접근하는 connection이다.
+        __connection: 데이터베이스에 접근하는 connection이다.
         __cursor: SQL 쿼리를 수행하는 객체이다.
     """
-    def __init__(self):
-        self.__database = psycopg2.connect(
+    __instance = None
+    __lock = threading.Lock()
+
+    def __new__(cls):
+        if not cls.__instance:
+            with cls.__lock:
+                if not cls.__instance:
+                    cls.__instance = super().__new__(cls)
+                    cls.__instance.__init_connection()
+        return cls.__instance
+
+    def __init_connection(self):
+        self.__connection = psycopg2.connect(
             host=os.getenv("POSTGRES_URI"),
             database=os.getenv("POSTGRES_DB_NAME"),
             user=os.getenv("POSTGRES_USER"),
             password=os.getenv("POSTGRES_PASSWORD"),
             port=os.getenv("POSTGRES_PORT")
         )
-        self.__cursor = self.__database.cursor()
 
-    def __del__(self):
-        self.__database.close()
-        self.__cursor.close()
+    def get_connection(self):
+        return self.__connection
 
-    def insert_persona(self, ego_id: str, persona: dict):
-        """
-        요약:
-            페르소나를 추가하는 함수
+    def get_cursor(self):
+        return self.__connection.cursor()
 
-        Parameters:
-            ego_id(str): 추가할 에고의 아이디 * BE ego 테이블과 1대1 매핑되어야 한다.
-            persona(dict): 추가할 페르소나 정보
-        """
+    def close(self):
+        if self.__connection:
+            self.__connection.close()
+
+        if self.__class__.__instance:
+            self.__class__.__instance = None
+
+    def execute_update(self, sql: str, values: tuple=()):
         try:
-            sql = "INSERT INTO persona (ego_id, persona) VALUES (%s, %s)"
-            self.__cursor.execute(sql, (ego_id, json.dumps(persona),))
-            self.__database.commit()
-        except Exception:
-            self.__database.rollback()
+            with self.get_cursor() as cursor:
+                cursor.execute(sql, values)
+            self.__connection.commit()
+        except DatabaseError:
+            self.__connection.rollback()
             raise ControlledException(ErrorCode.FAILURE_TRANSACTION)
 
-    def update_persona(self, ego_id: str, persona: dict):
-        """
-        요약:
-            기존 페르소나를 변경하는 함수
-
-        Parameters:
-            ego_id(str): 변경할 에고의 아이디
-            persona(dict): 새로 저장할 사용자의 페르소나\
-        """
+    def execute_query(self, sql: str, values: tuple=()):
         try:
-            sql = "UPDATE persona SET persona = %s WHERE ego_id = %s"
-            self.__cursor.execute(sql, (json.dumps(persona), ego_id,))
-            self.__database.commit()
-        except Exception:
-            self.__database.rollback()
+            with self.get_cursor() as cursor:
+                cursor.execute(sql, values)
+                return cursor.fetchall()
+        except DatabaseError:
             raise ControlledException(ErrorCode.FAILURE_TRANSACTION)
-
-    def select_persona_to_ego_id(self, ego_id: str)->tuple:
-        """
-        요약:
-            ego_id를 이용해 페르소나를 저장하는 함수
-
-        Parameters:
-            ego_id(str): 조회할 ego의 아이디
-
-        Raises:
-            PERSONA_NOT_FOUND: ego_id로 페르소나 조회 실패
-        """
-        try:
-            sql = "SELECT * FROM persona WHERE ego_id = %s"
-            self.__cursor.execute(sql, (ego_id,))
-            result = self.__cursor.fetchall()
-        except Exception:
-            self.__database.rollback()
-            raise ControlledException(ErrorCode.FAILURE_TRANSACTION)
-
-        if len(result) == 0: raise ControlledException(ErrorCode.PERSONA_NOT_FOUND)
-        else: return result[0] # 페르소나 결과 반환
-
-    def has_persona(self, ego_id: str) -> bool:
-        """
-        요약:
-            persona 테이블에 이미 ego_id가 존재하는지 확인하는 함수
-
-        Parameters:
-            ego_id(str): 존재하는지 확인힐 ego 아이디
-        """
-        try:
-            sql = "SELECT * FROM persona WHERE ego_id = %s"
-            self.__cursor.execute(sql, (ego_id,))
-            result = self.__cursor.fetchall()
-        except Exception:
-            self.__database.rollback()
-            raise ControlledException(ErrorCode.FAILURE_TRANSACTION)
-
-        if len(result) == 0: return False
-        else: return True
-
-    def delete_persona(self, ego_id: str):
-        """
-        모든 데이터를 제거하는 함수
-        """
-        try:
-            sql = "DELETE FROM persona WHERE ego_id = %s"
-            self.__cursor.execute(sql, (ego_id,) )
-            self.__database.commit()
-        except Exception:
-            self.__database.rollback()
-            raise ControlledException(ErrorCode.FAILURE_TRANSACTION)
-
-    def create_persona(self):
-        """
-        persona 테이블을 생성하는 함수
-        """
-        try:
-            sql = "CREATE TABLE persona (ego_id VARCHAR PRIMARY KEY, persona JSON NOT NULL)"
-            self.__cursor.execute(sql)
-            self.__database.commit()
-        except Exception:
-            self.__database.rollback()
-            raise ControlledException(ErrorCode.FAILURE_TRANSACTION)
-
-    def drop_persona(self):
-        """
-        persona 테이블을 제거하는 함수
-        """
-        try:
-            sql = "DROP TABLE persona"
-            self.__cursor.execute(sql)
-            self.__database.commit()
-        except Exception:
-            self.__database.rollback()
-            raise ControlledException(ErrorCode.FAILURE_TRANSACTION)
-
-    def insert_tone(self, ego_id: str, tone: dict):
-        """
-        요약:
-            말투를 추가하는 함수
-
-        Parameters:
-            ego_id(str): 추가할 에고의 아이디 * BE ego 테이블과 1대1 매핑되어야 한다.
-            tone(dict): 추가할 말투 정보
-        """
-        try:
-            sql = "INSERT INTO tone (ego_id, persona) VALUES (%s, %s)"
-            self.__cursor.execute(sql, (ego_id, json.dumps(tone),))
-            self.__database.commit()
-        except Exception:
-            self.__database.rollback()
-            raise ControlledException(ErrorCode.FAILURE_TRANSACTION)
-
-    def has_tone(self, ego_id: str) -> bool:
-        """
-        요약:
-            tone 테이블에 이미 ego_id가 존재하는지 확인하는 함수
-
-        Parameters:
-            ego_id(str): 존재하는지 확인힐 ego 아이디
-        """
-        try:
-            sql = "SELECT * FROM tone WHERE ego_id = %s"
-            self.__cursor.execute(sql, (ego_id,))
-            result = self.__cursor.fetchall()
-        except Exception:
-            self.__database.rollback()
-            raise ControlledException(ErrorCode.FAILURE_TRANSACTION)
-
-        if len(result) == 0: return False
-        else: return True
-
-    def delete_tone(self, ego_id: str):
-        """
-        모든 데이터를 제거하는 함수
-        """
-        try:
-            sql = "DELETE FROM tone WHERE ego_id = %s"
-            self.__cursor.execute(sql, (ego_id,) )
-            self.__database.commit()
-        except Exception:
-            self.__database.rollback()
-            raise ControlledException(ErrorCode.FAILURE_TRANSACTION)
-
-    def create_tone(self):
-        """
-        tone 테이블을 생성하는 함수
-        """
-        try:
-            sql = "CREATE TABLE tone (ego_id VARCHAR PRIMARY KEY, tone JSON NOT NULL)"
-            self.__cursor.execute(sql)
-            self.__database.commit()
-        except Exception:
-            self.__database.rollback()
-            raise ControlledException(ErrorCode.FAILURE_TRANSACTION)
-
-    def drop_tone(self):
-        """
-        tone 테이블을 제거하는 함수
-        """
-        try:
-            sql = "DROP TABLE tone"
-            self.__cursor.execute(sql)
-            self.__database.commit()
-        except Exception:
-            self.__database.rollback()
-            raise ControlledException(ErrorCode.FAILURE_TRANSACTION)
-
-postgres_database = PostgresDatabase()

@@ -1,16 +1,14 @@
+import asyncio
+import logging
 import os
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from contextlib import asynccontextmanager
-
 import config.kafka.kafka_handler as kh
-import asyncio
-
-import logging
-
 from app.internal.admin import admin_controller
-from app.internal.exception.exception_handler import register_exception_handlers
+from app.internal.exception.exception_handler import \
+    register_exception_handlers
 from app.routers.chat import chat_controller
 from app.routers.diary import diary_controller
 from app.routers.fal import fal_controller

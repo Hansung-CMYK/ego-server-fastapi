@@ -1,6 +1,7 @@
 import torch
 from transformers import Pipeline
 
+
 class MultiLabelPipeline(Pipeline):
     def __init__(self, model, tokenizer, threshold=0.3, **kwargs):
         super().__init__(model=model, tokenizer=tokenizer, **kwargs)

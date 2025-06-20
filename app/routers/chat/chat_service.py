@@ -1,14 +1,14 @@
 import asyncio
 import threading
 
-from app.routers.chat.graph_rag_service import get_rag_prompt
-from config.be.api_service import get_ego
-from config.session.session_config import SessionConfig
-from app.routers.chat.persona_store import persona_store
-from config.llm.main_llm import main_llm
-from config.embedding.split_llm import split_llm
-from config.database.milvus_database import milvus_database
 from app.internal.logger.logger import logger
+from app.routers.chat.graph_rag_service import get_rag_prompt
+from app.routers.chat.persona_store import persona_store
+from config.be.api_service import get_ego
+from config.database.milvus_database import milvus_database
+from config.embedding.split_llm import split_llm
+from config.llm.main_llm import main_llm
+from config.session.session_config import SessionConfig
 
 MAIN_LOOP = asyncio.new_event_loop()
 threading.Thread(target=MAIN_LOOP.run_forever, daemon=True).start()

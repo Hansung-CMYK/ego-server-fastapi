@@ -1,11 +1,12 @@
 import os
 from datetime import date
 
-from app.routers.diary.tag.tag_service import search_tags
-from config.be.api_service import get_chat_history, get_ego, post_relationship, patch_tags
-from config.emotion.emotion_classifier import EmotionClassifier
 from app.internal.logger.logger import logger
 from app.routers.chat.persona_store import persona_store
+from app.routers.diary.tag.tag_service import search_tags
+from config.be.api_service import (get_chat_history, get_ego, patch_tags,
+                                   post_relationship)
+from config.emotion.emotion_classifier import EmotionClassifier
 
 SPRING_URI = os.getenv('SPRING_URI')
 

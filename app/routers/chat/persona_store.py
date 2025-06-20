@@ -2,6 +2,7 @@ from datetime import datetime
 
 from config.database.postgres_database import postgres_database
 
+
 class PersonaStore:
     """
     요약:

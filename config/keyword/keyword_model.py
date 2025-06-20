@@ -1,7 +1,6 @@
 from keybert import KeyBERT
 from kiwi import kiwi
 from kiwipiepy import Kiwi
-
 from sentence_transformers import SentenceTransformer
 
 from app.internal.logger.logger import logger

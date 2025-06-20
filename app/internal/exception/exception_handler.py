@@ -1,7 +1,8 @@
-from fastapi import Request, FastAPI
+import logging
+
+from fastapi import FastAPI, Request
 from fastapi.encoders import jsonable_encoder
 from starlette.responses import JSONResponse
-import logging
 
 from app.internal.exception.error_code import ControlledException
 from config.common.common_response import CommonResponse

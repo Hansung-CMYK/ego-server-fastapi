@@ -1,9 +1,9 @@
 import json
 import logging
 import traceback
+import uuid
 
 from aiokafka import AIOKafkaConsumer, AIOKafkaProducer
-import uuid
 
 from app.routers.chat.chat_service import chat_stream
 from config.image.image_descriptor import ImageDescriptor

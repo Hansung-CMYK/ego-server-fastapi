@@ -1,5 +1,6 @@
 import re
 
+
 class TTSBuffer:
     def __init__(self, send_tts_fn, min_length=8):
         self.buffer = ""

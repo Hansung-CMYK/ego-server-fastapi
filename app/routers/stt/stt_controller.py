@@ -1,14 +1,13 @@
+import asyncio
+import json
+import math
 import os
 import uuid
-import json
-import asyncio
-import math
 import wave
-
 from difflib import SequenceMatcher
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
 import numpy as np
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from scipy.signal import resample_poly
 
 from config.voice.stt_recorder import get_stt_recorder, release_stt_recorder
