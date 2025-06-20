@@ -9,23 +9,19 @@ class CommonDatabase(ABC):
     관계형 데이터베이스를 구현할 시, 꼭 다음 함수를 이용해주세요.
 
     Attributes:
-        __instance: 싱글턴 인스턴스입니다. 인스턴스를 사용하기 위해선 PostgresDatabase()
+        __instance: 싱글턴 인스턴스입니다.
         __lock: 싱글턴을 구현하기 위한 동기화 Flag 객체입니다.
     """
     __instance = None
     __lock = threading.Lock()
 
-    def __new__(cls):
+    def __new__(cls, *args, **kwargs):
         """
         싱글턴 구현을 위한 함수입니다.
+
         인스턴스를 호출할 땐 CommonDatabase() 혹은 상속 객체를 호출해주세요.
         """
-        if not cls.__instance:
-            with cls.__lock:
-                if not cls.__instance:
-                    cls.__instance = super().__new__(cls)
-                    cls.__instance.__connection = cls.__instance.__init_connection()
-        return cls.__instance
+        pass
 
     @abstractmethod
     def __init_connection(self):

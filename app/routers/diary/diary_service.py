@@ -7,6 +7,8 @@ from app.routers.diary.tag.tag_service import search_tags
 from config.be.api_service import (get_chat_history, get_ego, patch_tags,
                                    post_relationship)
 from config.emotion.emotion_classifier import EmotionClassifier
+from config.llm import persona_llm
+from config.llm.persona_llm import PersonaLLM
 
 SPRING_URI = os.getenv('SPRING_URI')
 
@@ -101,10 +103,11 @@ def save_persona(ego_id:str, chat_rooms:list[str]):
     user_persona = persona_store.get_persona(ego_id=ego_id)
 
     # NOTE 2. 대화내역을 바탕으로 변경사항을 추출한다.
-    # delta_persona = persona_llm.persona_invoke(
-    #     user_persona=user_persona,
-    #     session_history=chat_rooms
-    # )
+    # TODO: 작동방식 변경할 것
+    # delta_persona = PersonaLLM().invoke({
+    #     "session_history": chat_rooms,
+    #     "current_persona": user_persona
+    # })
 
     # NOTE 3. 변경사항을 저장한다.
     # persona_store.update(ego_id=ego_id, delta_persona=delta_persona)  # 변경사항 업데이트

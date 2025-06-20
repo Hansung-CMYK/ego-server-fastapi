@@ -1,11 +1,13 @@
 import os
 
 import psycopg2
+from dotenv import load_dotenv
 from psycopg2 import DatabaseError
 
 from app.internal.exception.error_code import ControlledException, ErrorCode
 from config.common.common_database import CommonDatabase
 
+load_dotenv()
 
 # TODO 1. 멀티스레드로 다중성 관리하기 # ConnectionPool
 class PostgresDatabase(CommonDatabase):
@@ -15,6 +17,14 @@ class PostgresDatabase(CommonDatabase):
 
         psycopg2를 이용한 CommonDatabase 구현체
     """
+    def __new__(cls, *args, **kwargs):
+        if not cls.__instance:
+            with cls.__lock:
+                if not cls.__instance:
+                    cls.__instance = super().__new__(cls)
+                    cls.__instance.__connection = cls.__instance.__init_connection()
+        return cls.__instance
+
     def __init_connection(self):
         return psycopg2.connect(
             host=os.getenv("POSTGRES_URI"),
