@@ -6,7 +6,16 @@ from config.database.postgres_database import PostgresDatabase
 
 
 class PersonaRepository:
+    """
+    Postgres Persona를 관리하기 위한 Respository
+
+    Persona와 관련된 SQL을 관리한다.
+    """
     def __init__(self, database:CommonDatabase = PostgresDatabase()):
+        """
+        Parameters:
+            database(CommonDatabase): Database를 활용하기 위한 구현체
+        """
         self.database = database
 
     def insert_persona(self, ego_id: str, persona: dict):

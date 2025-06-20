@@ -1,5 +1,4 @@
 import os
-import threading
 
 import psycopg2
 from psycopg2 import DatabaseError
@@ -7,29 +6,17 @@ from psycopg2 import DatabaseError
 from app.internal.exception.error_code import ControlledException, ErrorCode
 from config.common.common_database import CommonDatabase
 
+
 # TODO 1. 멀티스레드로 다중성 관리하기 # ConnectionPool
 class PostgresDatabase(CommonDatabase):
     """
     요약:
         PostgreSQL을 이용하기 위한 Client
 
-    Attributes:
-        __connection: 데이터베이스에 접근하는 connection이다.
-        __cursor: SQL 쿼리를 수행하는 객체이다.
+        psycopg2를 이용한 CommonDatabase 구현체
     """
-    __instance = None
-    __lock = threading.Lock()
-
-    def __new__(cls):
-        if not cls.__instance:
-            with cls.__lock:
-                if not cls.__instance:
-                    cls.__instance = super().__new__(cls)
-                    cls.__instance.__init_connection()
-        return cls.__instance
-
     def __init_connection(self):
-        self.__connection = psycopg2.connect(
+        return psycopg2.connect(
             host=os.getenv("POSTGRES_URI"),
             database=os.getenv("POSTGRES_DB_NAME"),
             user=os.getenv("POSTGRES_USER"),

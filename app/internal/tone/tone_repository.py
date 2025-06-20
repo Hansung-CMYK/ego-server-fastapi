@@ -5,7 +5,16 @@ from config.database.postgres_database import PostgresDatabase
 
 
 class ToneRepository:
+    """
+    Postgres Tone을 호출하기 위한 Respository
+
+    Tone과 관련된 SQL을 관리한다.
+    """
     def __init__(self, database:CommonDatabase = PostgresDatabase()):
+        """
+        Parameters:
+            database(CommonDatabase): Database를 활용하기 위한 구현체
+        """
         self.database = database
 
     def insert_tone(self, ego_id: str, tone: dict):
@@ -40,6 +49,9 @@ class ToneRepository:
     def delete_tone(self, ego_id: str):
         """
         모든 데이터를 제거하는 함수
+
+        Parameters:
+            ego_id: 제거할 ego_id
         """
         self.database.execute_update(
             sql="DELETE FROM tone WHERE ego_id = %s",

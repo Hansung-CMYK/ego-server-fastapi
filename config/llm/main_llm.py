@@ -8,8 +8,8 @@ from langchain_core.messages import AIMessage
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables import RunnableWithMessageHistory
 
-from config.common.default_model import (chat_model,  # chat_model = 답변 LLM
-                                         llm_sem)
+from config.common.default_model import chat_model  # chat_model = 답변 LLM
+from config.common.default_model import llm_sem
 
 load_dotenv()
 
