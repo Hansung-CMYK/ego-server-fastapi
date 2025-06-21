@@ -1,4 +1,5 @@
 import json
+import threading
 
 from config.common.common_database import CommonDatabase
 from config.database.postgres_database import PostgresDatabase
@@ -10,12 +11,21 @@ class ToneRepository:
 
     Tone과 관련된 SQL을 관리한다.
     """
-    def __init__(self, database:CommonDatabase = PostgresDatabase()):
+    _instance = None
+    _lock = threading.Lock()
+
+    def __new__(cls, *args, **kwargs):
         """
         Parameters:
             database(CommonDatabase): Database를 활용하기 위한 구현체
         """
-        self.database = database
+        if cls._instance is None:
+            with cls._lock:
+                if cls._instance is None:
+                    instance = super().__new__(cls)
+                    instance.database = kwargs.get("database") or PostgresDatabase()
+                    cls._instance = instance
+        return cls._instance
 
     def insert_tone(self, ego_id: str, tone: dict):
         """

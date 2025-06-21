@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from config.database.postgres_database import postgres_database
+from app.routers.persona import persona_service
 
 
 class PersonaStore:
@@ -61,7 +61,7 @@ class PersonaStore:
             ego_id(str): 페르소나를 조회할 에고의 아이디
         """
         if self.__store.get(ego_id) is None: # 기존 store에 persona_id가 저장되어 있지않다면,
-            new_persona = postgres_database.select_persona_to_ego_id(ego_id=ego_id) # postgres에서 정보를 가져와서,
+            new_persona = persona_service.select_persona_to_ego_id(ego_id=ego_id) # postgres에서 정보를 가져와서,
             self.__store[ego_id] = new_persona[1] # store에 저장한다.
 
         return self.__store[ego_id]
@@ -96,7 +96,7 @@ class PersonaStore:
         self.__store[ego_id]["updated_at"] = datetime.now().isoformat()
 
         # NOTE 5. 데이터베이스에 저장
-        postgres_database.update_persona(ego_id=ego_id, persona=self.__store[ego_id])
+        persona_service.update_persona(ego_id=ego_id, persona=self.__store[ego_id])
 
     @staticmethod
     def __unset(original_persona: dict, unset_persona: dict) -> None:

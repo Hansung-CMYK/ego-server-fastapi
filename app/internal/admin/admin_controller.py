@@ -1,35 +1,19 @@
-import os
-
-from dotenv import load_dotenv
 from fastapi import APIRouter
-from pydantic import BaseModel
 
+from app.internal.admin.dto.admin_request import (ADMIN_ID, ADMIN_PASSWORD,
+                                                  AdminRequest)
 from app.internal.exception.error_code import ControlledException, ErrorCode
+from app.internal.tone import tone_service
 from app.routers.chat.persona_store import KARINA_PERSONA, MYEONGJUN_PERSONA
+from app.routers.persona import persona_service
+from app.routers.persona.persona_repository import PersonaRepository
 from config.common.common_response import CommonResponse
 from config.database.milvus_database import milvus_database
-from config.database.postgres_database import postgres_database
 from config.llm.main_llm import main_llm
-
-load_dotenv()
 
 router = APIRouter(prefix="/admin")
 
-# 따로 관리자 계정의 ID가 정해지지 않아서, PostgreSQL Root 계정의 정보를 활용한다.
-ADMIN_ID = os.environ.get("POSTGRES_USER")
-ADMIN_PASSWORD = os.environ.get("POSTGRES_PASSWORD")
-
-class AdminRequest(BaseModel):
-    """
-    요약:
-        /admin POST API를 사용하기 위해서 사용하는 Request Class
-
-    Attributes:
-        admin_id(str): 관리자 계정의 ID
-        admin_password(str): 관리자 계정의 Password
-    """
-    admin_id: str
-    admin_password: str
+persona_repository = PersonaRepository()
 
 @router.post("/reset/{user_id}/{ego_id}")
 async def reset_ego(user_id:str, ego_id:str, body: AdminRequest)->CommonResponse:
@@ -58,10 +42,10 @@ async def reset_ego(user_id:str, ego_id:str, body: AdminRequest)->CommonResponse
     milvus_database.reset_collection(ego_id=ego_id)
 
     # NOTE 2. postgres의 페르소나 정보들을 삭제한다.
-    postgres_database.delete_persona(ego_id=ego_id)
+    persona_service.delete_persona(ego_id=ego_id)
 
     # NOTE 3. postgres의 페르소나 정보들을 불러온다.
-    postgres_database.insert_persona(
+    persona_service.insert_persona(
         ego_id=ego_id,
         persona=KARINA_PERSONA if ego_id == "5" else MYEONGJUN_PERSONA # 만약에 에고 아이디가 2가 아니면 명준 페르소나 삽입
     )
@@ -91,10 +75,10 @@ async def delete_ego(ego_id: str, body:AdminRequest)->CommonResponse:
         raise ControlledException(ErrorCode.INVALID_ADMIN_ID)
 
     # NOTE 1. PostgreSQL persona 테이블 삭제
-    postgres_database.delete_persona(ego_id=ego_id)
+    persona_service.delete_persona(ego_id=ego_id)
 
     # NOTE 2. PostgreSQL tone 테이블 삭제
-    postgres_database.delete_tone(ego_id=ego_id)
+    tone_service.delete_tone(ego_id=ego_id)
 
     # NOTE 3. Milvus Partition 삭제
     milvus_database.delete_partition(ego_id=ego_id)
