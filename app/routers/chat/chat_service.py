@@ -1,6 +1,7 @@
 import asyncio
 import threading
 
+from app.internal.exception.error_code import ControlledException, ErrorCode
 from app.internal.logger.logger import logger
 from app.routers.chat.graph_rag_service import get_rag_prompt
 from app.routers.chat.persona_store import persona_store
@@ -83,8 +84,8 @@ async def save_graphdb(session_id:str, user_message:str):
         input.join(f"\nHUMAN: {message.content}")
 
     # NOTE 2. 문장을 분리한다.
-    splited_messages = SplitLLM().invoke({
-        "input": input,
+    split_messages = SplitLLM().invoke({
+        "input": input
     })
 
     # LOG. 시연용 로그
@@ -93,5 +94,5 @@ async def save_graphdb(session_id:str, user_message:str):
     # NOTE 3. 에고에 맞게 삼중항을 저장한다.
     my_ego = get_ego(user_id=user_id)
 
-    milvus_database.insert_messages(single_sentences=splited_messages, passage=input, ego_id=str(my_ego["id"]))
+    milvus_database.insert_messages(single_sentences=split_messages, passage=input, ego_id=str(my_ego["id"]))
     logger.info("save_graphdb success!")

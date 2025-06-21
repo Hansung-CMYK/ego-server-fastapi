@@ -4,6 +4,18 @@ from config.common.common_llm import CommonLLM
 
 
 class TopicLLM(CommonLLM):
+    """
+    요약:
+        대화내역을 기반으로 일기를 생성하는 LLM
+
+    설명:
+        SummaryLLM의 반환 값을 토대로 일기를 생성한다.
+        일기 내용은 대화 주제(topic)를 기반으로 분리되어 반환된다.
+
+    Attributes:
+        __DIARY_TEMPLATE(tuple): 대화내역으로 요약된 일기를 생성하기 위한 시스템 프롬프트
+        __RESULT_EXAMPLE(tuple): 요약 일기 작성 예시 프롬프트
+    """
     __DIARY_TEMPLATE = ("system", dedent("""
         <PRIMARY_RULE>
         1. Return ONLY valid JSON – no additional text.
@@ -33,7 +45,19 @@ class TopicLLM(CommonLLM):
         </WRITING_GUIDELINES>
 
         <OUTPUT_SCHEMA>
-        {return_form_example}
+        {{
+        "result": [
+            {{
+                "title": "<주제 1>",
+                "content": "<본문 1>. <본문 2>..."
+            }},
+            {{
+                "title": "<주제 2>",
+                "content": "..."
+            }},
+            ...
+        ]
+        }}
         </OUTPUT_SCHEMA>
 
         <RETURN_EXAMPLE>
@@ -43,22 +67,6 @@ class TopicLLM(CommonLLM):
         Q. <INPUT> {input} </INPUT>
         A.
         """))
-
-    __RETURN_FORM_EXAMPLE = dedent("""
-        {
-        "result": [
-            {
-                "title": "<주제 1>",
-                "content": "<본문 1>. <본문 2>..."
-            },
-            {
-                "title": "<주제 2>",
-                "content": "..."
-            },
-            ...
-        ]
-        }
-        """)
 
     __RESULT_EXAMPLE = dedent("""
         Q. <INPUT> U@Human: 안녕! 오늘 퇴근 후에 뭐 해? at 0000-00-00T00:00:00.000\nO@user_id_100: 별 계획 없는데? 영화나 볼까 생각 중이야. at 2025-05-20T18:01:25.901\nU@Human: 오! 그럼 ‘파묘’ 볼래? 다들 소름 돋는다고 하더라. at 2025-05-20T18:02:01.667\nO@user_id_100: 좋지! 7시 30분 홍대 CGV 예매해 둘게. at 2025-05-20T18:02:30.488\nU@Human: 끝나고 매운 라멘 먹자~ 요즘 날이 쌀쌀해서 딱일 듯. at 2025-05-20T18:03:04.210\nO@user_id_100: 콜! 영화관 앞에서 보자. at 2025-05-20T18:03:25.004 </INPUT>
@@ -75,8 +83,15 @@ class TopicLLM(CommonLLM):
         return [self.__DIARY_TEMPLATE]
 
     def invoke(self, parameter:dict)->list[dict]:
+        """
+        요약:
+            대화내역을 바탕으로 일기를 생성하는 함수
+
+        Parameters:
+            parameter(dict): parameter는 다음과 같은 key-value를 갖는다.
+                - input(str): SummaryLLM()에서 요약된 대화 내역 리스트
+        """
         parameter.update({
-            "return_form_example": self.__RETURN_FORM_EXAMPLE,
             "result_example": self.__RESULT_EXAMPLE
         })
         return super().invoke(parameter)

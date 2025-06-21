@@ -1,21 +1,23 @@
 from textwrap import dedent
 
+from app.internal.exception.error_code import ControlledException, ErrorCode
+from app.internal.logger.logger import logger
 from config.common.common_llm import CommonLLM
 
 
 class PersonaLLM(CommonLLM):
     """
     요약:
-        Persona 수정 사항을 생성하는 Ollama 클래스
+        Persona 수정 사항을 생성하는 LLM
 
     설명:
-        대화 내역을 바탕으로 사용자의 페르소나를 재구성해주는 모델이다.
+        대화 내역을 바탕으로 사용자의 페르소나를 재구성한다.
 
     Attributes:
-        __chain: llm을 활용하기 위한 lang_chain
+        __PERSONA_TEMPLATE(tuple): 사용자의 페르소나를 갱신하기 위한 시스템 프롬프트
+        __RESULT_EXAMPLE(tuple): 페르소나 갱신 예시 프롬프트
     """
 
-    # 역할‧규칙 블록 ― 전부 영어
     __PERSONA_TEMPLATE = ("system", dedent("""
         <PRIMARY_RULE>
         1. **Return strictly valid JSON only.**
@@ -96,10 +98,19 @@ class PersonaLLM(CommonLLM):
         요약:
             사용자의 대화기록으로 페르소나를 수정하는 함수
 
+        Parameters:
+            parameter(dict): parameter는 다음과 같은 key-value를 갖는다.
+                - session_history(list[str]): FastAPI가 실행된 후, 채팅방의 전체 대화 내역
+                - current_persona(dict): 대화 내역 본인의 에고 페르소나
+
         Raises:
             JSONDecodeError: JSON Decoding 실패 시, 빈 딕셔너리 반환
         """
         parameter.update({
             "result_example": self.__RESULT_EXAMPLE
         })
-        return super().invoke(parameter)
+        try:
+            return super().invoke(parameter)
+        except ControlledException(ErrorCode.FAILURE_JSON_PARSING):
+            logger.exception(f"\n\nPersona 변화 감지를 실패했습니다. 딕셔너리를 반환합니다.\n")
+            return {}

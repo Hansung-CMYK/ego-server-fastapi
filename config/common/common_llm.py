@@ -32,28 +32,32 @@ chat_model = ChatOllama(
 
 class CommonLLM(ABC):
     """
-    요청에 대한 JSON 값을 반환하는 LLM 추상 클래스이다.
+    요청에 대한 JSON 값을 반환하는 LLM 추상 클래스
 
     JSON을 활용하는 LLM 구현 시, 꼭 다음 함수를 super()를 통해 이용해주세요.
 
     Attributes:
         __instance: 싱글턴 인스턴스입니다.
+            - __template(list): 각 prompt를 연결할 객체이다. 추가 TEMPLATE는 이 객체에 .append() 할 것
         __lock: 싱글턴을 구현하기 위한 동기화 Flag 객체입니다.
 
         common_model(ChatOllama): CommonModel이 사용하는 ollama 모델
         semaphore(Semaphore): Ollama 프로세스 수를 고정하기 위한 세마포
+
         __COMMON_COMMAND_TEMPLATE(tuple): LLM System Prompt - 제어 메타 태그
-            /json: 반환 값을 json 문자열로 반환한다.
-            /no_think: Qwen3의 경우 chain_of_thought를 결과를 출력하지 않도록 함
-        __COMMON_RESPONSE_TEMPLATE(tuple): LLM System Prompt - 반환값 고정
-        __template(list): 각 prompt를 연결할 객체이다. 추가 TEMPLATE는 이 객체에 .append() 할 것
+            - /json: 반환 값을 json 문자열로 반환한다.
+            - /no_think: Qwen3의 경우 chain_of_thought를 결과를 출력하지 않도록 함
+        __COMMON_RESPONSE_TEMPLATE(tuple): LLM System Prompt - 반환값을 JSON으로 고정하기 위한 명령어
     """
     __instance = None
     __lock = threading.Lock()
 
+    # common_model = ChatOllama(
+    #     model=MODEL_VERSION,
+    #     temperature=0.0
+    # )
     common_model = chat_model
     semaphore = threading.Semaphore(1)
-
 
     __COMMON_COMMAND_TEMPLATE = ("system", dedent("""
         /json

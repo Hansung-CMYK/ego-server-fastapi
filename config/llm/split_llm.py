@@ -8,15 +8,15 @@ from config.common.common_llm import CommonLLM
 class SplitLLM(CommonLLM):
     """
     요약:
-        복합 문장을 단일 문장으로 분리하는 Ollama 클래스
+        복합 문장을 단일 문장으로 분리하는 LLM
 
     설명:
-        사용자 메세지에 담겨있는 의미들을 단일 문장으로 분리하는 모델이다.
+        사용자 메세지에 담겨있는 의미들을 단일 문장으로 분리한다.
 
     Attributes:
-        __chain: llm을 활용하기 위한 lang_chain
+        __SPLIT_TEMPLATE(tuple): 복합 문장을 분리하기 위한 시스템 프롬프트
+        __RESULT_EXAMPLE(tuple): 복합 문장 분리의 예시 프롬프트
     """
-
     __SPLIT_TEMPLATE = ("system", dedent("""
         <PRIMARY_RULE>
         1. **Return valid JSON only** – nothing before/after the object.
@@ -76,10 +76,11 @@ class SplitLLM(CommonLLM):
             전달 받은 문장들을 하나의 단일 의미나 사건으로 분리하는 함수
 
         Parameters:
-            complex_sentence(str): 복합 의미를 가진 문장
+            parameter(dict): parameter는 다음과 같은 key-value를 갖는다.
+                - input(str): 분리할 복합 문장
 
         Raises:
-            JSONDecodeError: JSON Decoding 실패 시, 빈 리스트(`[]`) 반환
+            ControlledException(ErrorCode.FAILURE_SPLIT_MESSAGE): 분리할 문장 없음
         """
         parameter.update({
             "datetime": datetime.now().isoformat(timespec="milliseconds"),
@@ -91,5 +92,4 @@ class SplitLLM(CommonLLM):
         # 문장 분리 실패 시, 데이터는 저장하지 않는다.
         if len(split_messages) == 0:
             raise ControlledException(ErrorCode.FAILURE_SPLIT_MESSAGE)
-
         return split_messages

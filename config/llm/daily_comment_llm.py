@@ -8,13 +8,14 @@ from config.common.common_llm import CommonLLM
 class DailyCommentLLM(CommonLLM):
     """
     요약:
-        하루 한줄평을 생성하는 Ollama 클래스
+        하루 한줄평을 생성하는 LLM
 
     설명:
-        일기 내용을 바탕으로 오늘 하루 한줄평을 생성하는 모델이다.
+        DiaryService에서 생성한 모든 정보를 기반으로 일기 한줄 요약을 생성한다.
 
     Attributes:
-        __chain: llm을 활용하기 위한 lang_chain
+        __DAILY_COMMENT_TEMPLATE(tuple): 하루 한줄평을 생성하기 위한 시스템 프롬프트
+        __RESULT_EXAMPLE(tuple): 하루 한줄평의 예시 프롬프트
     """
 
     __DAILY_COMMENT_TEMPLATE = ("system", dedent("""
@@ -49,7 +50,9 @@ class DailyCommentLLM(CommonLLM):
         </OUTPUT_SCHEMA>
 
         <EXAMPLE_OUTPUT>
-        {return_form_example}
+        - {{"result": "~ 가 있었던 오늘, ~ 감정이 하루를 지배했고, ~ 가 곁을 맴돌았어요."}}
+        - {{"result": "~ 일로 인해, ~ 한 하루였어요. ~ 가 기억에 남아요."}}
+        - {{"result": "~ 과 함께, ~ 를 겪으며, ~ 을 느꼈어요}}
         </EXAMPLE_OUTPUT>
 
         <REFERENCE>
@@ -79,12 +82,6 @@ class DailyCommentLLM(CommonLLM):
         A. {"result": "'폭우 퇴근길'과 '버스 지연' 속에서도 '우산', '물웅덩이'가 익숙한 배경음이었어요."}
         """)
 
-    __RETURN_FORM_EXAMPLE = dedent("""
-        - {"result": "~ 가 있었던 오늘, ~ 감정이 하루를 지배했고, ~ 가 곁을 맴돌았어요."}
-        - {"result": "~ 일로 인해, ~ 한 하루였어요. ~ 가 기억에 남아요."}
-        - {"result": "~ 과 함께, ~ 를 겪으며, ~ 을 느꼈어요}
-        """)
-
     def __add_template(self) ->list[tuple]:
         return [self.__DAILY_COMMENT_TEMPLATE]
 
@@ -93,11 +90,17 @@ class DailyCommentLLM(CommonLLM):
         요약:
             일기에서 생성한 값들을 조합해 하나의 문장을 만드는 함수
 
+        Parameters:
+            parameter(dict): parameter는 다음과 같은 key-value를 갖는다.
+                - events(list[str]): 일기(있었던 일)
+                - feelings(list[str]): 감정
+                - keywords(list[str]): 키워드
+
         Raises:
-            JSONDecodeError: JSON Decoding 실패 시, 빈 문자열 반환
+            FAILURE_JSON_PARSING: JSON Decoding 실패 시, 빈 문자열 반환
+                - {"result":str} 한줄 요약 실패 시, 형태로 반환이 실패하기 때문
         """
         parameter.update({
-            "return_form_example":self.__RETURN_FORM_EXAMPLE,
             "result_example":self.__RESULT_EXAMPLE
         })
 
@@ -106,6 +109,3 @@ class DailyCommentLLM(CommonLLM):
         except ControlledException(ErrorCode.FAILURE_JSON_PARSING):
             logger.exception(f"\n\nLLM이 일기 한줄 요약을 실패했습니다. 일기에 빈 문자열을 반환합니다.\n")
             return ""
-
-
-daily_comment_llm = DailyCommentLLM()
