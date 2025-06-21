@@ -7,27 +7,16 @@ from pydantic import BaseModel
 
 from app.internal.exception.error_code import ControlledException, ErrorCode
 from app.routers.diary.diary_service import async_save, get_all_chat
+from app.routers.diary.dto.diary_request import DiaryRequest
 from app.routers.diary.feeling.kobert_handler import extract_emotions
 from config.common.common_response import CommonResponse
 from config.keyword.keyword_model import keyword_model
 from config.llm.daily_comment_llm import DailyCommentLLM
 from config.llm.summary_llm import SummaryLLM
-from config.llm.topic_llm import TopicLLM, topic_llm
+from config.llm.topic_llm import TopicLLM
 
 router = APIRouter(prefix="/diary")
 
-class DiaryRequest(BaseModel):
-    """
-    /diary POST API를 이용하기 위해서 사용하는 Request Class
-
-    Attributes:
-        user_id(str): 일기가 작성될 사용자 ID
-        ego_id(int): 당일 에고 ID
-        target_date(date): 일기에 포함될 날짜 * 대화를 조회할 시간
-    """
-    user_id: str
-    ego_id: int
-    target_date: date
 
 @router.post("")
 async def create_diary(body: DiaryRequest)->CommonResponse:

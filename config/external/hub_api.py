@@ -2,10 +2,13 @@ import json
 import logging
 import os
 from datetime import date
-from json import JSONDecodeError
 
 import requests
 from dotenv import load_dotenv
+
+from config.external.common_function import parse_json
+
+load_dotenv()
 
 SPRING_URI = os.getenv('SPRING_URI')
 
@@ -20,21 +23,7 @@ def get_ego(user_id:str):
     url = f"{SPRING_URI}/api/v1/ego/user/{user_id}"
     response = requests.get(url)
 
-    return check_error(response, title="에고 조회 실패")
-
-def get_chat_history(user_id:str, target_date:date):
-    """
-    요약:
-        사용자가 하루동안 한 채팅 내역을 불러오는 함수
-
-    Parameters:
-        user_id(str): 조회할 사용자 아이디
-        target_date(date): 검색할 날짜
-    """
-    url = f"{SPRING_URI}/api/v1/chat-history/{user_id}/{target_date}"
-    response = requests.get(url)
-
-    return check_error(response, title="채팅 기록 조회 실패")
+    return parse_json(response, title="에고 조회 실패")
 
 def patch_tags(ego_id:str, tags:list[str]):
     """
@@ -50,7 +39,7 @@ def patch_tags(ego_id:str, tags:list[str]):
     headers = {"Content-Type": "application/json"}
     response = requests.patch(url=url, data=json.dumps(update_data), headers=headers)
 
-    return check_error(response, title="태그 저장 실패")
+    return parse_json(response, title="태그 저장 실패")
 
 def post_relationship(user_id:str, ego_id:str, relationship_id:int, target_date:date):
     """
@@ -70,18 +59,4 @@ def post_relationship(user_id:str, ego_id:str, relationship_id:int, target_date:
 
     response = requests.post(url=url, data=json.dumps(post_data, default=str), headers=headers)
 
-    return check_error(response, title="관계 저장 실패")
-
-def check_error(response, title:str):
-    try:
-        result = response.json()
-        if result["code"] != 200:
-            # LOG. 시연용 로그
-            logging.exception(msg=f"\n\nPOST: api/v1/diary [{title}]\n{result["message"]}\n")
-        return result["data"]
-    except JSONDecodeError:
-        # LOG. 시연용 로그
-        logging.exception(msg=f"\n\nPOST: api/v1/diary [{title}]\n{response}\n")
-    except KeyError:
-        # LOG. 시연용 로그
-        logging.exception(msg=f"\n\nPOST: api/v1/diary [{title}]\n{response}\n")
+    return parse_json(response, title="관계 저장 실패")

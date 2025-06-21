@@ -32,7 +32,7 @@ class DailyCommentLLM(CommonLLM):
 
         <SUMMARY_REQUIREMENTS>
         • Base the summary on both chat logs & diary topics (“events”).  
-        • Use **every** piece of information – nothing may be omitted.  
+        • Use **every** piece of information – nothing may external omitted.  
         • Merge the data smoothly so it feels natural in Korean.  
         • Include the following placeholders in the sentence (wrap each with single quotes `'`):  
             – `events`   (list of strings)  

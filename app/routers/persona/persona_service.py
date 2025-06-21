@@ -13,3 +13,6 @@ def update_persona(ego_id: str, persona: dict):
 
 def delete_persona(ego_id: str):
     return persona_repository.delete_persona(ego_id=ego_id)
+
+def has_persona(ego_id: str) -> bool:
+    return persona_repository.has_persona(ego_id=ego_id)

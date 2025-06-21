@@ -5,26 +5,12 @@ from pydantic import BaseModel
 
 from app.internal.exception.error_code import ControlledException, ErrorCode
 from app.routers.chat.chat_service import chat_stream
+from app.routers.chat.dto.chat_request import ChatRequest
 from config.common.common_response import CommonResponse
 from config.image.image_descriptor import ImageDescriptor
 from config.session.session_config import SessionConfig
 
 router = APIRouter(prefix="/chat")
-
-
-class ChatRequest(BaseModel):
-    """
-    요약:
-        /chat/text Post API를 이용하기 위해서 사용하는 Request Class
-
-    Attributes:
-        message(str): 사용자가 질문한 메세지
-        user_id(str): 질문한 사용자 ID
-        ego_id(str): 답변할 Ego ID
-    """
-    message: str
-    user_id: str
-    ego_id: str
 
 
 @router.post("/text")

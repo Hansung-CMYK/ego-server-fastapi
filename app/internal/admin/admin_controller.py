@@ -3,10 +3,10 @@ from fastapi import APIRouter
 from app.internal.admin.dto.admin_request import (ADMIN_ID, ADMIN_PASSWORD,
                                                   AdminRequest)
 from app.internal.exception.error_code import ControlledException, ErrorCode
-from app.internal.tone import tone_service
 from app.routers.chat.persona_store import KARINA_PERSONA, MYEONGJUN_PERSONA
 from app.routers.persona import persona_service
 from app.routers.persona.persona_repository import PersonaRepository
+from app.routers.tone import tone_service
 from config.common.common_response import CommonResponse
 from config.database.milvus_database import milvus_database
 from config.llm.main_llm import main_llm

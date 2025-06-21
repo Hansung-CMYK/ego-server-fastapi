@@ -21,7 +21,7 @@ class TopicLLM(CommonLLM):
         1. Return ONLY valid JSON – no additional text.
         2. No comments, markdown, or system tags.
         3. Use straight double-quotes (").
-        4. All output must be in fluent, natural Korean.
+        4. All output must external in fluent, natural Korean.
         </PRIMARY_RULE>
 
         <ROLE>

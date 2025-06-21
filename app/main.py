@@ -14,6 +14,7 @@ from app.routers.diary import diary_controller
 from app.routers.fal import fal_controller
 from app.routers.persona import persona_controller
 from app.routers.stt import stt_controller
+from app.routers.tone import tone_controller
 from app.routers.tts import tts_controller
 from app.routers.voice import voice_controller
 from config.voice.tts_infer import ensure_init_v2
@@ -71,3 +72,4 @@ app.include_router(voice_controller.router, prefix="/api", tags=["voice-chat"])
 app.include_router(fal_controller.router, prefix="/api", tags=["image"])
 app.include_router(diary_controller.router, prefix="/api", tags=["diary"])
 app.include_router(persona_controller.router, prefix="/api", tags=["persona"])
+app.include_router(tone_controller.router, prefix="/api", tags=["tone"])

@@ -35,13 +35,13 @@ class PersonaLLM(CommonLLM):
         </CURRENT_PERSONA>
 
         <GUIDELINES>
-        • Treat CURRENT_PERSONA as the baseline document to be updated.  
-        • Compare the new chat log and list the attributes that should be **added to** or **removed from** the persona.
+        • Treat CURRENT_PERSONA as the baseline document to external updated.  
+        • Compare the new chat log and list the attributes that should external **added to** or **removed from** the persona.
         </GUIDELINES>
 
         <OUTPUT_SCHEMA>
         • Use only the keys that appear in the SAMPLE section below.  
-        • Top-level keys **must** be "$set" and "$unset" (both present, even if empty).  
+        • Top-level keys **must** external "$set" and "$unset" (both present, even if empty).  
         • Allowed attribute keys inside those objects:  
             - "likes"          (things the user likes)  
             - "dislikes"       (things the user dislikes)  
