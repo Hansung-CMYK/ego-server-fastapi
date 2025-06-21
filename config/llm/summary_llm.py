@@ -1,27 +1,11 @@
 from textwrap import dedent
 
-from langchain_core.prompts import ChatPromptTemplate
-
-from config.common.default_model import clean_json_string, llm_sem
+from config.common.common_llm import CommonLLM
 
 
-class SummaryLlm:
-    def __init__(self):
-        prompt = ChatPromptTemplate.from_messages(self.__SUMMARY_TEMPLATE)
-        self.__chain = prompt | chat_model
+class SummaryLLM(CommonLLM):
 
-    def summary_invoke(self, chat_rooms: list[str]) -> str:
-        with llm_sem:
-            answer = self.__chain.invoke({
-                "input": "\n".join(chat_rooms),
-            }).content
-        answer = clean_json_string(answer)
-        logger.info(msg=f"\n\nPOST: api/v1/diary [summary_invoke 요약문]\n{answer}\n")
-        return answer
-
-    __SUMMARY_TEMPLATE = [
-        ("system", "/no_think"),
-        ("system", dedent("""
+    __SUMMARY_TEMPLATE = ("system", dedent("""
         You are an assistant who refines raw chat history to help another AI diarist understand a user's day.
 
         <SUMMARY_GUIDELINES>
@@ -37,6 +21,9 @@ class SummaryLlm:
         {input}
         </CHAT_LOG>
         """).strip())
-    ]
 
-summary_llm = SummaryLlm()
+    def __add_template(self)->list[tuple]:
+        return [self.__SUMMARY_TEMPLATE]
+
+    def invoke(self, parameter:dict)->str:
+        return super().invoke(parameter)

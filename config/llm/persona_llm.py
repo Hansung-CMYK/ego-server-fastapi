@@ -94,7 +94,7 @@ class PersonaLLM(CommonLLM):
     def invoke(self, parameter:dict)->dict:
         """
         요약:
-            사용자의 대화기록으로 페르소나를 수정하는 함수이다.
+            사용자의 대화기록으로 페르소나를 수정하는 함수
 
         Raises:
             JSONDecodeError: JSON Decoding 실패 시, 빈 딕셔너리 반환

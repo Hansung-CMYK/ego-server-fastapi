@@ -3,8 +3,8 @@ import os
 import re
 import threading
 from abc import ABC, abstractmethod
-from json import JSONDecodeError
 from textwrap import dedent
+from typing import Any
 
 from dotenv import load_dotenv
 from langchain_core.prompts import ChatPromptTemplate
@@ -58,6 +58,7 @@ class CommonLLM(ABC):
     __COMMON_COMMAND_TEMPLATE = ("system", dedent("""
         /json
         /no_think
+        {common_response_template}
         """))
 
     __COMMON_RESPONSE_TEMPLATE = ("system", dedent("""
@@ -79,8 +80,7 @@ class CommonLLM(ABC):
                 if not cls.__instance:
                     cls.__instance = super().__new__(cls)
                     cls.__instance._template = [
-                        cls.__COMMON_COMMAND_TEMPLATE,
-                        cls.__COMMON_RESPONSE_TEMPLATE
+                        cls.__COMMON_COMMAND_TEMPLATE
                     ]
                     # TODO 1: Template Pattern 사용 이유에 대한 부연설명 할 것
                     cls.__instance._template.extend(cls.__add_template(cls.__instance))
@@ -98,7 +98,7 @@ class CommonLLM(ABC):
         """
         pass
 
-    def invoke(self, parameter:dict)->dict:
+    def invoke(self, parameter:dict)->Any:
         """
         LLM의 응답을 받는 함수입니다.
 
@@ -109,6 +109,7 @@ class CommonLLM(ABC):
             FAILURE_JSON_PARSING: JSON Decoding 실패 시, 빈 딕셔너리 반환
         """
         with self.semaphore:
+            parameter.update({"common_response_template": self.__COMMON_RESPONSE_TEMPLATE})
             answer:str = self.__chain.invoke(parameter).content
         clean_answer:str = self.clean_json_string(text=answer)
 
@@ -118,8 +119,10 @@ class CommonLLM(ABC):
         # 반환된 문자열 dict로 변환
         try:
             return json.loads(clean_answer)["result"]
-        except JSONDecodeError:
+        except json.JSONDecodeError:
             raise ControlledException(ErrorCode.FAILURE_JSON_PARSING)
+        except KeyError:
+            raise ControlledException(ErrorCode.INVALID_DATA_TYPE)
 
     @staticmethod
     def clean_json_string(text: str) -> str:

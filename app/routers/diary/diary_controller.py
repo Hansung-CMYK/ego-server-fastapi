@@ -10,9 +10,9 @@ from app.routers.diary.diary_service import async_save, get_all_chat
 from app.routers.diary.feeling.kobert_handler import extract_emotions
 from config.common.common_response import CommonResponse
 from config.keyword.keyword_model import keyword_model
-from config.llm.daily_comment_llm import daily_comment_llm
-from config.llm.summary_llm import summary_llm
-from config.llm.topic_llm import topic_llm
+from config.llm.daily_comment_llm import DailyCommentLLM
+from config.llm.summary_llm import SummaryLLM
+from config.llm.topic_llm import TopicLLM, topic_llm
 
 router = APIRouter(prefix="/diary")
 
@@ -69,11 +69,13 @@ async def create_diary(body: DiaryRequest)->CommonResponse:
         raise ControlledException(ErrorCode.CHAT_COUNT_NOT_ENOUGH)
 
     # 대화 내역 요약
-    summary = summary_llm.summary_invoke(chat_rooms=chat_rooms)
+    summary = SummaryLLM().invoke({
+        "input": "\n".join(chat_rooms)
+    })
 
     # 일기 생성
     # 각 주제가 list[{"title": str, "content": str}]로 저장된다.
-    topics:list[dict] = topic_llm.topic_invoke(summary=summary)
+    topics:list[dict] = TopicLLM().invoke({"input": summary})
 
     # 예외처리 2. 일기로 아무 내용이 반환되지 않았는지 확인한다.
     if len(topics) < 1:
@@ -86,7 +88,10 @@ async def create_diary(body: DiaryRequest)->CommonResponse:
 
     # NOTE 5. 한줄 요약 문장 생성
     # 키워드, 일기, 감정을 기반으로 한줄평을 생성한다.
-    daily_comment:str = daily_comment_llm.daily_comment_invoke(diaries=topics, feeling=feeling, keywords=keywords)
+    events = [topic["title"] for topic in topics]  # 일기에서 제목(주제)를 정제한다.
+    daily_comment:str = DailyCommentLLM().invoke({
+        "events": events, "feelings": feeling, "keywords": keywords
+    })
 
     # NOTE 6. 에고 페르소나 수정
     # 일기 생성과 동시에 이루어져야 할 작업을 수행한다.

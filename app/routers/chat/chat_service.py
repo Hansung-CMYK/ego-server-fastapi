@@ -6,8 +6,8 @@ from app.routers.chat.graph_rag_service import get_rag_prompt
 from app.routers.chat.persona_store import persona_store
 from config.be.api_service import get_ego
 from config.database.milvus_database import milvus_database
-from config.embedding.split_llm import split_llm
 from config.llm.main_llm import main_llm
+from config.llm.split_llm import SplitLLM
 from config.session.session_config import SessionConfig
 
 MAIN_LOOP = asyncio.new_event_loop()
@@ -83,7 +83,9 @@ async def save_graphdb(session_id:str, user_message:str):
         input.join(f"\nHUMAN: {message.content}")
 
     # NOTE 2. 문장을 분리한다.
-    splited_messages = split_llm.split_invoke(complex_sentence=input)
+    splited_messages = SplitLLM().invoke({
+        "input": input,
+    })
 
     # LOG. 시연용 로그
     logger.info(f"\n\nPOST: api/v1/chat [저장할 단일 문장들]\n{input}\n")

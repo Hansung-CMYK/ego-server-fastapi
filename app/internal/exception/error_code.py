@@ -27,7 +27,7 @@ class ErrorCode(Enum):
     # 일기 생성
     CHAT_COUNT_NOT_ENOUGH = (-201, "일기를 만들기 위한 문장 수가 부족합니다.")
     CAN_NOT_EXTRACT_DIARY = (-202, "아무런 주제도 도출되지 못했습니다.")
-    INVALID_DATA_TYPE = (-203, "LLM이 잘못된 데이터 타입을 생성했습니다.")
+    INVALID_DATA_TYPE = (-203, "LLM이 잘못된 데이터 타입을 생성했습니다.") # 보통 dict가 아닌 문자열을 반환할 때 나타난다.
     POSTGRES_ACCESS_DENIED = (-204, "PostgreSQL 접속(or 스키마 접속)에 실패하였습니다.")
     INVALID_SQL_ERROR = (-205, "잘못된 SQL로 에러가 발생했습니다.")
     # 관계 생성

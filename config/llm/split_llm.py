@@ -1,17 +1,11 @@
-import json
 from datetime import datetime
 from textwrap import dedent
 
-from langchain_core.prompts import ChatPromptTemplate
-
 from app.internal.exception.error_code import ControlledException, ErrorCode
-from app.internal.logger.logger import logger
-from config.common.default_model import (DEFAULT_TASK_LLM_TEMPLATE,
-                                         clean_json_string, llm_sem,
-                                         task_model)
+from config.common.common_llm import CommonLLM
 
 
-class SplitLlm:
+class SplitLLM(CommonLLM):
     """
     요약:
         복합 문장을 단일 문장으로 분리하는 Ollama 클래스
@@ -23,52 +17,7 @@ class SplitLlm:
         __chain: llm을 활용하기 위한 lang_chain
     """
 
-    def __init__(self):
-        # 문장 분리 프롬프트 적용 + 랭체인 생성
-        split_prompt = ChatPromptTemplate.from_messages(self.__SPLIT_TEMPLATE)
-        self.__chain = split_prompt | task_model
-
-    def split_invoke(self, complex_sentence:str)->list:
-        """
-        요약:
-            전달 받은 문장들을 하나의 단일 의미나 사건으로 분리하는 함수
-
-        Parameters:
-            complex_sentence(str): 복합 의미를 가진 문장
-
-        Raises:
-            JSONDecodeError: JSON Decoding 실패 시, 빈 리스트(`[]`) 반환
-        """
-        with llm_sem:
-            answer = self.__chain.invoke({
-                "input": complex_sentence,
-                "datetime": datetime.now().isoformat(),
-                "result_example":self.__RESULT_EXAMPLE,
-                "default_task_llm_template": DEFAULT_TASK_LLM_TEMPLATE
-            }).content
-        clean_answer: str = clean_json_string(text=answer)  # 필요없는 문자열 제거
-
-        try:
-            split_messages = json.loads(clean_answer)["result"]
-        except json.JSONDecodeError:
-            raise ControlledException(ErrorCode.FAILURE_SPLIT_MESSAGE)
-
-        # 문장 분리 실패 시, 데이터는 저장하지 않는다.
-        if len(split_messages) == 0:
-            raise ControlledException(ErrorCode.FAILURE_SPLIT_MESSAGE)
-
-        # LOG. 시연용 로그
-        logger.info(msg=f"\n\nPOST: api/v1/chat [단일 문장 분리 성공]\n")
-
-        return split_messages
-
-    __SPLIT_TEMPLATE = [
-        ("system", """
-        /json
-        /no_think
-        {default_task_llm_template}
-        """),
-        ("system", dedent("""
+    __SPLIT_TEMPLATE = ("system", dedent("""
         <PRIMARY_RULE>
         1. **Return valid JSON only** – nothing before/after the object.
         2. Every item in `"result"` **must** follow the pattern [Subject, Verb, Object/Complement].
@@ -101,8 +50,7 @@ class SplitLlm:
 
         Q. {input}
         A.
-        """)),
-    ]
+        """))
 
     __RESULT_EXAMPLE = dedent("""
     Q. AI: 그때 이야기했던 세종대왕에 대해 이야기 해줘.\nHUMAN: 그 사람은 조선의 제4대 왕으로서, 훈민정음을 창제하여 백성들이 쉽게 글을 익히도록 하였다. 특히 일을 하는 것을 좋아했는데, 이것 때문에 지병을 갖게 되었다.
@@ -119,4 +67,29 @@ class SplitLlm:
     A. {"result": ["아침에는 비가 내렸다. at 0000-00-00T00:00:000","오후에는 해가 떴다. at 0000-00-00T00:00:000","나는 오후에 산책을 했다. at 0000-00-00T00:00:000","산책 덕분에 나는 기분이 좋아졌다. at 0000-00-00T00:00:000"]}
     """)
 
-split_llm = SplitLlm()
+    def __add_template(self) ->list[tuple]:
+        return [self.__SPLIT_TEMPLATE]
+
+    def invoke(self, parameter:dict)->list[str]:
+        """
+        요약:
+            전달 받은 문장들을 하나의 단일 의미나 사건으로 분리하는 함수
+
+        Parameters:
+            complex_sentence(str): 복합 의미를 가진 문장
+
+        Raises:
+            JSONDecodeError: JSON Decoding 실패 시, 빈 리스트(`[]`) 반환
+        """
+        parameter.update({
+            "datetime": datetime.now().isoformat(timespec="milliseconds"),
+            "result_example": self.__RESULT_EXAMPLE
+        })
+
+        split_messages = super().invoke(parameter)
+
+        # 문장 분리 실패 시, 데이터는 저장하지 않는다.
+        if len(split_messages) == 0:
+            raise ControlledException(ErrorCode.FAILURE_SPLIT_MESSAGE)
+
+        return split_messages

@@ -54,6 +54,6 @@ def register_exception_handlers(app: FastAPI):
             message="알 수 없는 에러",
         )
         return JSONResponse(
-            status_code=400,
+            status_code=500,
             content=jsonable_encoder(body)
         )
