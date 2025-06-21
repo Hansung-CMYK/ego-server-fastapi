@@ -1,4 +1,3 @@
-import os
 from textwrap import dedent
 
 from dotenv import load_dotenv
@@ -122,7 +121,7 @@ class MainLlm:
         rag_prompt: str,
         session_id: str,
     ):
-        with CommonLLM.semaphore:
+        with CommonLLM._semaphore:
             for chunk in self.__prompt.stream(
                 input={
                     "name": persona.get("name", ""),

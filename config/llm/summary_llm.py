@@ -13,10 +13,10 @@ class SummaryLLM(CommonLLM):
         대화 내역이 많을 시, LLM의 프롬프트가 가려지는 문제가 발생해 이를 해결하기 위해 적용하였다.
 
     Attributes:
-        __SUMMARY_TEMPLATE(tuple): 대화 내역을 요약하기 위한 시스템 프롬프트
+        _SUMMARY_TEMPLATE(tuple): 대화 내역을 요약하기 위한 시스템 프롬프트
     """
 
-    __SUMMARY_TEMPLATE = ("system", dedent("""
+    _SUMMARY_TEMPLATE = ("system", dedent("""
         You are an assistant who refines raw chat history to help another AI diarist understand a user's day.
 
         <SUMMARY_GUIDELINES>
@@ -33,8 +33,8 @@ class SummaryLLM(CommonLLM):
         </CHAT_LOG>
         """).strip())
 
-    def __add_template(self)->list[tuple]:
-        return [self.__SUMMARY_TEMPLATE]
+    def _add_template(self)->list[tuple]:
+        return [self._SUMMARY_TEMPLATE]
 
     def invoke(self, parameter:dict)->str:
         """

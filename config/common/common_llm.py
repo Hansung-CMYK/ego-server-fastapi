@@ -37,35 +37,32 @@ class CommonLLM(ABC):
     JSON을 활용하는 LLM 구현 시, 꼭 다음 함수를 super()를 통해 이용해주세요.
 
     Attributes:
-        __instance: 싱글턴 인스턴스입니다.
-            - __template(list): 각 prompt를 연결할 객체이다. 추가 TEMPLATE는 이 객체에 .append() 할 것
-        __lock: 싱글턴을 구현하기 위한 동기화 Flag 객체입니다.
+        _instances: 자식 클래스들의 싱글턴 인스턴스입니다.
+            - _template(list): 각 prompt를 연결할 객체이다. 추가 TEMPLATE는 이 객체에 .append() 할 것
+        _lock: 싱글턴을 구현하기 위한 동기화 Flag 객체입니다.
 
-        common_model(ChatOllama): CommonModel이 사용하는 ollama 모델
-        semaphore(Semaphore): Ollama 프로세스 수를 고정하기 위한 세마포
+        _common_model(ChatOllama): CommonModel이 사용하는 ollama 모델
+        _semaphore(Semaphore): Ollama 프로세스 수를 고정하기 위한 세마포
 
-        __COMMON_COMMAND_TEMPLATE(tuple): LLM System Prompt - 제어 메타 태그
+        _COMMON_COMMAND_TEMPLATE(tuple): LLM System Prompt - 제어 메타 태그
             - /json: 반환 값을 json 문자열로 반환한다.
             - /no_think: Qwen3의 경우 chain_of_thought를 결과를 출력하지 않도록 함
-        __COMMON_RESPONSE_TEMPLATE(tuple): LLM System Prompt - 반환값을 JSON으로 고정하기 위한 명령어
+        _COMMON_RESPONSE_TEMPLATE(tuple): LLM System Prompt - 반환값을 JSON으로 고정하기 위한 명령어
     """
-    __instance = None
-    __lock = threading.Lock()
+    _instances: dict[type, 'CommonLLM'] = {}
+    _lock = threading.Lock()
 
-    # common_model = ChatOllama(
+    # _common_model = ChatOllama(
     #     model=MODEL_VERSION,
     #     temperature=0.0
     # )
-    common_model = chat_model
-    semaphore = threading.Semaphore(1)
+    _common_model = chat_model
+    _semaphore = threading.Semaphore(1)
 
-    __COMMON_COMMAND_TEMPLATE = ("system", dedent("""
+    _COMMON_COMMAND_TEMPLATE = ("system", dedent("""
         /json
         /no_think
-        {common_response_template}
-        """))
-
-    __COMMON_RESPONSE_TEMPLATE = ("system", dedent("""
+        
         You have access to functions. If you decide to invoke any of the function(s),
         you MUST put it in the format of
         {{"result": dictionary of argument name and its value }}
@@ -79,22 +76,21 @@ class CommonLLM(ABC):
 
         인스턴스를 호출할 땐 CommonLLM() 혹은 상속 객체를 호출해주세요.
         """
-        if not cls.__instance:
-            with cls.__lock:
-                if not cls.__instance:
-                    cls.__instance = super().__new__(cls)
-                    cls.__instance._template = [
-                        cls.__COMMON_COMMAND_TEMPLATE
-                    ]
-                    # TODO 1: Template Pattern 사용 이유에 대한 부연설명 할 것
-                    cls.__instance._template.extend(cls.__add_template(cls.__instance))
-                    prompt = ChatPromptTemplate.from_messages(cls.__instance._template)
-                    cls.__instance.__chain = prompt | cls.common_model
+        with cls._lock:
+            if cls not in cls._instances:
+                instance = super().__new__(cls)
+                instance._template = [
+                    cls._COMMON_COMMAND_TEMPLATE,
+                    # 상속받은 자식 클래스에서 추가적으로 Template를 추가할 수 있도록 TemplatePattern을 적용
+                    *instance._add_template()
+                ]
+                instance._chain = (ChatPromptTemplate.from_messages(instance._template) | cls._common_model)
+                cls._instances[cls] = instance
+        return cls._instances[cls]
 
-        return cls.__instance
 
     @abstractmethod
-    def __add_template(self)->list[tuple]:
+    def _add_template(self)->list[tuple]:
         """
         추가할 프롬프트를 추가하는 함수
 
@@ -112,9 +108,8 @@ class CommonLLM(ABC):
         Raises:
             FAILURE_JSON_PARSING: JSON Decoding 실패 시, 빈 딕셔너리 반환
         """
-        with self.semaphore:
-            parameter.update({"common_response_template": self.__COMMON_RESPONSE_TEMPLATE})
-            answer:str = self.__chain.invoke(parameter).content
+        with self._semaphore:
+            answer:str = self._chain.invoke(parameter).content
         clean_answer:str = self.clean_json_string(text=answer)
 
         # LOG. 사연용 로그

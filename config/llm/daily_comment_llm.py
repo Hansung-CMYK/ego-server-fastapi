@@ -14,11 +14,11 @@ class DailyCommentLLM(CommonLLM):
         DiaryService에서 생성한 모든 정보를 기반으로 일기 한줄 요약을 생성한다.
 
     Attributes:
-        __DAILY_COMMENT_TEMPLATE(tuple): 하루 한줄평을 생성하기 위한 시스템 프롬프트
-        __RESULT_EXAMPLE(tuple): 하루 한줄평의 예시 프롬프트
+        _DAILY_COMMENT_TEMPLATE(tuple): 하루 한줄평을 생성하기 위한 시스템 프롬프트
+        _RESULT_EXAMPLE(tuple): 하루 한줄평의 예시 프롬프트
     """
 
-    __DAILY_COMMENT_TEMPLATE = ("system", dedent("""
+    _DAILY_COMMENT_TEMPLATE = ("system", dedent("""
         <PRIMARY_RULE>
         1. **Return valid JSON only** – no extra text before/after.  
         2. Do **NOT** output explanations, comments or system tags.  
@@ -63,7 +63,7 @@ class DailyCommentLLM(CommonLLM):
         A.
         """))
 
-    __RESULT_EXAMPLE = dedent("""
+    _RESULT_EXAMPLE = dedent("""
         Q. <INPUT> events: ['군대 동기와의 만남', '수업 지각'], feelings: ['기쁨', '화남'], keywords: ['군대', '약속 시간', '달리기'] </INPUT>
         A. {"result": "'군대 동기와의 만남'과 '수업 지각'이 있었던 오늘, '기쁨'과 '화남' 속에서, '군대', '약속 시간', '달리기'가 기억에 남아요!"}
         Q. <INPUT> events: ['체육시간 족구공으로 축구하기'], feelings: ['슬픈'], keywords: ['체육시간', '족구공'] </INPUT>
@@ -82,8 +82,8 @@ class DailyCommentLLM(CommonLLM):
         A. {"result": "'폭우 퇴근길'과 '버스 지연' 속에서도 '우산', '물웅덩이'가 익숙한 배경음이었어요."}
         """)
 
-    def __add_template(self) ->list[tuple]:
-        return [self.__DAILY_COMMENT_TEMPLATE]
+    def _add_template(self) ->list[tuple]:
+        return [self._DAILY_COMMENT_TEMPLATE]
 
     def invoke(self, parameter:dict)->str:
         """
@@ -101,11 +101,11 @@ class DailyCommentLLM(CommonLLM):
                 - {"result":str} 한줄 요약 실패 시, 형태로 반환이 실패하기 때문
         """
         parameter.update({
-            "result_example":self.__RESULT_EXAMPLE
+            "result_example":self._RESULT_EXAMPLE
         })
 
         try:
             return super().invoke(parameter)
-        except ControlledException(ErrorCode.FAILURE_JSON_PARSING):
+        except ControlledException:
             logger.exception(f"\n\nLLM이 일기 한줄 요약을 실패했습니다. 일기에 빈 문자열을 반환합니다.\n")
             return ""

@@ -13,10 +13,10 @@ class TopicLLM(CommonLLM):
         일기 내용은 대화 주제(topic)를 기반으로 분리되어 반환된다.
 
     Attributes:
-        __DIARY_TEMPLATE(tuple): 대화내역으로 요약된 일기를 생성하기 위한 시스템 프롬프트
-        __RESULT_EXAMPLE(tuple): 요약 일기 작성 예시 프롬프트
+        _DIARY_TEMPLATE(tuple): 대화내역으로 요약된 일기를 생성하기 위한 시스템 프롬프트
+        _RESULT_EXAMPLE(tuple): 요약 일기 작성 예시 프롬프트
     """
-    __DIARY_TEMPLATE = ("system", dedent("""
+    _DIARY_TEMPLATE = ("system", dedent("""
         <PRIMARY_RULE>
         1. Return ONLY valid JSON – no additional text.
         2. No comments, markdown, or system tags.
@@ -68,7 +68,7 @@ class TopicLLM(CommonLLM):
         A.
         """))
 
-    __RESULT_EXAMPLE = dedent("""
+    _RESULT_EXAMPLE = dedent("""
         Q. <INPUT> U@Human: 안녕! 오늘 퇴근 후에 뭐 해? at 0000-00-00T00:00:00.000\nO@user_id_100: 별 계획 없는데? 영화나 볼까 생각 중이야. at 2025-05-20T18:01:25.901\nU@Human: 오! 그럼 ‘파묘’ 볼래? 다들 소름 돋는다고 하더라. at 2025-05-20T18:02:01.667\nO@user_id_100: 좋지! 7시 30분 홍대 CGV 예매해 둘게. at 2025-05-20T18:02:30.488\nU@Human: 끝나고 매운 라멘 먹자~ 요즘 날이 쌀쌀해서 딱일 듯. at 2025-05-20T18:03:04.210\nO@user_id_100: 콜! 영화관 앞에서 보자. at 2025-05-20T18:03:25.004 </INPUT>
         A. {"result": [{"title": "퇴근 후 영화·라멘 약속","content": "나는 퇴근 후 별다른 계획이 없어 친구와 영화를 보기로 했다. 우리는 홍대 CGV에서 저녁 7시 30분에 공포 영화 ‘파묘’를 예매했다. 쌀쌀한 밤공기 속에서 영화를 본 뒤 매운 라멘으로 몸을 데우기로 했는데, 매콤한 향을 상상하니 벌써 침이 고였다. 영화의 긴장감과 뜨거운 국물의 조합을 생각하니 기대감에 마음이 들떴다."}]}
         Q. <INPUT> U@Human: 오늘 팀장님이 기획안 싹 갈아엎으랬어… 멘탈 박살 at 2025-05-20T12:15:33.882\nO@user_id_231: 헉 고생; 저녁에 헬스장 갈 건데 같이 털어버릴래? at 2025-05-20T12:16:11.402\nU@Human: 좋아! 러닝머신 뛰면서 욕 좀 해야겠다 ㅋㅋ at 2025-05-20T12:16:45.730\nO@user_id_231: 6시 반에 디지털미디어시티역 2번 출구 헬스장 고고! at 2025-05-20T12:17:10.957 </INPUT>
@@ -79,8 +79,8 @@ class TopicLLM(CommonLLM):
         A. {"result": [{"title": "신선한 원두 시향","content": "아침에 도착한 브라질산 원두를 열어 보니 봉투에서 달콤한 초콜릿 향이 확 퍼져 코끝이 깜짝 놀랐다. 점심에 핸드드립으로 내려 마시기로 약속하자 괜히 마음이 설렜다. 진한 향을 맡으며 오늘 하루가 기분 좋게 시작될 것 같아 가벼운 발걸음으로 일을 시작했다."},{"title": "부산 여행 준비","content": "점심시간에 주말 부산행 KTX 11시 10분 표를 예매했다는 소식을 듣고 가슴이 두근거렸다. 해운대 근처 숙소까지 예약을 마치니 여행이 눈앞에 그려졌다. 토요일 밤 광안리 불꽃쇼를 볼 생각에 벌써부터 귓가에 바닷소리가 들리는 듯했다. 인스타그램에서 바다 전망이 좋은 카페를 찾아볼 생각에 설렘이 더해졌다."},{"title": "프로젝트 마감 준비","content": "금요일 오후 여섯 시 데드라인을 앞두고 팀원들과 네 시 중간 점검 회의를 잡았다. 나는 오늘 안으로 KPI 표를 다시 정리해 드라이브에 올리기로 약속했다. 서류를 매만지며 키보드를 두드리는 소리가 사무실에 잔잔히 울릴 때, 일을 마치면 곧 부산으로 떠난다는 생각이 피로를 잊게 해 주었다."}]}
         """)
 
-    def __add_template(self) ->list[tuple]:
-        return [self.__DIARY_TEMPLATE]
+    def _add_template(self) ->list[tuple]:
+        return [self._DIARY_TEMPLATE]
 
     def invoke(self, parameter:dict)->list[dict]:
         """
@@ -92,6 +92,6 @@ class TopicLLM(CommonLLM):
                 - input(str): SummaryLLM()에서 요약된 대화 내역 리스트
         """
         parameter.update({
-            "result_example": self.__RESULT_EXAMPLE
+            "result_example": self._RESULT_EXAMPLE
         })
         return super().invoke(parameter)

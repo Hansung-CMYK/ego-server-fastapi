@@ -14,10 +14,10 @@ class SplitLLM(CommonLLM):
         사용자 메세지에 담겨있는 의미들을 단일 문장으로 분리한다.
 
     Attributes:
-        __SPLIT_TEMPLATE(tuple): 복합 문장을 분리하기 위한 시스템 프롬프트
-        __RESULT_EXAMPLE(tuple): 복합 문장 분리의 예시 프롬프트
+        _SPLIT_TEMPLATE(tuple): 복합 문장을 분리하기 위한 시스템 프롬프트
+        _RESULT_EXAMPLE(tuple): 복합 문장 분리의 예시 프롬프트
     """
-    __SPLIT_TEMPLATE = ("system", dedent("""
+    _SPLIT_TEMPLATE = ("system", dedent("""
         <PRIMARY_RULE>
         1. **Return valid JSON only** – nothing before/after the object.
         2. Every item in `"result"` **must** follow the pattern [Subject, Verb, Object/Complement].
@@ -52,7 +52,7 @@ class SplitLLM(CommonLLM):
         A.
         """))
 
-    __RESULT_EXAMPLE = dedent("""
+    _RESULT_EXAMPLE = dedent("""
     Q. AI: 그때 이야기했던 세종대왕에 대해 이야기 해줘.\nHUMAN: 그 사람은 조선의 제4대 왕으로서, 훈민정음을 창제하여 백성들이 쉽게 글을 익히도록 하였다. 특히 일을 하는 것을 좋아했는데, 이것 때문에 지병을 갖게 되었다.
     A. {"result": ["세종대왕은 조선의 제4대 왕이다. at 0000-00-00T00:00:000","세종대왕은 훈민정음을 창제하였다. at 0000-00-00T00:00:000","세종대왕은 백성이 쉽게 글을 익히도록 하였다. at 0000-00-00T00:00:000","세종대왕은 일을 하는 것을 좋아했다. at 0000-00-00T00:00:000", "세종대왕은 일을 하는 것을 좋아해서 지병을 갖게 되었다. at 0000-00-00T00:00:000"]}
     Q. AI: 어떻게 혜화에서 이렇게 빨리 여기까지 도착할 수 있었어?\nHUMAN: 교통 체증으로 인해 출발이 지연되어 우회했습니다. 거기는 보통 차가 자주 막히는 곳인데, 창신역으로 우회하면 막히지 않고 도착할 수 있습니다.
@@ -67,8 +67,8 @@ class SplitLLM(CommonLLM):
     A. {"result": ["아침에는 비가 내렸다. at 0000-00-00T00:00:000","오후에는 해가 떴다. at 0000-00-00T00:00:000","나는 오후에 산책을 했다. at 0000-00-00T00:00:000","산책 덕분에 나는 기분이 좋아졌다. at 0000-00-00T00:00:000"]}
     """)
 
-    def __add_template(self) ->list[tuple]:
-        return [self.__SPLIT_TEMPLATE]
+    def _add_template(self) ->list[tuple]:
+        return [self._SPLIT_TEMPLATE]
 
     def invoke(self, parameter:dict)->list[str]:
         """
@@ -84,7 +84,7 @@ class SplitLLM(CommonLLM):
         """
         parameter.update({
             "datetime": datetime.now().isoformat(timespec="milliseconds"),
-            "result_example": self.__RESULT_EXAMPLE
+            "result_example": self._RESULT_EXAMPLE
         })
 
         split_messages = super().invoke(parameter)

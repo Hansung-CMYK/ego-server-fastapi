@@ -14,11 +14,11 @@ class PersonaLLM(CommonLLM):
         대화 내역을 바탕으로 사용자의 페르소나를 재구성한다.
 
     Attributes:
-        __PERSONA_TEMPLATE(tuple): 사용자의 페르소나를 갱신하기 위한 시스템 프롬프트
-        __RESULT_EXAMPLE(tuple): 페르소나 갱신 예시 프롬프트
+        _PERSONA_TEMPLATE(tuple): 사용자의 페르소나를 갱신하기 위한 시스템 프롬프트
+        _RESULT_EXAMPLE(tuple): 페르소나 갱신 예시 프롬프트
     """
 
-    __PERSONA_TEMPLATE = ("system", dedent("""
+    _PERSONA_TEMPLATE = ("system", dedent("""
         <PRIMARY_RULE>
         1. **Return strictly valid JSON only.**
         2. Do **NOT** output any natural-language commentary, markdown, system tags, or explanations.
@@ -77,7 +77,7 @@ class PersonaLLM(CommonLLM):
         A.
         """))
 
-    __RESULT_EXAMPLE = dedent("""
+    _RESULT_EXAMPLE = dedent("""
         Q. <INPUT> U@Human: 요즘 암벽등반 시작했는데 손끝이 아플 만큼 재밌어! at 2025-05-21T19:12:14.002\nU@Human: 대신 커피는 입에 안 맞아서 끊었어. at 2025-05-21T19:12:45.110\nU@Human: 발표력 키워서 좀 더 외향적으로 변하고 싶다. at 2025-05-21T19:13:08.550 </INPUT>
         A. {"result":{"$set": {"likes": ["암벽등반"],"personality": ["외향적"],"goal": ["발표력 향상"]},"$unset": {"likes": ["커피"]}}}}
         Q. <INPUT> U@Human: 축구보다 요가가 몸에 더 잘 맞는 것 같아. at 2025-05-22T07:55:21.300\nU@Human: 더위도 너무 싫어서 여름엔 실내만 찾게 돼. at 2025-05-22T07:56:02.718\nU@Human: 취업 준비 본격적으로 시작해야지! at 2025-05-22T07:56:45.904 </INPUT>
@@ -90,8 +90,8 @@ class PersonaLLM(CommonLLM):
         A. {"result":{"$set": {"likes": ["매운 음식", "봉사 활동"],"dislikes": ["게으름"],"goal": ["영어 회화 향상", "해외 봉사 참가"],"personality": ["규율적"]},"$unset": {"likes": ["게임"],"personality": ["게으른"]}}}
         """)
 
-    def __add_template(self)->list[tuple]:
-        return [self.__PERSONA_TEMPLATE]
+    def _add_template(self)->list[tuple]:
+        return [self._PERSONA_TEMPLATE]
 
     def invoke(self, parameter:dict)->dict:
         """
@@ -107,10 +107,10 @@ class PersonaLLM(CommonLLM):
             JSONDecodeError: JSON Decoding 실패 시, 빈 딕셔너리 반환
         """
         parameter.update({
-            "result_example": self.__RESULT_EXAMPLE
+            "result_example": self._RESULT_EXAMPLE
         })
         try:
             return super().invoke(parameter)
-        except ControlledException(ErrorCode.FAILURE_JSON_PARSING):
+        except ControlledException:
             logger.exception(f"\n\nPersona 변화 감지를 실패했습니다. 딕셔너리를 반환합니다.\n")
             return {}
