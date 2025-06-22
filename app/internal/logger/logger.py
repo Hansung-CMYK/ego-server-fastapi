@@ -1,11 +1,34 @@
 import logging
+import sys
+from logging.config import dictConfig
+from textwrap import dedent
 
-logger = logging.getLogger("default")
-logger.propagate = False
-logger.setLevel(logging.INFO)
+dictConfig({
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "default": {
+            "format": dedent("""
+            %(asctime)s - %(name)s - %(levelname)s 
+            %(message)s
+            """),
+            "datefmt": "%Y-%m-%d %H:%M:%S",
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "stream": sys.stdout,
+            "level": "INFO",
+            "formatter": "default",
+        },
+    },
+    "loggers": {
+        "": {                 # root 로거
+            "handlers": ["console"],
+            "level": "INFO",
+        }
+    },
+})
 
-# Console handler
-console_handler = logging.StreamHandler()
-formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
-console_handler.setFormatter(formatter)
-logger.addHandler(console_handler)
+logger = logging.getLogger(__name__)
