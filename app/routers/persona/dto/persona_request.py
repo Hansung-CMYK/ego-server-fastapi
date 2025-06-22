@@ -12,7 +12,6 @@ class PersonaRequest(BaseModel):
     Attributes:
         ego_id(str): 페르소나가 생성 될 ego_id
         name(str|None): 에고의 이름
-        age(int|None): 에고(사용자)의 나이
         mbti(str|None): 에고(사용자)의 mbti
     """
     ego_id: str
