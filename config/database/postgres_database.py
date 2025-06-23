@@ -18,14 +18,14 @@ class PostgresDatabase(CommonDatabase):
         psycopg2를 이용한 CommonDatabase 구현체
     """
     def __new__(cls, *args, **kwargs):
-        if not cls.__instance:
-            with cls.__lock:
-                if not cls.__instance:
-                    cls.__instance = super().__new__(cls)
-                    cls.__instance.__connection = cls.__instance.__init_connection()
-        return cls.__instance
+        if not cls._instance:
+            with cls._lock:
+                if not cls._instance:
+                    cls._instance = super().__new__(cls)
+                    cls._instance.__connection = cls._instance._init_connection()
+        return cls._instance
 
-    def __init_connection(self):
+    def _init_connection(self):
         return psycopg2.connect(
             host=os.getenv("POSTGRES_URI"),
             database=os.getenv("POSTGRES_DB_NAME"),
@@ -44,8 +44,8 @@ class PostgresDatabase(CommonDatabase):
         if self.__connection:
             self.__connection.close()
 
-        if self.__class__.__instance:
-            self.__class__.__instance = None
+        if self.__class__._instance:
+            self.__class__._instance = None
 
     def execute_update(self, sql: str, values: tuple=()):
         try:

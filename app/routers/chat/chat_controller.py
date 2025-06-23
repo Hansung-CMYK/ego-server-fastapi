@@ -1,10 +1,9 @@
 import base64
 
 from fastapi import APIRouter, File, Form, UploadFile
-from pydantic import BaseModel
 
 from app.internal.exception.error_code import ControlledException, ErrorCode
-from app.routers.chat.chat_service import chat_stream
+from app.routers.chat.service.chat_service import chat_stream
 from app.routers.chat.dto.chat_request import ChatRequest
 from config.common.common_response import CommonResponse
 from config.image.image_descriptor import ImageDescriptor

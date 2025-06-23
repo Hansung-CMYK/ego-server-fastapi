@@ -1,10 +1,9 @@
 import asyncio
 import threading
 
-from app.internal.exception.error_code import ControlledException, ErrorCode
 from app.internal.logger.logger import logger
-from app.routers.chat.graph_rag_service import get_rag_prompt
-from app.routers.chat.persona_store import persona_store
+from app.routers.chat.service.graph_rag_service import get_rag_prompt
+from app.routers.chat.service.persona_store import persona_store
 from config.be.api_service import get_ego
 from config.database.milvus_database import milvus_database
 from config.llm.main_llm import main_llm

@@ -9,11 +9,11 @@ class CommonDatabase(ABC):
     관계형 데이터베이스를 구현할 시, 꼭 다음 함수를 이용해주세요.
 
     Attributes:
-        __instance: 싱글턴 인스턴스입니다.
-        __lock: 싱글턴을 구현하기 위한 동기화 Flag 객체입니다.
+        _instance: 싱글턴 인스턴스입니다.
+        _lock: 싱글턴을 구현하기 위한 동기화 Flag 객체입니다.
     """
-    __instance = None
-    __lock = threading.Lock()
+    _instance = None
+    _lock = threading.Lock()
 
     def __new__(cls, *args, **kwargs):
         """
@@ -24,7 +24,7 @@ class CommonDatabase(ABC):
         pass
 
     @abstractmethod
-    def __init_connection(self):
+    def _init_connection(self):
         """
         connection을 생성하는 함수입니다.
 

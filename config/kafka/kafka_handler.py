@@ -5,7 +5,7 @@ import uuid
 
 from aiokafka import AIOKafkaConsumer, AIOKafkaProducer
 
-from app.routers.chat.chat_service import chat_stream
+from app.routers.chat.service.chat_service import chat_stream
 from config.image.image_descriptor import ImageDescriptor
 from config.kafka.chat_message import ChatMessage, ContentType
 from config.session.session_config import SessionConfig

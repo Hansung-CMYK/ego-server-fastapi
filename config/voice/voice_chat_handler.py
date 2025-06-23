@@ -10,7 +10,7 @@ import emoji
 import numpy as np
 
 from app.internal.logger.logger import logger
-from app.routers.chat.chat_service import chat_stream
+from app.routers.chat.service.chat_service import chat_stream
 from app.routers.diary.feeling.kobert_handler import extract_emotions
 from app.routers.tts.tts_controller import gpt_sovits_api
 from config.kafka.kafka_handler import (RESPONSE_AI_TOPIC,

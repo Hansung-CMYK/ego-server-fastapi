@@ -1,17 +1,19 @@
 import os
+import threading
 
 from numpy import ndarray
-from pymilvus import MilvusClient, MilvusException
+from pymilvus import MilvusClient, MilvusException, CollectionSchema
+from pymilvus.milvus_client import IndexParams
 
 from app.internal.exception.error_code import ControlledException, ErrorCode
 from app.internal.logger.logger import logger
-from app.routers.chat.parsed_sentence import ParsedSentence
+from app.routers.chat.service.parsed_sentence import ParsedSentence
 from config.embedding.embedding_model import embedding_model
 
 # .env 환경 변수 추출
 MILVUS_URI = os.getenv('MILVUS_URI')
 
-class MilvusDatabase:
+class MilvusDatabase1:
     """
     요약:
         Milvus를 이용하기 위한 Client
@@ -247,4 +249,136 @@ class MilvusDatabase:
         self.__milvus_client.drop_partition(collection_name="passages",partition_name=ego_id)
         self.__milvus_client.drop_partition(collection_name="triplets",partition_name=ego_id)
 
-milvus_database = MilvusDatabase()
+milvus_database = MilvusDatabase1()
+
+class MilvusDatabase:
+    _instance = None
+    _lock = threading.Lock()
+
+    def __new__(cls, *args, **kwargs):
+        if not cls._instance:
+            with cls._lock:
+                if not cls._instance:
+                    cls._instance = super().__new__(cls)
+                    cls.__connection = cls._instance._init_connection()
+        return cls._instance
+
+    @staticmethod
+    def _init_connection():
+        return MilvusClient(
+            uri=MILVUS_URI,
+            token="root:Milvus"
+        )
+
+    def get_connection(self):
+        return self.__connection
+
+    def close(self):
+        if self.__connection:
+            self.__connection.close()
+
+        if self.__class__._instance:
+            self.__class__._instance = None
+
+    """
+    pattition
+    """
+    def create_partition(self, collection_name:str, partition_name:str):
+        return self.get_connection().create_partition(
+            collection_name=collection_name,
+            partition_name=partition_name
+        )
+
+    def drop_partition(self, collection_name:str, partition_name:str):
+        return self.get_connection().drop_partition(
+            collection_name=collection_name,
+            partition_name=partition_name
+        )
+
+    def has_partition(self, collection_name:str, partition_name:str):
+        return self.get_connection().has_partition(
+            collection_name=collection_name,
+            partition_name=partition_name
+        )
+
+    def load_partitions(self, collection_name:str, partition_names:list[str]):
+        return self.get_connection().load_partitions(
+            collection_name=collection_name,
+            partition_names=partition_names
+        )
+
+    def get_load_state(self, collection_name:str, partition_name:str):
+        return self.get_connection().get_load_state(
+            collection_name=collection_name,
+            partition_name=partition_name
+        )
+
+    def release_partitions(self, collection_name:str, partition_names:list[str]):
+        return self.get_connection().release_partitions(
+            collection_name=collection_name,
+            partition_names=partition_names
+        )
+
+    """
+    DCL
+    """
+    def create_collection(self, collection_name:str, schema:CollectionSchema, index_params:IndexParams):
+        return self.get_connection().create_collection(
+            collection_name=collection_name,
+            schema=schema,
+            index_params=index_params
+        )
+
+    def drop_collection(self, collection_name:str):
+        return self.get_connection().drop_collection(
+            collection_name=collection_name
+        )
+
+    """
+    DML
+    """
+    def insert(self, collection_name:str, partition_name:str, data:dict|list[dict]):
+        return self.get_connection().insert(
+            collection_name=collection_name,
+            partition_name=partition_name,
+            data=data
+        )
+
+    def range_select(self, collection_name: str, search_field: str, partition_names: list[str],
+                              output_fields: list[str], data: ndarray|list[ndarray], radius: float = 0.6):
+        return self.get_connection().search(
+            collection_name=collection_name,
+            anns_field=search_field,
+            partition_names=partition_names,
+            data=data,
+            search_params={
+                "metric_type": "COSINE",
+                "params": {
+                    "radius": radius
+                }
+            },
+            output_fields=output_fields
+        )
+
+    def select_all(self, collection_name: str, partition_names: list[str], output_fields:list[str], filter:str="id >= 0"):
+        return self.get_connection().query(
+            collection_name=collection_name,
+            partition_names=partition_names,
+            filter=filter,
+            output_fields=output_fields,
+        )
+
+    def select_passages_to_ids(self, collection_name: str, partition_names: list[str], ids: int|list[int], output_fields: list[str]):
+        return self.get_connection().get(
+            collection_name=collection_name,
+            partition_names=partition_names,
+            ids=ids,
+            output_fields=output_fields,
+        )
+
+    def delete(self, collection_name: str, partition_name: str, filter:str="id >= 0"):
+        return self.get_connection().delete(
+            collection_name=collection_name,
+            partition_name=partition_name,
+            filter=filter,
+        )

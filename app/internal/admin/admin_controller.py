@@ -3,7 +3,7 @@ from fastapi import APIRouter
 from app.internal.admin.dto.admin_request import (ADMIN_ID, ADMIN_PASSWORD,
                                                   AdminRequest)
 from app.internal.exception.error_code import ControlledException, ErrorCode
-from app.routers.chat.persona_store import KARINA_PERSONA, MYEONGJUN_PERSONA
+from app.routers.chat.service.persona_store import KARINA_PERSONA, MYEONGJUN_PERSONA
 from app.routers.persona import persona_service
 from app.routers.persona.persona_repository import PersonaRepository
 from app.routers.tone import tone_service
