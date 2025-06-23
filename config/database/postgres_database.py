@@ -12,10 +12,9 @@ load_dotenv()
 # TODO 1. 멀티스레드로 다중성 관리하기 # ConnectionPool
 class PostgresDatabase(CommonDatabase):
     """
-    요약:
-        PostgreSQL을 이용하기 위한 Client
+    PostgreSQL을 이용하기 위한 클래스
 
-        psycopg2를 이용한 CommonDatabase 구현체
+    psycopg2를 이용한 CommonDatabase 구현체
     """
     def __new__(cls, *args, **kwargs):
         if not cls._instance:

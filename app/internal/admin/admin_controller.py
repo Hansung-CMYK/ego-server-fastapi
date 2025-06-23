@@ -79,7 +79,7 @@ async def delete_ego(ego_id: str, body:AdminRequest)->CommonResponse:
     tone_service.delete_tone(ego_id=ego_id)
 
     # NOTE 3. Milvus Partition 삭제
-    milvus_database.delete_partition(ego_id=ego_id)
+    milvus_database.delete_partition(partition_name=ego_id)
 
     return CommonResponse(
         code=200,

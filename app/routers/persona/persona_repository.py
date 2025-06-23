@@ -11,6 +11,49 @@ Persona와 관련된 SQL을 관리한다.
 
 database = PostgresDatabase()
 
+"""
+DDL
+"""
+def create_persona():
+    """
+    persona 테이블을 생성하는 함수
+    """
+    database.execute_update(
+        sql = "CREATE TABLE persona (ego_id VARCHAR(255) PRIMARY KEY, persona JSONB NOT NULL)"
+    )
+
+def drop_persona():
+    """
+    persona 테이블을 제거하는 함수
+    """
+    database.execute_update(
+        sql = "DROP TABLE persona"
+    )
+
+"""
+DML
+"""
+def select_persona_to_ego_id(ego_id: str)->tuple:
+    """
+    요약:
+        ego_id를 이용해 페르소나를 조회하는 함수
+
+    Parameters:
+        ego_id(str): 조회할 ego의 아이디
+
+    Raises:
+        PERSONA_NOT_FOUND: ego_id로 페르소나 조회 실패
+    """
+    result=database.execute_query(
+            sql="SELECT * FROM persona WHERE ego_id = %s",
+            values=(ego_id,)
+    )
+
+    if len(result) == 0:
+        raise ControlledException(ErrorCode.PERSONA_NOT_FOUND)
+    else:
+        return result[0] # 페르소나 결과 반환
+
 def insert_persona(ego_id: str, persona: dict):
     """
     요약:
@@ -39,27 +82,18 @@ def update_persona(ego_id: str, persona: dict):
         values=(json.dumps(persona), ego_id,)
     )
 
-def select_persona_to_ego_id(ego_id: str)->tuple:
+def delete_persona(ego_id: str):
     """
-    요약:
-        ego_id를 이용해 페르소나를 저장하는 함수
-
-    Parameters:
-        ego_id(str): 조회할 ego의 아이디
-
-    Raises:
-        PERSONA_NOT_FOUND: ego_id로 페르소나 조회 실패
+    모든 데이터를 제거하는 함수
     """
-    result=database.execute_query(
-            sql="SELECT * FROM persona WHERE ego_id = %s",
-            values=(ego_id,)
+    database.execute_update(
+        sql="DELETE FROM persona WHERE ego_id = %s",
+        values=(ego_id,)
     )
 
-    if len(result) == 0:
-        raise ControlledException(ErrorCode.PERSONA_NOT_FOUND)
-    else:
-        return result[0] # 페르소나 결과 반환
-
+"""
+Another
+"""
 def has_persona(ego_id: str) -> bool:
     """
     요약:
@@ -77,28 +111,3 @@ def has_persona(ego_id: str) -> bool:
         return False
     else:
         return True
-
-def delete_persona(ego_id: str):
-    """
-    모든 데이터를 제거하는 함수
-    """
-    database.execute_update(
-        sql="DELETE FROM persona WHERE ego_id = %s",
-        values=(ego_id,)
-    )
-
-def create_persona():
-    """
-    persona 테이블을 생성하는 함수
-    """
-    database.execute_update(
-        sql = "CREATE TABLE persona (ego_id VARCHAR(255) PRIMARY KEY, persona JSONB NOT NULL)"
-    )
-
-def drop_persona():
-    """
-    persona 테이블을 제거하는 함수
-    """
-    database.execute_update(
-        sql = "DROP TABLE persona"
-    )
