@@ -2,7 +2,7 @@ import os
 import threading
 
 from numpy import ndarray
-from pymilvus import MilvusClient, MilvusException, CollectionSchema
+from pymilvus import CollectionSchema, MilvusClient, MilvusException
 from pymilvus.milvus_client import IndexParams
 
 from app.internal.exception.error_code import ControlledException, ErrorCode

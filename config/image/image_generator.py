@@ -1,7 +1,7 @@
 import fal_client
 from langchain_core.messages import HumanMessage
 
-from config.common.default_model import chat_model
+from config.common.common_llm import chat_model
 
 
 class ImageGenerator:

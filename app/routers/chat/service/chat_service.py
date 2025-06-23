@@ -4,8 +4,8 @@ import threading
 from app.internal.logger.logger import logger
 from app.routers.chat.service.graph_rag_service import get_rag_prompt
 from app.routers.chat.service.persona_store import persona_store
-from config.be.api_service import get_ego
 from config.database.milvus_database import milvus_database
+from config.external.hub_api import get_ego
 from config.llm.main_llm import main_llm
 from config.llm.split_llm import SplitLLM
 from config.session.session_config import SessionConfig

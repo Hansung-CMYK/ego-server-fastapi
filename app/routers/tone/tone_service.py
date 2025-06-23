@@ -1,6 +1,5 @@
-from app.routers.tone.tone_repository import ToneRepository
+from app.routers.tone import tone_repository
 
-tone_repository = ToneRepository()
 
 def insert_tone(ego_id: str, tone: dict):
     return tone_repository.insert_tone(ego_id=ego_id, tone=tone)

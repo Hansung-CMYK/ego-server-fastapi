@@ -4,9 +4,9 @@ from datetime import date
 from app.internal.logger.logger import logger
 from app.routers.chat.service.persona_store import persona_store
 from app.routers.diary.tag.tag_service import search_tags
-from config.be.api_service import (get_chat_history, get_ego, patch_tags,
-                                   post_relationship)
 from config.emotion.emotion_classifier import EmotionClassifier
+from config.external.hub_api import get_ego, patch_tags, post_relationship
+from config.external.personalized_data_api import get_chat_history
 
 SPRING_URI = os.getenv('SPRING_URI')
 

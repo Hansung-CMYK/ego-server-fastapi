@@ -1,6 +1,5 @@
-from app.routers.persona.persona_repository import PersonaRepository
+from app.routers.persona import persona_repository
 
-persona_repository = PersonaRepository()
 
 def insert_persona(ego_id: str, persona: dict):
     return persona_repository.insert_persona(ego_id=ego_id, persona=persona)

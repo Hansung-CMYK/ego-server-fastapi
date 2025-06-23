@@ -3,8 +3,8 @@ import base64
 from fastapi import APIRouter, File, Form, UploadFile
 
 from app.internal.exception.error_code import ControlledException, ErrorCode
-from app.routers.chat.service.chat_service import chat_stream
 from app.routers.chat.dto.chat_request import ChatRequest
+from app.routers.chat.service.chat_service import chat_stream
 from config.common.common_response import CommonResponse
 from config.image.image_descriptor import ImageDescriptor
 from config.session.session_config import SessionConfig

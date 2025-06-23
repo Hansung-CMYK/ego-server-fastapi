@@ -4,7 +4,6 @@ import threading
 from config.common.common_database import CommonDatabase
 from config.database.postgres_database import PostgresDatabase
 
-
 """
 Postgres Tone을 호출하기 위한 Respository
 

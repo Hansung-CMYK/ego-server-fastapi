@@ -4,7 +4,8 @@ import numpy as np
 from scipy.sparse import csr_matrix
 
 from app.internal.logger.logger import logger
-from app.routers.chat.service.parsed_sentence import ParsedSentence, split_sentence
+from app.routers.chat.service.parsed_sentence import (ParsedSentence,
+                                                      split_sentence)
 from config.database.milvus_database import milvus_database
 
 """
