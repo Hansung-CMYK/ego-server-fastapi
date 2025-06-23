@@ -1,9 +1,7 @@
 import asyncio
 import logging
-from datetime import date
 
 from fastapi import APIRouter
-from pydantic import BaseModel
 
 from app.internal.exception.error_code import ControlledException, ErrorCode
 from app.routers.diary.diary_service import async_save, get_all_chat

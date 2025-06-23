@@ -1,12 +1,16 @@
 import os
 from datetime import date
 
+from dotenv import load_dotenv
+
 from app.internal.logger.logger import logger
 from app.routers.chat.service.persona_store import persona_store
 from app.routers.diary.tag.tag_service import search_tags
 from config.emotion.emotion_classifier import EmotionClassifier
 from config.external.hub_api import get_ego, patch_tags, post_relationship
 from config.external.personalized_data_api import get_chat_history
+
+load_dotenv()
 
 SPRING_URI = os.getenv('SPRING_URI')
 

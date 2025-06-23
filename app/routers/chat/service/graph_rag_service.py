@@ -4,9 +4,9 @@ import numpy as np
 from scipy.sparse import csr_matrix
 
 from app.internal.logger.logger import logger
+from app.routers.chat.service import milvus_service
 from app.routers.chat.service.parsed_sentence import (ParsedSentence,
                                                       split_sentence)
-from config.database.milvus_database import milvus_database
 
 """
 Graph RAG를 활용하기 위한 서비스
@@ -41,29 +41,29 @@ def get_rag_prompt(ego_id:str, user_message:str)->str:
         if parsed_sentence.triplet[1] != "": embedding_object.append(embedded_sentence["embedded_triplet"][1])
         if parsed_sentence.relation != "": embedding_relation.append(embedded_sentence["embedded_relation"])
 
-    triplets_with_similar_subject = milvus_database.search_triplets(
+    triplets_with_similar_subject = milvus_service.search_triplets(
         ego_id=ego_id,
         field_name="embedded_subject",
         datas=embedding_subject
     )
-    triplets_with_similar_subject.extend(milvus_database.search_triplets(
+    triplets_with_similar_subject.extend(milvus_service.search_triplets(
         ego_id=ego_id,
         field_name="embedded_object",
         datas=embedding_subject
     ))
 
-    triplets_with_similar_object = milvus_database.search_triplets(
+    triplets_with_similar_object = milvus_service.search_triplets(
         ego_id=ego_id,
         field_name="embedded_object",
         datas=embedding_object
     )
-    triplets_with_similar_object.extend(milvus_database.search_triplets(
+    triplets_with_similar_object.extend(milvus_service.search_triplets(
         ego_id=ego_id,
         field_name="embedded_subject",
         datas=embedding_object
     ))
 
-    triplets_with_similar_relations = milvus_database.search_triplets(
+    triplets_with_similar_relations = milvus_service.search_triplets(
         ego_id=ego_id,
         field_name="embedded_relation",
         datas=embedding_relation
@@ -77,7 +77,7 @@ def get_rag_prompt(ego_id:str, user_message:str)->str:
     )
 
     # NOTE 4. 연결된 관계들의 원문을 조회한다.
-    related_passages = milvus_database.search_passages(
+    related_passages = milvus_service.search_passages(
         ego_id=ego_id,
         datas=related_passages_ids
     )

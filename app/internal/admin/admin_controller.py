@@ -3,12 +3,12 @@ from fastapi import APIRouter
 from app.internal.admin.dto.admin_request import (ADMIN_ID, ADMIN_PASSWORD,
                                                   AdminRequest)
 from app.internal.exception.error_code import ControlledException, ErrorCode
+from app.routers.chat.service import milvus_service
 from app.routers.chat.service.persona_store import (KARINA_PERSONA,
                                                     MYEONGJUN_PERSONA)
 from app.routers.persona import persona_service
 from app.routers.tone import tone_service
 from config.common.common_response import CommonResponse
-from config.database.milvus_database import milvus_database
 from config.llm.main_llm import main_llm
 
 router = APIRouter(prefix="/admin")
@@ -37,7 +37,7 @@ async def reset_ego(user_id:str, ego_id:str, body: AdminRequest)->CommonResponse
         )
 
     # NOTE 1. milvus_db의 파티션에 있는 정보들을 초기화한다.
-    milvus_database.reset_collection(ego_id=ego_id)
+    milvus_service.reset_collection(ego_id=ego_id)
 
     # NOTE 2. postgres의 페르소나 정보들을 삭제한다.
     persona_service.delete_persona(ego_id=ego_id)
@@ -79,7 +79,7 @@ async def delete_ego(ego_id: str, body:AdminRequest)->CommonResponse:
     tone_service.delete_tone(ego_id=ego_id)
 
     # NOTE 3. Milvus Partition 삭제
-    milvus_database.delete_partition(partition_name=ego_id)
+    milvus_service.delete_partition(partition_name=ego_id)
 
     return CommonResponse(
         code=200,

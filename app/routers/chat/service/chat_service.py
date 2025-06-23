@@ -2,9 +2,9 @@ import asyncio
 import threading
 
 from app.internal.logger.logger import logger
+from app.routers.chat.service import milvus_service
 from app.routers.chat.service.graph_rag_service import get_rag_prompt
 from app.routers.chat.service.persona_store import persona_store
-from config.database.milvus_database import milvus_database
 from config.external.hub_api import get_ego
 from config.llm.main_llm import main_llm
 from config.llm.split_llm import SplitLLM
@@ -93,5 +93,5 @@ async def save_graphdb(session_id:str, user_message:str):
     # NOTE 3. 에고에 맞게 삼중항을 저장한다.
     my_ego = get_ego(user_id=user_id)
 
-    milvus_database.insert_messages(single_sentences=split_messages, passage=input, ego_id=str(my_ego["id"]))
+    milvus_service.insert_messages(single_sentences=split_messages, passage=input, ego_id=str(my_ego["id"]))
     logger.info("save_graphdb success!")

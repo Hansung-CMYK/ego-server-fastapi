@@ -5,6 +5,10 @@ from pydantic import BaseModel
 
 load_dotenv()
 
+# 따로 관리자 계정의 ID가 정해지지 않아서, PostgreSQL Root 계정의 정보를 활용한다.
+ADMIN_ID = os.environ.get("POSTGRES_USER")
+ADMIN_PASSWORD = os.environ.get("POSTGRES_PASSWORD")
+
 class AdminRequest(BaseModel):
     """
     요약:
@@ -16,7 +20,3 @@ class AdminRequest(BaseModel):
     """
     admin_id: str
     admin_password: str
-
-# 따로 관리자 계정의 ID가 정해지지 않아서, PostgreSQL Root 계정의 정보를 활용한다.
-ADMIN_ID = os.environ.get("POSTGRES_USER")
-ADMIN_PASSWORD = os.environ.get("POSTGRES_PASSWORD")

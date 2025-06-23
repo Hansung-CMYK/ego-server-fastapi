@@ -1,6 +1,5 @@
 from textwrap import dedent
 
-from dotenv import load_dotenv
 from langchain.memory import ConversationSummaryBufferMemory
 from langchain_core.chat_history import BaseChatMessageHistory
 from langchain_core.messages import AIMessage
@@ -8,8 +7,6 @@ from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables import RunnableWithMessageHistory
 
 from config.common.common_llm import CommonLLM, chat_model
-
-load_dotenv()
 
 MAIN_LLM = """
 <PRIMARY_RULE>

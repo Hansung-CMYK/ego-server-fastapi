@@ -9,6 +9,12 @@ from config.common.common_database import CommonDatabase
 
 load_dotenv()
 
+POSTGRES_URI = os.getenv("POSTGRES_URI")
+POSTGRES_DB_NAME = os.getenv("POSTGRES_DB_NAME")
+POSTGRES_USER = os.getenv("POSTGRES_USER")
+POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
+POSTGRES_PORT = os.getenv("POSTGRES_PORT")
+
 # TODO 1. 멀티스레드로 다중성 관리하기 # ConnectionPool
 class PostgresDatabase(CommonDatabase):
     """
@@ -26,11 +32,11 @@ class PostgresDatabase(CommonDatabase):
 
     def _init_connection(self):
         return psycopg2.connect(
-            host=os.getenv("POSTGRES_URI"),
-            database=os.getenv("POSTGRES_DB_NAME"),
-            user=os.getenv("POSTGRES_USER"),
-            password=os.getenv("POSTGRES_PASSWORD"),
-            port=os.getenv("POSTGRES_PORT")
+            host=POSTGRES_URI,
+            database=POSTGRES_DB_NAME,
+            user=POSTGRES_USER,
+            password=POSTGRES_PASSWORD,
+            port=POSTGRES_PORT
         )
 
     def get_connection(self):

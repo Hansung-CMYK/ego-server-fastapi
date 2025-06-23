@@ -1,11 +1,11 @@
 from fastapi import APIRouter
 
 from app.internal.exception.error_code import ControlledException, ErrorCode
+from app.routers.chat.service import milvus_service
 from app.routers.persona import persona_service
 from app.routers.persona.dto.persona_request import PersonaRequest
 from app.routers.tone.tone_controller import build_interview_log
 from config.common.common_response import CommonResponse
-from config.database.milvus_database import milvus_database
 
 router = APIRouter(prefix="/persona")
 
@@ -29,7 +29,7 @@ async def create_persona(body: PersonaRequest)->CommonResponse:
         raise ControlledException(ErrorCode.ALREADY_CREATED_EGO_ID)
 
     # Milvus에 중복되는 ego_id가 있는지 조회합니다.
-    if milvus_database.has_partition(partition_name=body.ego_id):
+    if milvus_service.has_partition(partition_name=body.ego_id):
         raise ControlledException(ErrorCode.ALREADY_CREATED_PARTITION)
 
     interview = build_interview_log(interview=body.interview)
@@ -43,7 +43,7 @@ async def create_persona(body: PersonaRequest)->CommonResponse:
 
     # NOTE 4. Milvus Partition 생성
     # Milvus Database의 partition_name은 ego_id로 생성됩니다.
-    milvus_database.create_partition(partition_name=body.ego_id)
+    milvus_service.create_partition(partition_name=body.ego_id)
 
     return CommonResponse(
         code=200,
