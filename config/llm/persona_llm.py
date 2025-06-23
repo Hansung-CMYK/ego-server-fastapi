@@ -111,6 +111,6 @@ class PersonaLLM(CommonLLM):
         })
         try:
             return super().invoke(parameter)
-        except ControlledException:
+        except ControlledException: # TODO: 정상 작동 확인할 것
             logger.exception(f"\n\nPersona 변화 감지를 실패했습니다. 딕셔너리를 반환합니다.\n")
             return {}

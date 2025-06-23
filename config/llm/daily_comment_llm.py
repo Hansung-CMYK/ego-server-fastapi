@@ -106,6 +106,6 @@ class DailyCommentLLM(CommonLLM):
 
         try:
             return super().invoke(parameter)
-        except ControlledException:
+        except ControlledException: # TODO: 정상 작동 확인할 것
             logger.exception(f"\n\nLLM이 일기 한줄 요약을 실패했습니다. 일기에 빈 문자열을 반환합니다.\n")
             return ""
