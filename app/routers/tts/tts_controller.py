@@ -6,19 +6,18 @@ from pathlib import Path
 
 from fastapi import APIRouter, File, HTTPException, UploadFile
 
-here = os.path.dirname(__file__)
-api_file_path = os.path.abspath(os.path.join(here, "../../modules/GPT-SoVITS/api_v2.py"))
-gpt_sovits_root = os.path.dirname(api_file_path)
-gpt_sovits_sub = os.path.join(gpt_sovits_root, "GPT_SoVITS")
+here = Path(__file__).resolve().parent
+api_file_path = (here / "../../../modules/GPT-SoVITS/api_v2.py").resolve()
+gpt_sovits_root = api_file_path.parent
 
-for path in (gpt_sovits_root, gpt_sovits_sub):
-    if path not in sys.path:
-        sys.path.insert(0, path)
+if str(gpt_sovits_root) not in sys.path:
+    sys.path.insert(0, str(gpt_sovits_root))
 
 spec = importlib.util.spec_from_file_location("gpt_sovits_api", api_file_path)
 gpt_sovits_api = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(gpt_sovits_api)
 
+# 다른 모듈에서 `import gpt_sovits_api` 로 접근 가능하도록 등록
 sys.modules["gpt_sovits_api"] = gpt_sovits_api
 
 gsv = importlib.import_module("gpt_sovits_api")

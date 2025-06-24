@@ -5,6 +5,7 @@ import os
 import uuid
 import wave
 from difflib import SequenceMatcher
+from pathlib import Path
 
 import numpy as np
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
@@ -15,7 +16,7 @@ from config.voice.stt_recorder import get_stt_recorder, release_stt_recorder
 router = APIRouter()
 
 TARGET_SR = 16_000
-SAVE_DIR = "/home/keem/refer"
+SAVE_DIR = str(Path.home() / "refer")
 os.makedirs(SAVE_DIR, exist_ok=True)
 
 def _decode_resample_le(pcm_bytes: bytes, src_sr: int, tgt_sr: int = TARGET_SR) -> bytes:
