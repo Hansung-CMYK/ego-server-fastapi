@@ -2,6 +2,7 @@ import importlib
 import os
 import shutil
 import sys
+from pathlib import Path
 
 from fastapi import APIRouter, File, HTTPException, UploadFile
 
@@ -41,8 +42,8 @@ async def update_refer(model_id: str, refer_path: str, refer_text: str, refer_la
 
 
 @router.post("/update_refer/{model_id}")
-async def api_update_refer(model_id: str = "default", refer_path: str = "/home/keem/refer/",
-                           refer_text: str = "/home/keem/refer/", refer_language: str = "ko"):
+async def api_update_refer(model_id: str = "default", refer_path: str = str(Path.home() / "refer"),
+                           refer_text: str = str(Path.home() / "refer"), refer_language: str = "ko"):
     try:
         await update_refer(model_id, refer_path, refer_text, refer_language)
         return {"message": f"Refer updated for model {model_id}"}
@@ -54,7 +55,7 @@ async def api_update_refer(model_id: str = "default", refer_path: str = "/home/k
 async def upload_wav(file: UploadFile = File(...), filename: str = None):
     if '.wav' not in filename:
         filename += ".wav"
-    save_dir = "/home/keem/refer/"
+    save_dir = str(Path.home() / "refer")
 
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)

@@ -34,7 +34,7 @@ def _save_wav(pcm: bytes, sr: int, path: str):
         wf.writeframes(pcm)
     print(f"[PRINT] WAV saved → {path}")
 
-@router.websocket("/ws/pronunciation-test")
+@router.websocket("/ws/pronunciation-_test")
 async def pronunciation_test(ws: WebSocket):
     await ws.accept()
     loop = asyncio.get_event_loop()

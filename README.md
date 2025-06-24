@@ -67,10 +67,11 @@ PR 전략에 대한 자세한 정보는 [PR Strategy 바로가기](docs/pr_strat
 Issue 전략에 대한 자세한 정보는 [Issue Strategy 바로가기](docs/issue)strategy.md)를 참고해주세요.
 
 # Dependency & Library
-| Name  | Description                                           | Version |
-|-------|-------------------------------------------------------|---------|
-| name  | description                                           | version |
-| isort | Import sorting tool for Python, compliant with PEP 8. | 6.0.1   |
+| Name   | Description                                           | Version |
+|--------|-------------------------------------------------------|---------|
+| name   | description                                           | version |
+| isort  | Import sorting tool for Python, compliant with PEP 8. | 6.0.1   |
+| pytest | Python Unit Test                                      | 8.4.1   |
 
 # Support
 ### E-Mail

@@ -12,4 +12,4 @@ venv/
 **/*.log
 *.log
 
-test/
+_test/
