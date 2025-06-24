@@ -72,6 +72,7 @@ Issue 전략에 대한 자세한 정보는 [Issue Strategy 바로가기](docs/is
 | name   | description                                           | version |
 | isort  | Import sorting tool for Python, compliant with PEP 8. | 6.0.1   |
 | pytest | Python Unit Test                                      | 8.4.1   |
+| kiwi | 형태소 분석기 | 10.2.22 |
 
 # Support
 ### E-Mail

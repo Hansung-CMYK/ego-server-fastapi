@@ -1,14 +1,13 @@
 from __future__ import annotations
 
 from typing import List
-
 import numpy as np
 import torch
 import torch.nn.functional as F
-from kiwi import kiwi
 
 from app.routers.diary.tag.tag_embedding_service import load_index
 from config.embedding.embedding_model import embedding_model
+from config.keyword.keyword_model import keyword_model
 
 __KEYS, __EMBEDS = load_index()
 
@@ -25,7 +24,8 @@ def sentence_embedding(stories: list[str]) -> np.ndarray:
     """
     # 명사만 추출해 노이즈 감소
     user_chat_logs = "\n".join(stories)
-    nouns = [tok.form for sent in kiwi.analyze(user_chat_logs) for tok in sent[0] if tok.tag.startswith("NN")]
+    # TODO: keyword_model에서 임시로 불러옴 변경할 것
+    nouns = [tok.form for sent in keyword_model.kiwi.analyze(user_chat_logs) for tok in sent[0] if tok.tag.startswith("NN")]
     message = " ".join(nouns) if nouns else user_chat_logs
     return embedding_model.embedding(texts=[message])[0].astype(np.float32)
 

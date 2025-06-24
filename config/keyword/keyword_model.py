@@ -1,5 +1,4 @@
 from keybert import KeyBERT
-from kiwi import kiwi
 from kiwipiepy import Kiwi
 from sentence_transformers import SentenceTransformer
 
@@ -33,7 +32,7 @@ class KeywordModel:
         sentences = "\n".join(story for story in chat_rooms)
 
         # NOTE 2. 문장에서 명사만 남겨둔다.
-        for sentence in kiwi.analyze(sentences):
+        for sentence in self.kiwi.analyze(sentences):
             nouns = [token.form for token in sentence[0] if token.tag.startswith('NN')]
             if nouns: nouns_list.extend(nouns)
         result_text = ' '.join(nouns_list)
