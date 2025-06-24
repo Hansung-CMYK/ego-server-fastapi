@@ -9,10 +9,11 @@ class CommonDatabase(ABC):
     데이터베이스 드라이버를 구현할 시, 꼭 다음 함수를 이용해주세요.
 
     Attributes:
-        _instance: 싱글턴 인스턴스입니다.
+        _instances: _instances: 자식 클래스들의 싱글턴 인스턴스입니다.
+            - _template(list): 각 prompt를 연결할 객체이다. 추가 TEMPLATE는 이 객체에 .append() 할 것
         _lock: 싱글턴을 구현하기 위한 동기화 Flag 객체입니다.
     """
-    _instance = None
+    _instances: dict[type, 'CommonDatabase'] = {}
     _lock = threading.Lock()
 
     def __new__(cls, *args, **kwargs):
@@ -21,7 +22,19 @@ class CommonDatabase(ABC):
 
         인스턴스를 호출할 땐 CommonDatabase() 혹은 상속 객체를 호출해주세요.
         """
-        pass
+        if cls not in cls._instances:  # 1차 검사
+            with cls._lock:
+                if cls not in cls._instances:  # 2차 검사
+                    instance = super().__new__(cls)
+                    cls._instances[cls] = instance
+        return cls._instances[cls]
+
+    def __init__(self, *args, **kwargs) -> None:
+        # 한 번만 실행되도록
+        if getattr(self, "_initialized", False):
+            return
+        self._connection = self._init_connection()
+        self._initialized = True
 
     @abstractmethod
     def _init_connection(self):

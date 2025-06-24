@@ -22,14 +22,6 @@ class PostgresDatabase(CommonDatabase):
 
     psycopg2를 이용한 CommonDatabase 구현체
     """
-    def __new__(cls, *args, **kwargs):
-        if not cls._instance:
-            with cls._lock:
-                if not cls._instance:
-                    cls._instance = super().__new__(cls)
-                    cls._instance.__connection = cls._instance._init_connection()
-        return cls._instance
-
     def _init_connection(self):
         return psycopg2.connect(
             host=POSTGRES_URI,
@@ -40,25 +32,24 @@ class PostgresDatabase(CommonDatabase):
         )
 
     def get_connection(self):
-        return self.__connection
+        return self._connection
 
     def get_cursor(self):
-        return self.__connection.cursor()
+        return self._connection.cursor()
 
     def close(self):
-        if self.__connection:
-            self.__connection.close()
+        if self._connection:
+            self._connection.close()
 
-        if self.__class__._instance:
-            self.__class__._instance = None
+        self.__class__._instances.pop(self.__class__, None)
 
     def execute_update(self, sql: str, values: tuple=()):
         try:
             with self.get_cursor() as cursor:
                 cursor.execute(sql, values)
-            self.__connection.commit()
+            self._connection.commit()
         except DatabaseError:
-            self.__connection.rollback()
+            self._connection.rollback()
             raise ControlledException(ErrorCode.FAILURE_TRANSACTION)
 
     def execute_query(self, sql: str, values: tuple=()):
