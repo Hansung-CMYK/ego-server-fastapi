@@ -2,6 +2,8 @@ import re
 
 from dotenv import load_dotenv
 
+from config.external import srl_api
+
 load_dotenv()
 
 def expand(pharse_id:int, phrases:dict)->str:
@@ -54,7 +56,7 @@ def get_triplets(single_sentence:str)->list[str]:
         single_sentence(str): 분리할 삼중항 단일 문장
     """
     # NOTE 1. 형태소 분석
-    nlu  = get_srl(single_sentence) # Natural Language Understanding
+    nlu  = srl_api.get_srl(single_sentence) # Natural Language Understanding
     sentence = nlu["return_object"]["sentence"][0]
     phrases = {p["id"]:p for p in sentence["phrase_dependency"]}
 
