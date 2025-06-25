@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 
-from app.internal.admin.dto.admin_request import (ADMIN_ID, ADMIN_PASSWORD,
-                                                  AdminRequest)
+from app.internal.admin import admin_service
+from app.internal.admin.dto.admin_request import AdminRequest
 from app.internal.exception.error_code import ControlledException, ErrorCode
 from app.routers.chat.service import milvus_service
 from app.routers.chat.service.persona_store import (KARINA_PERSONA,
@@ -27,10 +27,10 @@ async def reset_ego(user_id:str, ego_id:str, body: AdminRequest)->CommonResponse
         ego_id(str): 초기화 할 사용자의 에고 아이디
         body(AdminRequest): 관리자 인증
     """
-    if body.admin_id != ADMIN_ID or body.admin_password != ADMIN_PASSWORD:
+    if not admin_service.check_authorization(body.admin_id, body.admin_password):
         raise ControlledException(ErrorCode.INVALID_ADMIN_ID)
 
-    if int(user_id.split("user_id_")[1]) != int(ego_id):
+    if not admin_service.check_correct_user(user_id, ego_id):
         return CommonResponse(
             code=500,
             message="에고 아이디와 유저 아이디가 일치하지 않습니다."
@@ -69,7 +69,7 @@ async def delete_ego(ego_id: str, body:AdminRequest)->CommonResponse:
         ego_id(str): 삭제할 에고의 아이디
         body(AdminRequest): 관리자 권한 소유 여부 확인
     """
-    if body.admin_id != ADMIN_ID or body.admin_password != ADMIN_PASSWORD:
+    if not admin_service.check_authorization(body.admin_id, body.admin_password):
         raise ControlledException(ErrorCode.INVALID_ADMIN_ID)
 
     # NOTE 1. PostgreSQL persona 테이블 삭제
