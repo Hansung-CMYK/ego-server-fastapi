@@ -11,7 +11,8 @@ import numpy as np
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from scipy.signal import resample_poly
 
-from config.keem.voice.stt_recorder import get_stt_recorder, release_stt_recorder
+from config.keem.voice.stt_recorder import (get_stt_recorder,
+                                            release_stt_recorder)
 
 router = APIRouter()
 

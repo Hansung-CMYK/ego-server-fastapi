@@ -68,6 +68,12 @@ def insert_tone(ego_id: str, tone: dict):
         values = (ego_id, json.dumps(tone),)
     )
 
+def update_tone(ego_id: str, tone: dict):
+    database.execute_update(
+        sql="update tone set tone = %s where ego_id = %s",
+        values= (ego_id, json.dumps(tone),)
+    )
+
 def delete_tone(ego_id: str):
     """
     모든 데이터를 제거하는 함수

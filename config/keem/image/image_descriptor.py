@@ -3,8 +3,8 @@ import base64
 from langchain_core.messages import HumanMessage
 
 from config.common.common_llm import chat_model as vision_model
-from config.llm.main_llm import main_llm
 from config.common.common_session import CommonSession
+from config.llm.main_llm import main_llm
 
 
 class ImageDescriptor:

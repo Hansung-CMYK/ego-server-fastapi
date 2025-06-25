@@ -28,6 +28,9 @@ def interview_to_str(interview: list[list[str]]) -> str:
 
     return "\n".join(lines)
 
+def select_tone_to_ego_id(ego_id: str)->tuple:
+    return tone_repository.select_tone_to_ego_id(ego_id=ego_id)
+
 def insert_tone(ego_id: str, tone: dict):
     """
     요약:
@@ -38,6 +41,9 @@ def insert_tone(ego_id: str, tone: dict):
         tone(dict): 추가할 말투 정보
     """
     return tone_repository.insert_tone(ego_id=ego_id, tone=tone)
+
+def update_tone(ego_id: str, tone:dict):
+    return tone_repository.update_tone(ego_id=ego_id, tone=tone)
 
 def delete_tone(ego_id: str):
     """

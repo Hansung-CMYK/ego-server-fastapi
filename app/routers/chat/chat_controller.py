@@ -6,8 +6,8 @@ from app.internal.exception.error_code import ControlledException, ErrorCode
 from app.routers.chat.dto.chat_request import ChatRequest
 from app.routers.chat.service import chat_service
 from config.common.common_response import CommonResponse
-from config.keem.image.image_descriptor import ImageDescriptor
 from config.common.common_session import CommonSession
+from config.keem.image.image_descriptor import ImageDescriptor
 
 router = APIRouter(prefix="/chat")
 

@@ -13,12 +13,13 @@ from app.internal.logger.logger import logger
 from app.routers.chat.service.chat_service import chat_stream
 from app.routers.diary.feeling.kobert_handler import extract_emotions
 from app.routers.tts.tts_controller import gpt_sovits_api
+from config.common.common_session import CommonSession
 from config.keem.kafka.kafka_handler import (RESPONSE_AI_TOPIC,
-                                             RESPONSE_CLIENT_TOPIC, ChatMessage,
-                                             ContentType, get_producer,
+                                             RESPONSE_CLIENT_TOPIC,
+                                             ChatMessage, ContentType,
+                                             get_producer,
                                              wait_until_kafka_ready)
 
-from config.common.common_session import CommonSession
 from .stt_recorder import get_stt_recorder, release_stt_recorder
 from .tts_buffer import TTSBuffer
 from .util.audio_utils import decode_and_resample

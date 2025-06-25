@@ -6,9 +6,9 @@ import uuid
 from aiokafka import AIOKafkaConsumer, AIOKafkaProducer
 
 from app.routers.chat.service.chat_service import chat_stream
+from config.common.common_session import CommonSession
 from config.keem.image.image_descriptor import ImageDescriptor
 from config.keem.kafka.chat_message import ChatMessage, ContentType
-from config.common.common_session import CommonSession
 
 LOG = logging.getLogger("kafka-handler")
 

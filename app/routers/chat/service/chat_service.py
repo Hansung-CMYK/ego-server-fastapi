@@ -4,10 +4,10 @@ import threading
 from app.internal.logger.logger import logger
 from app.routers.chat.service import graph_rag_service, milvus_service
 from app.routers.chat.service.persona_store import persona_store
+from config.common.common_session import CommonSession
 from config.external import hub_api
 from config.llm.main_llm import main_llm
 from config.llm.split_llm import SplitLLM
-from config.common.common_session import CommonSession
 
 MAIN_LOOP = asyncio.new_event_loop()
 threading.Thread(target=MAIN_LOOP.run_forever, daemon=True).start()
