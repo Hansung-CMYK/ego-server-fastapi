@@ -11,6 +11,9 @@ load_dotenv()
 
 SPRING_URI = os.getenv('SPRING_URI')
 
+"""
+ego Table
+"""
 def get_ego(user_id:str):
     """
     요약:
@@ -24,6 +27,9 @@ def get_ego(user_id:str):
 
     return parse_json(response, title="에고 조회 실패")
 
+"""
+personality Table
+"""
 def patch_tags(ego_id:str, tags:list[str]):
     """
     요약:
@@ -40,6 +46,9 @@ def patch_tags(ego_id:str, tags:list[str]):
 
     return parse_json(response, title="태그 저장 실패")
 
+"""
+relationship Table
+"""
 def post_relationship(user_id:str, ego_id:str, relationship_id:int, target_date:date):
     """
     요약:

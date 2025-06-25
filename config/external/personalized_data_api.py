@@ -10,6 +10,9 @@ load_dotenv()
 
 SPRING_URI = os.getenv('SPRING_URI')
 
+"""
+chat_history Table
+"""
 def get_chat_history(user_id:str, target_date:date):
     """
     요약:

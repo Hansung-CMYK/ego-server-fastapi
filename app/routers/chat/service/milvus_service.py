@@ -6,7 +6,7 @@ from app.internal.logger.logger import logger
 from app.routers.chat.repository import (passages_repository,
                                          triplets_repository)
 from app.routers.chat.service.parsed_sentence import ParsedSentence
-from config.embedding.embedding_model import embedding_model
+from config.models.embedding_model import embedding_model
 
 """
 DML

@@ -1,46 +1,8 @@
-import json
-import os
 import re
 
-import requests
 from dotenv import load_dotenv
 
-from app.internal.exception.error_code import ControlledException, ErrorCode
-from app.internal.logger.logger import logger
-
 load_dotenv()
-
-AI_OPEN_URL  = os.getenv('AI_OPEN_URL')
-KEYS  = json.loads(os.getenv("AI_DATA_ACCESS_KEYS"))
-KEYS_INDEX = 0
-
-def get_srl(text:str):
-    """
-    요약:
-        의미역 인식(Semantic Role Labeling) API 호출
-
-    Parameters:
-        text(str): 의미역 인식을 요청할 단일 문장
-    """
-    global KEYS_INDEX
-    body = {"argument":{"analysis_code":"srl", "text":text}}
-
-    # AI API-DATA 언어 분석 기술 OPEN API 요청
-    while True:
-        try:
-            return requests.post(
-                url=AI_OPEN_URL,
-                headers={"Authorization": KEYS[KEYS_INDEX], "Content-Type": "application/json"},
-                json=body
-            ).json()
-        except json.JSONDecodeError:
-            logger.info(msg=f"\n\nPOST: AI API DATA [구문 분석 json 파싱 실패]\n{text}\n")
-            raise ControlledException(ErrorCode.FAILURE_JSON_PARSING)
-        except Exception:
-            KEYS_INDEX += 1
-            if KEYS_INDEX == len(KEYS):
-                raise ControlledException(ErrorCode.OUT_OF_BOUND_KEYS)
-            continue
 
 def expand(pharse_id:int, phrases:dict)->str:
     """
@@ -73,7 +35,7 @@ ARG_ORDER = [
     "ARGM-ADV","ARGM-NEG"
 ]
 
-def split_to_triplets(single_sentence:str)->dict:
+def get_triplets(single_sentence:str)->list[str]:
     """
     요약:
         문장을 우선순위에 맞게 삼중항으로 삼등분한다.
@@ -91,20 +53,19 @@ def split_to_triplets(single_sentence:str)->dict:
     Parameters:
         single_sentence(str): 분리할 삼중항 단일 문장
     """
+    # NOTE 1. 형태소 분석
     nlu  = get_srl(single_sentence) # Natural Language Understanding
     sentence = nlu["return_object"]["sentence"][0]
     phrases = {p["id"]:p for p in sentence["phrase_dependency"]}
 
     # 예외처리: API에 SRL 프레임이 없으면 빈 리스트 반환
     if not sentence["SRL"]:
-        return {
-        "triplet": ["", "", single_sentence.strip()],
-        "relation": sentence["text"]
-    }
+        return ["", "", single_sentence.strip()]
 
     frame = sentence["SRL"][0]
     arguments   = {argument["type"]:argument for argument in frame["argument"]}
 
+    # NOTE 2. 형태소를 통한 구문 도출
     picked = []
     for tag in ARG_ORDER:
         if tag in arguments:
@@ -115,7 +76,4 @@ def split_to_triplets(single_sentence:str)->dict:
     while len(picked) < 2:
         picked.append("")
 
-    return {
-        "triplet": [picked[0], picked[1], single_sentence.strip()],
-        "relation": sentence["text"]
-    }
+    return [picked[0], picked[1], single_sentence.strip()]

@@ -4,7 +4,7 @@ import os
 
 import numpy as np
 
-from config.embedding.embedding_model import embedding_model
+from config.models.embedding_model import embedding_model
 
 __TAGS = {
     "늘정주나": "정주행, 몰입, 콘텐츠, 연속시청, 시리즈완료, 스트리밍",

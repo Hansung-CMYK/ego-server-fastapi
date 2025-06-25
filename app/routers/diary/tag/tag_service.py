@@ -5,12 +5,15 @@ from typing import List
 import numpy as np
 import torch
 import torch.nn.functional as F
+from kiwipiepy import Kiwi
 
 from app.routers.diary.tag.tag_embedding_service import load_index
-from config.embedding.embedding_model import embedding_model
-from config.keyword.keyword_model import keyword_model
+from config.models import morpheme_model
+from config.models.embedding_model import embedding_model
 
 __KEYS, __EMBEDS = load_index()
+
+kiwi = Kiwi()
 
 def sentence_embedding(stories: list[str]) -> np.ndarray:
     """
@@ -25,8 +28,7 @@ def sentence_embedding(stories: list[str]) -> np.ndarray:
     """
     # 명사만 추출해 노이즈 감소
     user_chat_logs = "\n".join(stories)
-    # TODO: keyword_model에서 임시로 불러옴 변경할 것
-    nouns = [tok.form for sent in keyword_model.kiwi.analyze(user_chat_logs) for tok in sent[0] if tok.tag.startswith("NN")]
+    nouns = [tok.form for sent in morpheme_model.get_morpheme(sentences=user_chat_logs) for tok in sent[0] if tok.tag.startswith("NN")]
     message = " ".join(nouns) if nouns else user_chat_logs
     return embedding_model.embedding(texts=[message])[0].astype(np.float32)
 

@@ -1,8 +1,8 @@
 from keybert import KeyBERT
-from kiwipiepy import Kiwi
 from sentence_transformers import SentenceTransformer
 
 from app.internal.logger.logger import logger
+from config.models import morpheme_model
 
 
 class KeywordModel:
@@ -13,7 +13,6 @@ class KeywordModel:
     Attributes:
         __keyword_model(KeyBERT): 실질적으로 키워드를 추출하는 모델이다.
     """
-    kiwi = Kiwi()  # 형태소 분석기(명사만 남기기 위함)
     sentence_transformer = SentenceTransformer("snunlp/KR-SBERT-V40K-klueNLI-augSTS")
     __keyword_model = KeyBERT(sentence_transformer)
 
@@ -32,7 +31,7 @@ class KeywordModel:
         sentences = "\n".join(story for story in chat_rooms)
 
         # NOTE 2. 문장에서 명사만 남겨둔다.
-        for sentence in self.kiwi.analyze(sentences):
+        for sentence in morpheme_model.get_morpheme(sentences=sentences):
             nouns = [token.form for token in sentence[0] if token.tag.startswith('NN')]
             if nouns: nouns_list.extend(nouns)
         result_text = ' '.join(nouns_list)

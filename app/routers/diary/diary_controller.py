@@ -8,10 +8,10 @@ from app.routers.diary import diary_service
 from app.routers.diary.dto.diary_request import DiaryRequest
 from app.routers.diary.feeling import kobert_handler
 from config.common.common_response import CommonResponse
-from config.keyword.keyword_model import keyword_model
 from config.llm.daily_comment_llm import DailyCommentLLM
 from config.llm.summary_llm import SummaryLLM
 from config.llm.topic_llm import TopicLLM
+from config.models.keyword_model import keyword_model
 
 router = APIRouter(prefix="/diary")
 
