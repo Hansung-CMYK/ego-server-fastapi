@@ -23,36 +23,10 @@ async def create_tone(body: ToneRequest)->CommonResponse:
 
     # NOTE 2. PostgreSQL에 저장한다.
     tone = body.model_dump()
+    tone.pop("ego_id")
     tone_service.insert_tone(ego_id=body.ego_id, tone=tone)
 
     return CommonResponse(
         code=200,
         message="말투를 생성하였습니다."
     )
-
-def build_interview_log(interview: list[list[str]]) -> str:
-    """
-    인터뷰(2중 리스트)에서 첫 두 리스트를 교대로 이어붙여
-    Java StringBuilder 로직과 동일한 로그 문자열을 반환합니다.
-
-    Parameters
-    ----------
-    interview : list[list[str]]
-        [[Q1, Q2, …], [A1, A2, …], …] 형태의 중첩 리스트
-
-    Returns
-    -------
-    str
-        Q1\nA1\nQ2\nA2\n … 형식의 문자열
-    """
-    if len(interview) < 2:           # 리스트가 2개 미만이면 빈 문자열 반환
-        return ""
-
-    first_list, second_list = interview[0], interview[1]
-
-    lines: list[str] = []
-    for q, a in zip(first_list, second_list):
-        lines.append(q)
-        lines.append(a)
-
-    return "\n".join(lines)

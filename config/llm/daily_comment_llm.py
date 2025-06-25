@@ -1,6 +1,6 @@
 from textwrap import dedent
 
-from app.internal.exception.error_code import ControlledException, ErrorCode
+from app.internal.exception.error_code import ControlledException
 from app.internal.logger.logger import logger
 from config.common.common_llm import CommonLLM
 

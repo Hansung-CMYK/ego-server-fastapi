@@ -3,7 +3,7 @@ import re
 from numpy import ndarray
 
 from config.embedding.embedding_model import embedding_model
-from config.ner.ner_service import split_to_triplets
+from config.ner import ner_service
 
 
 class ParsedSentence:
@@ -22,7 +22,7 @@ class ParsedSentence:
             passage(str): 삼중항과 원문으로 저장할 문자열(문장)
         """
         # 순환 호출 문제로 인해 내부 import
-        triplets = split_to_triplets(single_sentence)
+        triplets = ner_service.split_to_triplets(single_sentence)
         self.passage = passage
         self.triplet:list = triplets["triplet"]
         self.relation:str = triplets["relation"]

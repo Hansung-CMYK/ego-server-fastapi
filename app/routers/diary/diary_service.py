@@ -5,10 +5,9 @@ from dotenv import load_dotenv
 
 from app.internal.logger.logger import logger
 from app.routers.chat.service.persona_store import persona_store
-from app.routers.diary.tag.tag_service import search_tags
+from app.routers.diary.tag import tag_service
 from config.emotion.emotion_classifier import EmotionClassifier
-from config.external.hub_api import get_ego, patch_tags, post_relationship
-from config.external.personalized_data_api import get_chat_history
+from config.external import personalized_data_api, hub_api
 
 load_dotenv()
 
@@ -24,7 +23,7 @@ def get_all_chat(user_id: str, target_date: date):
         target_date(date): 검색할 날짜
     """
     # NOTE 1. 대화 내역 조회
-    chat_rooms = get_chat_history(user_id=user_id, target_date=target_date)
+    chat_rooms = personalized_data_api.get_chat_history(user_id=user_id, target_date=target_date)
 
     # NOTE 2. 대화 내역 정제
     all_chat: list[list[str]] = []  # 사용자의 모든 채팅방 대화 목록
@@ -38,6 +37,24 @@ def get_all_chat(user_id: str, target_date: date):
 
         all_chat.append(chat_room_log)
     return all_chat
+
+def integration_all_chat(all_chat: list[list[str]]):
+    """
+    하나의 채팅방 대화 내역을 하나의 str로 변경하는 함수
+    """
+    return ["\n".join(chat_room) for chat_room in all_chat]
+
+def how_much_chats(all_chat: list[list[str]]) -> int:
+    return sum(len(all_chat_of_chat_room) for all_chat_of_chat_room in all_chat)
+
+def how_much_topics(topics:list[dict]) -> int:
+    return len(topics)
+
+def filter_contents(topics:list[dict]) -> list[str]:
+    return [topic["content"] for topic in topics]
+
+def filter_titles(topics:list[dict]) -> list[str]:
+    return [topic["title"] for topic in topics]
 
 async def async_save(user_id:str, chat_rooms:list[str], target_date:date):
     """
@@ -56,7 +73,7 @@ async def async_save(user_id:str, chat_rooms:list[str], target_date:date):
         target_date(date): 저장할 날짜
     """
     # NOTE 1. user_id로 my_ego 추출
-    my_ego = get_ego(user_id=user_id)
+    my_ego = hub_api.get_ego(user_id=user_id)
     ego_id:str = str(my_ego["id"]) # ego_id 문자열 변환
 
     # NOTE 2. 페르소나 저장
@@ -89,7 +106,7 @@ def save_relation(user_id:str, chat_room:str, target_date:date):
     # LOG. 시연용 로그
     logger.info(msg=f"\n\nPOST: api/v1/diary [에고 관계]\n{relation}\n""")
 
-    post_relationship(user_id=user_id, ego_id=ego_id, relationship_id=relationship_id, target_date=target_date)
+    hub_api.post_relationship(user_id=user_id, ego_id=ego_id, relationship_id=relationship_id, target_date=target_date)
     logger.info("save_relation success!")
 
 def save_persona(ego_id:str, chat_rooms:list[str]):
@@ -135,12 +152,12 @@ def save_tags(ego_id:str, stories:list[str]):
         stories(list[str]): 태그를 추출할 대화 내역
     """
     # NOTE 1. 대화 내역과 높은 유사도를 가진 태그를 조회한다.
-    tags = search_tags(stories=stories)
+    tags = tag_service.search_tags(stories=stories)
 
     # LOG. 시연용 로그
     logger.info(msg=f"\n\nPOST: api/v1/diary [에고 태그]\n{tags}\n")
 
     # NOTE 2. 추출된 태그를 BE로 전달한다.
-    patch_tags(ego_id=ego_id, tags=tags)
+    hub_api.patch_tags(ego_id=ego_id, tags=tags)
     logger.info("save_tags success!")
 

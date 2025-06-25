@@ -4,7 +4,7 @@ from fastapi import APIRouter, File, Form, UploadFile
 
 from app.internal.exception.error_code import ControlledException, ErrorCode
 from app.routers.chat.dto.chat_request import ChatRequest
-from app.routers.chat.service.chat_service import chat_stream
+from app.routers.chat.service import chat_service
 from config.common.common_response import CommonResponse
 from config.image.image_descriptor import ImageDescriptor
 from config.session.session_config import SessionConfig
@@ -28,7 +28,7 @@ async def create_ai_chat(body: ChatRequest) -> CommonResponse:
     """
     # NOTE: 에고 채팅 생성
     ai_message: str = ""
-    for chunk in chat_stream(  # main_llm의 답변이 chunk 단위로 전달됩니다.
+    for chunk in chat_service.chat_stream(  # main_llm의 답변이 chunk 단위로 전달됩니다.
             user_message=body.message,
             config=SessionConfig(body.user_id, body.ego_id)
     ):

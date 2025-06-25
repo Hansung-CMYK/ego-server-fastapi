@@ -2,10 +2,9 @@ import asyncio
 import threading
 
 from app.internal.logger.logger import logger
-from app.routers.chat.service import milvus_service
-from app.routers.chat.service.graph_rag_service import get_rag_prompt
+from app.routers.chat.service import milvus_service, graph_rag_service
 from app.routers.chat.service.persona_store import persona_store
-from config.external.hub_api import get_ego
+from config.external import hub_api
 from config.llm.main_llm import main_llm
 from config.llm.split_llm import SplitLLM
 from config.session.session_config import SessionConfig
@@ -44,7 +43,7 @@ def chat_stream(user_message: str, config: SessionConfig):
     persona = persona_store.get_persona(ego_id=ego_id)
 
     # NOTE 2. 에고가 가진 지식 그래프에서 정보를 조회한다.
-    rag_prompt = get_rag_prompt(ego_id=ego_id, user_message=user_message)
+    rag_prompt = graph_rag_service.get_rag_prompt(ego_id=ego_id, user_message=user_message)
 
     # NOTE 3. 사용자의 이름 추출
     # my_ego = get_ego(user_id=user_id)
@@ -91,7 +90,7 @@ async def save_graphdb(session_id:str, user_message:str):
     logger.info(f"\n\nPOST: api/v1/chat [저장할 단일 문장들]\n{input}\n")
 
     # NOTE 3. 에고에 맞게 삼중항을 저장한다.
-    my_ego = get_ego(user_id=user_id)
+    my_ego = hub_api.get_ego(user_id=user_id)
 
     milvus_service.insert_messages(single_sentences=split_messages, passage=input, ego_id=str(my_ego["id"]))
     logger.info("save_graphdb success!")

@@ -4,7 +4,7 @@ from app.internal.exception.error_code import ControlledException, ErrorCode
 from app.routers.chat.service import milvus_service
 from app.routers.persona import persona_service
 from app.routers.persona.dto.persona_request import PersonaRequest
-from app.routers.tone.tone_controller import build_interview_log
+from app.routers.tone import tone_service
 from config.common.common_response import CommonResponse
 
 router = APIRouter(prefix="/persona")
@@ -32,10 +32,12 @@ async def create_persona(body: PersonaRequest)->CommonResponse:
     if milvus_service.has_partition(partition_name=body.ego_id):
         raise ControlledException(ErrorCode.ALREADY_CREATED_PARTITION)
 
-    interview = build_interview_log(interview=body.interview)
 
     # NOTE 2. None이 아닌 값만 필터링해서 저장
-    persona = {key: value for key, value in body.model_dump().items() if (key != "ego_id" or key != "interview") and value is not None}
+    # interview는 따로 관리
+    interview = tone_service.interview_to_str(interview=body.interview)
+
+    persona = persona_service.init_persona(body.model_dump())
     persona.update({"interview": interview})
 
     # NOTE 3. 에고 정보를 JSON으로 만들어 저장한다.
