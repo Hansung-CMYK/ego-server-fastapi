@@ -1,5 +1,6 @@
 from app.routers.tone import tone_repository
 
+
 def interview_to_str(interview: list[list[str]]) -> str:
     """
     인터뷰(2중 리스트)에서 첫 두 리스트를 교대로 이어붙여
