@@ -5,7 +5,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-import config.kafka.kafka_handler as kh
+import config.keem.kafka.kafka_handler as kh
 from app.internal.admin import admin_controller
 from app.internal.exception.exception_handler import \
     register_exception_handlers
@@ -17,7 +17,7 @@ from app.routers.stt import stt_controller
 from app.routers.tone import tone_controller
 from app.routers.tts import tts_controller
 from app.routers.voice import voice_controller
-from config.voice.tts_infer import ensure_init_v2
+from config.keem.voice.tts_infer import ensure_init_v2
 
 logging.basicConfig(level=logging.INFO)
 

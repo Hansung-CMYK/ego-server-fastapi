@@ -6,9 +6,9 @@ import uuid
 from aiokafka import AIOKafkaConsumer, AIOKafkaProducer
 
 from app.routers.chat.service.chat_service import chat_stream
-from config.image.image_descriptor import ImageDescriptor
-from config.kafka.chat_message import ChatMessage, ContentType
-from config.session.session_config import SessionConfig
+from config.keem.image.image_descriptor import ImageDescriptor
+from config.keem.kafka.chat_message import ChatMessage, ContentType
+from config.common.common_session import CommonSession
 
 LOG = logging.getLogger("kafka-handler")
 
@@ -82,7 +82,7 @@ async def consume_loop():
 async def handle_image(message: ChatMessage):
     b64_image = message.content
     image_description = ImageDescriptor.invoke(b64_image=b64_image)
-    ImageDescriptor.store(image_description, SessionConfig(message.from_, message.to))
+    ImageDescriptor.store(image_description, CommonSession(message.from_, message.to))
 
 async def handle_message(msg):
     LOG.debug(msg)
@@ -118,7 +118,7 @@ async def handle_message(msg):
 def to_response_message(req_msg: ChatMessage) -> ChatMessage:
     content = ""
     try:
-        session_config = SessionConfig(req_msg.from_, req_msg.to)
+        session_config = CommonSession(req_msg.from_, req_msg.to)
         prompt = str(req_msg.content).strip()
 
         if not prompt:

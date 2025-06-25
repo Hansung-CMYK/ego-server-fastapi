@@ -6,8 +6,8 @@ from app.internal.exception.error_code import ControlledException, ErrorCode
 from app.routers.chat.dto.chat_request import ChatRequest
 from app.routers.chat.service import chat_service
 from config.common.common_response import CommonResponse
-from config.image.image_descriptor import ImageDescriptor
-from config.session.session_config import SessionConfig
+from config.keem.image.image_descriptor import ImageDescriptor
+from config.common.common_session import CommonSession
 
 router = APIRouter(prefix="/chat")
 
@@ -30,7 +30,7 @@ async def create_ai_chat(body: ChatRequest) -> CommonResponse:
     ai_message: str = ""
     for chunk in chat_service.chat_stream(  # main_llm의 답변이 chunk 단위로 전달됩니다.
             user_message=body.message,
-            config=SessionConfig(body.user_id, body.ego_id)
+            config=CommonSession(body.user_id, body.ego_id)
     ):
         ai_message += chunk  # 모든 chunk를 answer에 연결합니다.
 
@@ -48,7 +48,7 @@ async def ollama_image(
         ego_id: str = Form(..., description="페르소나 ID"),
 ):
     try:
-        session_config = SessionConfig(user_id, ego_id)
+        session_config = CommonSession(user_id, ego_id)
         raw_bytes = await file.read()
 
         b64_image = base64.b64encode(raw_bytes).decode("utf-8")

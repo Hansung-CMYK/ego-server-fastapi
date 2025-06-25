@@ -7,7 +7,7 @@ from app.routers.chat.service.persona_store import persona_store
 from config.external import hub_api
 from config.llm.main_llm import main_llm
 from config.llm.split_llm import SplitLLM
-from config.session.session_config import SessionConfig
+from config.common.common_session import CommonSession
 
 MAIN_LOOP = asyncio.new_event_loop()
 threading.Thread(target=MAIN_LOOP.run_forever, daemon=True).start()
@@ -23,14 +23,14 @@ def worker(session_id:str, user_message:str):
     """
     asyncio.run_coroutine_threadsafe(save_graphdb(session_id=session_id, user_message=user_message), MAIN_LOOP)
 
-def chat_stream(user_message: str, config: SessionConfig):
+def chat_stream(user_message: str, config: CommonSession):
     """
     요약:
         AI가 지식 그래프와 페르소나 정보를 활용해 답변할 수 있게하는 함수이다.
 
     Parameters:
         user_message(str): 사용자 메세지
-        config(SessionConfig): 세션(웹 소켓) 정보
+        config(CommonSession): 세션(웹 소켓) 정보
     """
     ego_id:str = config.ego_id
     user_id:str = config.user_id

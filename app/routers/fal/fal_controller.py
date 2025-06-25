@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 
-from config.image.image_generator import ImageGenerator
+from config.keem.image.image_generator import ImageGenerator
 
 router = APIRouter()
 

@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from app.internal.logger.logger import logger
 from app.routers.chat.service.persona_store import persona_store
 from app.routers.diary.tag import tag_service
-from config.emotion.emotion_classifier import EmotionClassifier
+from config.keem.emotion.emotion_classifier import EmotionClassifier
 from config.external import hub_api, personalized_data_api
 
 load_dotenv()

@@ -1,4 +1,4 @@
-from ..session.session_config import SessionConfig
+from config.common.common_session import CommonSession
 from .voice_chat_handler import VoiceChatHandler
 
 
@@ -6,7 +6,7 @@ class VoiceChatSessionManager:
     def __init__(self):
         self.sessions: dict[str, VoiceChatHandler] = {}
 
-    def create_session(self, ws, config : SessionConfig):
+    def create_session(self, ws, config : CommonSession):
         session = VoiceChatHandler(ws, config)
         self.sessions[session.id] = session
         return session

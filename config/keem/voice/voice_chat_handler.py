@@ -13,18 +13,18 @@ from app.internal.logger.logger import logger
 from app.routers.chat.service.chat_service import chat_stream
 from app.routers.diary.feeling.kobert_handler import extract_emotions
 from app.routers.tts.tts_controller import gpt_sovits_api
-from config.kafka.kafka_handler import (RESPONSE_AI_TOPIC,
-                                        RESPONSE_CLIENT_TOPIC, ChatMessage,
-                                        ContentType, get_producer,
-                                        wait_until_kafka_ready)
+from config.keem.kafka.kafka_handler import (RESPONSE_AI_TOPIC,
+                                             RESPONSE_CLIENT_TOPIC, ChatMessage,
+                                             ContentType, get_producer,
+                                             wait_until_kafka_ready)
 
-from ..session.session_config import SessionConfig
+from config.common.common_session import CommonSession
 from .stt_recorder import get_stt_recorder, release_stt_recorder
 from .tts_buffer import TTSBuffer
 from .util.audio_utils import decode_and_resample
 
 
-async def produce_message(sentence: str, config: SessionConfig, topic: str):
+async def produce_message(sentence: str, config: CommonSession, topic: str):
     await wait_until_kafka_ready()
     if not sentence.strip():
         return
@@ -44,7 +44,7 @@ async def produce_message(sentence: str, config: SessionConfig, topic: str):
     except Exception as e:
         logger.exception(f"Kafka produce failed: {e}")
 
-def send_sentence_from_sync(sentence: str, config: SessionConfig, topic: str, loop: asyncio.AbstractEventLoop):
+def send_sentence_from_sync(sentence: str, config: CommonSession, topic: str, loop: asyncio.AbstractEventLoop):
     asyncio.run_coroutine_threadsafe(
         produce_message(sentence, config, topic),
         loop
@@ -53,7 +53,7 @@ def send_sentence_from_sync(sentence: str, config: SessionConfig, topic: str, lo
 class VoiceChatHandler:
     INACTIVITY_TIMEOUT = 10.0
 
-    def __init__(self, websocket, config: SessionConfig):
+    def __init__(self, websocket, config: CommonSession):
         self.id = str(uuid.uuid4())
         self.ws = websocket
         self.loop = asyncio.get_running_loop()
@@ -180,7 +180,7 @@ class VoiceChatHandler:
             if not clean:
                 return
 
-            from config.voice.tts_model_registry import get_tts_pipeline
+            from config.keem.voice.tts_model_registry import get_tts_pipeline
 
             speaker = gpt_sovits_api.speaker_list.get(self.config.spk)
             tts_pipe = get_tts_pipeline(self.config.spk)

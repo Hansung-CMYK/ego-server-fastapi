@@ -1,8 +1,8 @@
 from transformers import ElectraConfig, ElectraTokenizer
 
 from app.internal.exception.error_code import ControlledException, ErrorCode
-from config.emotion.model import ElectraForMultiLabelClassification
-from config.emotion.multilabel_pipeline import MultiLabelPipeline
+from config.keem.emotion.model import ElectraForMultiLabelClassification
+from config.keem.emotion.multilabel_pipeline import MultiLabelPipeline
 
 
 class EmotionClassifier:

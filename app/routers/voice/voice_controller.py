@@ -1,8 +1,8 @@
 import httpx
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
-from config.session.session_config import SessionConfig
-from config.voice.voice_chat_manager import VoiceChatSessionManager
+from config.common.common_session import CommonSession
+from config.keem.voice.voice_chat_manager import VoiceChatSessionManager
 
 router = APIRouter()
 session_manager = VoiceChatSessionManager()
@@ -20,7 +20,7 @@ async def websocket_voice_chat(ws: WebSocket):
     spk = ws.query_params.get("spk", "anonymous")
     chat_room_id = ws.query_params.get("chat_room_id", "anonymous")
 
-    config = SessionConfig(user_id, ego_id)
+    config = CommonSession(user_id, ego_id)
     config.spk = spk
     config.chat_room_id = chat_room_id
     # NOTE uid로 refer_path 조회 및 적용

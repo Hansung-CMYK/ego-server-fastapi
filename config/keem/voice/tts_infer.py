@@ -4,7 +4,7 @@ import GPUtil
 import torch
 from deprecated import deprecated
 
-from config.voice.tts_model_registry import has_model, register_model
+from config.keem.voice.tts_model_registry import has_model, register_model
 
 
 def pick_least_used_gpu() -> int | None:

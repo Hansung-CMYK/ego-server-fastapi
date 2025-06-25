@@ -4,7 +4,7 @@ from langchain_core.messages import HumanMessage
 
 from config.common.common_llm import chat_model as vision_model
 from config.llm.main_llm import main_llm
-from config.session.session_config import SessionConfig
+from config.common.common_session import CommonSession
 
 
 class ImageDescriptor:
@@ -19,5 +19,5 @@ class ImageDescriptor:
         return vision_model.invoke([human_msg]).content
 
     @staticmethod
-    def store(image_description : str, session_config : SessionConfig):
+    def store(image_description : str, session_config : CommonSession):
         main_llm.add_message_in_session_history(session_id=session_config.session_id, human_message=image_description)

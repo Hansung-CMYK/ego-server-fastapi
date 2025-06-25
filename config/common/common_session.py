@@ -1,7 +1,7 @@
 from pathlib import Path
 
 
-class SessionConfig:
+class CommonSession:
     def __init__(
         self,
         user_id : str,
