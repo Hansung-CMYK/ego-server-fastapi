@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.internal.admin import admin_service
+from app.internal.admin import admin_repository, admin_service
 from app.internal.admin.dto.admin_request import AdminRequest
 from app.internal.exception.error_code import ControlledException, ErrorCode
 from app.routers.chat.service import milvus_service
@@ -9,10 +9,94 @@ from app.routers.chat.service.persona_store import (KARINA_PERSONA,
 from app.routers.persona import persona_service
 from app.routers.tone import tone_service
 from config.common.common_response import CommonResponse
+from config.external import hub_api
 from config.llm.main_llm import main_llm
 
 router = APIRouter(prefix="/admin")
 
+@router.post("/test")
+async def post_test(body: AdminRequest)->CommonResponse:
+    if not admin_service.check_authorization(body.admin_id, body.admin_password):
+        raise ControlledException(ErrorCode.INVALID_ADMIN_ID)
+    return CommonResponse(
+        code=200,
+        message="test success"
+    )
+
+@router.post("/init")
+async def post_init(body: AdminRequest)->CommonResponse:
+    """
+    테이블 자체를 다시 생성하고 데이터를 추가하는 함수이다.
+    """
+    if not admin_service.check_authorization(body.admin_id, body.admin_password):
+        raise ControlledException(ErrorCode.INVALID_ADMIN_ID)
+
+    # NOTE 1. PostgreSQL.hub의 데이터를 초기화 한다.
+    # TODO: 테이블 초기화 API 요청하기
+
+    # NOTE 2. PostgreSQL.personalized_data의 데이터를 초기화 한다.
+    # TODO: 테이블 초기화 API 요청하기
+
+    # NOTE 3. MilvusDatabase의 데이터를 초기화 한다.
+    admin_service.init_passages()
+    admin_service.init_triplets()
+
+    # NOTE 4. PostgreSQL.persona, tone의 데이터를 초기화 한다.
+    admin_service.init_persona()
+    admin_service.init_tone()
+
+    # NOTE 5. user_id_001, user_id_002 생성
+    # 샘플 데이터 선언
+    karina_id = "user_id_001"  # 카리나
+    gomj_id = "user_id_002"  # 김명준
+
+    # user, ego 추가
+    # TODO: 데이터 추가 API 요청하기
+
+    # 생성된 에고 아이디 조회
+    karina_ego_id = hub_api.get_ego(karina_id)["id"]
+    gomj_ego_id = hub_api.get_ego(gomj_id)["id"]
+
+    # persona 추가
+    persona_service.insert_persona(
+        ego_id=karina_id,
+        persona={
+            "name": "카리나",
+            "mbti": "ENFP"
+            # TODO: interview 추가할 것
+        }
+    )
+    persona_service.insert_persona(
+        ego_id=gomj_id,
+        persona={
+            "name": "김명준",
+            "mbti": "ENTJ"
+            # TODO: interview 추가할 것
+        }
+    )
+
+    # tone 추가
+    # TODO: 데이터 추가 API 요청하기
+
+    # milvus partition 생성
+    milvus_service.create_partition(partition_name=karina_ego_id)
+    milvus_service.create_partition(partition_name=gomj_ego_id)
+    admin_service.load_partition(collection_name="passages", partition_names=[karina_ego_id, gomj_ego_id])
+    admin_service.load_partition(collection_name="triplets", partition_names=[karina_ego_id, gomj_ego_id])
+
+    # milvus 데이터 추가
+    admin_service.insert_sample_messages(
+        single_sentences=admin_repository.karina_messages,
+        ego_id=karina_ego_id,
+    )
+    admin_service.insert_sample_messages(
+        single_sentences=admin_repository.gomj_messages,
+        ego_id=gomj_ego_id,
+    )
+
+"""
+Capstone Design용 API들(사용 안함) 
+"""
 @router.post("/reset/{user_id}/{ego_id}")
 async def reset_ego(user_id:str, ego_id:str, body: AdminRequest)->CommonResponse:
     """
@@ -84,13 +168,4 @@ async def delete_ego(ego_id: str, body:AdminRequest)->CommonResponse:
     return CommonResponse(
         code=200,
         message="delete ego success"
-    )
-
-@router.post("/test")
-async def post_test(body: AdminRequest)->CommonResponse:
-    if not admin_service.check_authorization(body.admin_id, body.admin_password):
-        raise ControlledException(ErrorCode.INVALID_ADMIN_ID)
-    return CommonResponse(
-        code=200,
-        message="test success"
     )

@@ -38,7 +38,7 @@ async def create_persona(body: PersonaRequest)->CommonResponse:
     # interview는 따로 관리
     interview = tone_service.interview_to_str(interview=body.interview)
 
-    persona = persona_service.init_persona(body.model_dump())
+    persona = persona_service.persona_filter(body.model_dump())
     persona.update({"interview": interview})
 
     # NOTE 3. 에고 정보를 JSON으로 만들어 저장한다.

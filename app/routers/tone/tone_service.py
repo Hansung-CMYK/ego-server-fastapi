@@ -1,6 +1,15 @@
 from app.routers.tone import tone_repository
 
 
+def create_tone():
+    tone_repository.create_tone()
+
+def drop_tone():
+    tone_repository.drop_tone()
+
+def has_tone()->bool:
+    return tone_repository.has_tone()
+
 def interview_to_str(interview: list[list[str]]) -> str:
     """
     인터뷰(2중 리스트)에서 첫 두 리스트를 교대로 이어붙여

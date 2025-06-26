@@ -30,6 +30,10 @@ def drop_persona():
         sql = "DROP TABLE persona"
     )
 
+def has_persona()->bool:
+    return 1 == database.execute_update(
+        sql="SELECT 1 FROM Information_schema.tables WHERE table_name = 'persona' AND table_schema = 'postgres'"
+    )
 """
 DML
 """

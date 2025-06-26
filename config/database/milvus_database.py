@@ -6,10 +6,17 @@ from numpy import ndarray
 from pymilvus import CollectionSchema, MilvusClient
 from pymilvus.milvus_client import IndexParams
 
+from config.models.embedding_model import embedding_model
+
 load_dotenv()
 
 # .env 환경 변수 추출
 MILVUS_URI = os.getenv('MILVUS_URI')
+
+"""
+임베딩 모델의 최대 차원 수를 명시한 상수이다. 
+"""
+embedding_dim = len(embedding_model.embedding(["임베딩 모델 차원 수 측정용"])[0])
 
 class MilvusDatabase:
     """
@@ -79,7 +86,8 @@ class MilvusDatabase:
         return self.get_connection().create_collection(
             collection_name=collection_name,
             schema=schema,
-            index_params=index_params
+            index_params=index_params,
+            dimension=embedding_dim
         )
 
     def drop_collection(self, collection_name:str):
@@ -92,6 +100,15 @@ class MilvusDatabase:
         return self.get_connection().drop_collection(
             collection_name=collection_name
         )
+
+    def has_collection(self, collection_name:str):
+        self.get_connection().has_collection(collection_name=collection_name)
+
+    def create_schema(self):
+        self.get_connection().create_schema(auto_id=True, enable_dynamic_field=True)
+
+    def prepare_index_params(self):
+        self.get_connection().prepare_index_params()
 
     """
     DML
@@ -228,7 +245,7 @@ class MilvusDatabase:
             partition_name=partition_name
         )
 
-    def load_partitions(self, collection_name:str, partition_names:list[str]):
+    def load_partitions(self, collection_name:str, partition_names:str|list[str]):
         """
         Milvus에 파티션을 불러오는 함수
 

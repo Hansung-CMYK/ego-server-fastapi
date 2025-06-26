@@ -30,6 +30,11 @@ def drop_tone():
         sql="DROP TABLE tone"
     )
 
+def has_tone()->bool:
+    return 1 == database.execute_update(
+        sql="SELECT 1 FROM Information_schema.tables WHERE table_name = 'tone' AND table_schema = 'postgres'"
+    )
+
 """
 DML
 """

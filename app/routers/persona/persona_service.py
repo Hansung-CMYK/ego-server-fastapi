@@ -1,6 +1,15 @@
 from app.routers.persona import persona_repository
 
 
+def create_persona():
+    persona_repository.create_persona()
+
+def drop_persona():
+    persona_repository.drop_persona()
+
+def has_persona()->bool:
+    return persona_repository.has_persona()
+
 def select_persona_to_ego_id(ego_id: str)->tuple:
     """
     요약:
@@ -52,7 +61,10 @@ def has_persona(ego_id: str) -> bool:
     """
     return persona_repository.has_persona(ego_id=ego_id)
 
-def init_persona(request_body:dict) -> dict:
+def persona_filter(request_body:dict) -> dict:
+    """
+    request_body에서 페르소나 데이터만 필터링 해주는 함수
+    """
     request_body.pop("ego_id")
     request_body.pop("interview")
     return {key: value for key, value in request_body.items() if value is not None}
