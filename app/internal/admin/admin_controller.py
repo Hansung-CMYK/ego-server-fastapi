@@ -59,7 +59,7 @@ async def reset_ego(user_id:str, ego_id:str, body: AdminRequest)->CommonResponse
         message="reset ego success"
     )
 
-@router.delete("/ego/{ego_id}")
+@router.post("/ego/{ego_id}")
 async def delete_ego(ego_id: str, body:AdminRequest)->CommonResponse:
     """
     요약:
@@ -86,3 +86,11 @@ async def delete_ego(ego_id: str, body:AdminRequest)->CommonResponse:
         message="delete ego success"
     )
 
+@router.post("/test")
+async def post_test(body: AdminRequest)->CommonResponse:
+    if not admin_service.check_authorization(body.admin_id, body.admin_password):
+        raise ControlledException(ErrorCode.INVALID_ADMIN_ID)
+    return CommonResponse(
+        code=200,
+        message="test success"
+    )
